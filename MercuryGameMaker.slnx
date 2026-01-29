@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="GameEngine/GameEngine.csproj" />
+  <Project Path="GameLibrary/GameLibrary.csproj" />
+  <Project Path="GameMaker/GameMaker.csproj" />
+  <Project Path="MercuryGameMaker/MercuryGameMaker.csproj" />
+</Solution>
