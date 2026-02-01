@@ -8,15 +8,23 @@
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300"
              d:DataContext="{d:DesignInstance homeView:HomeViewViewModel}"
-             behaviors:LoadedBehavior.LoadedCommand="{Binding LoadedCommand}">
+             behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    <Frame x:Name="TopBarFrame" />
+    <Frame x:Name="ActiveFrame" />
+  </Grid>
   <!-- <Grid> -->
   <!--   <Grid.Resources> -->
   <!--       <ux:ViewLocator x:Key="ViewLocator" /> -->
   <!--   </Grid.Resources> -->
-  <!--   <Grid.RowDefinitions> -->
-  <!--     <RowDefinition Height="Auto" /> -->
-  <!--     <RowDefinition Height="*" /> -->
-  <!--   </Grid.RowDefinitions> -->
+  <!-- <Grid.RowDefinitions> -->
+  <!--   <RowDefinition Height="Auto" /> -->
+  <!--   <RowDefinition Height="*" /> -->
+  <!-- </Grid.RowDefinitions> -->
   <!--   <ContentControl Content="{Binding NavigationService.TopBar, Converter={StaticResource ViewLocator}}" -->
   <!--                   HorizontalContentAlignment="Stretch" -->
   <!--                   VerticalContentAlignment="Stretch" /> -->

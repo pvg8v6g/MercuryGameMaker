@@ -36,8 +36,8 @@ public partial class App
         #region Register Views
 
         services.AddSingleton<MainWindow>();
-        services.AddSingleton<HomeView>(provider => new HomeView { DataContext = provider.GetRequiredService<HomeViewViewModel>() });
-        services.AddSingleton<TopBar>(provider => new TopBar { DataContext = provider.GetRequiredService<TopBarViewModel>() });
+        services.AddSingleton<HomeView>();
+        services.AddSingleton<TopBar>();
 
         #endregion
 
@@ -58,10 +58,6 @@ public partial class App
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         _window = Services?.GetRequiredService<MainWindow>();
-
-        var navigationService = Services?.GetRequiredService<INavigationService>();
-        navigationService?.NavigateTo<HomeViewViewModel>();
-
         _window?.Activate();
     }
 

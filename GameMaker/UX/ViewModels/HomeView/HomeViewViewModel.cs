@@ -16,7 +16,7 @@ public class HomeViewViewModel(ILocationService locationService, INavigationServ
 
     protected override void LoadedAction()
     {
-        navigationService.SetTopBar<TopBarViewModel>();
+        navigationService.SetTopBar<Views.TopBar.TopBar>();
         locationService.CreateGameDirectory();
     }
 

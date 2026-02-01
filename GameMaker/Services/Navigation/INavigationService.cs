@@ -1,17 +1,19 @@
 ﻿using GameMaker.Tasks;
 using GameMaker.UX.ViewModels;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 
 namespace GameMaker.Services.Navigation;
 
 public interface INavigationService
 {
-    BaseViewModel ActivePage { get; set; }
+    Frame? TopFrame { get; set; }
 
-    BaseViewModel TopBar { get; set; }
+    Frame? ActiveFrame { get; set; }
 
-    void SetTopBar<T>() where T : BaseViewModel;
+    void SetTopBar<T>() where T : FrameworkElement;
 
-    void NavigateTo<T>() where T : BaseViewModel;
+    void NavigateTo<T>() where T : FrameworkElement;
 
     void ShowProgressPopup<T>(string? label) where T : EngineTask;
 }

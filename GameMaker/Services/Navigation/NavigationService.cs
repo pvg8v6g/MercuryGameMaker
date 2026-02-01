@@ -1,40 +1,40 @@
 ﻿using GameMaker.Tasks;
-using GameMaker.UX.ViewModels;
 using GameMaker.UX.Views.MainWindow;
 using GameMaker.UX.Views.Popups.Progress;
 using MercuryLibrary.WinUI3Components;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 
 namespace GameMaker.Services.Navigation;
 
-public class NavigationService(Func<Type, BaseViewModel> viewModelFactory, Func<Type, EngineTask> engineTaskFactory)
-    : PropertyChangedUpdater, INavigationService
+public class NavigationService(Func<Type, EngineTask> engineTaskFactory) : PropertyChangedUpdater, INavigationService
 {
     #region Properties
 
-    public BaseViewModel ActivePage
+    public Frame? TopFrame
     {
         get;
         set => SetField(ref field, value);
-    } = null!;
+    }
 
-    public BaseViewModel TopBar
+    public Frame? ActiveFrame
     {
         get;
         set => SetField(ref field, value);
-    } = null!;
+    }
 
     #endregion
 
     #region Functions
 
-    public void SetTopBar<T>() where T : BaseViewModel
+    public void SetTopBar<T>() where T : FrameworkElement
     {
-        TopBar = viewModelFactory.Invoke(typeof(T));
+        TopFrame?.Navigate(typeof(T));
     }
 
-    public void NavigateTo<T>() where T : BaseViewModel
+    public void NavigateTo<T>() where T : FrameworkElement
     {
-        ActivePage = viewModelFactory.Invoke(typeof(T));
+        // ActivePage = viewModelFactory.Invoke(typeof(T));
     }
 
     public async void ShowProgressPopup<T>(string? label) where T : EngineTask

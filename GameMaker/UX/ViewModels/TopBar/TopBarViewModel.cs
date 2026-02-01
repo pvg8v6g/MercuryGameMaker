@@ -79,9 +79,11 @@ public class TopBarViewModel : BaseViewModel
 
     protected override void LoadedAction()
     {
+        Console.WriteLine("top bar loaded");
     }
 
     private RelayCommand<string>? _topBarCommand;
+
     public RelayCommand<string> TopBarCommand => _topBarCommand ??= new(TopBarAction);
 
     private void TopBarAction(string index)
