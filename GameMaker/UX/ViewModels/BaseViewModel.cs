@@ -1,5 +1,6 @@
 ﻿using GameLibrary.Commands;
 using GameLibrary.Models;
+using MercuryLibrary.WinUI3Components;
 
 namespace GameMaker.UX.ViewModels;
 
@@ -13,7 +14,8 @@ public class BaseViewModel : PropertyChangedUpdater
 
     #region Actions
 
-    public RelayCommand LoadedCommand => new(LoadedAction);
+    private RelayCommand? _loadedCommand;
+    public RelayCommand LoadedCommand => _loadedCommand ??= new(LoadedAction);
 
     protected virtual void LoadedAction()
     {

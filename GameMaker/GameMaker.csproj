@@ -21,16 +21,18 @@
         <WindowsSdkPackageVersion>10.0.26100.38</WindowsSdkPackageVersion>
         <WindowsPackageType>None</WindowsPackageType>
         <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
+        <ApplicationIcon>Graphics\ico\app.ico</ApplicationIcon>
         <DISABLE_XAML_GENERATED_MAIN>true</DISABLE_XAML_GENERATED_MAIN>
         <EnableDefaultPageItems>false</EnableDefaultPageItems>
         <EnableDefaultApplicationDefinitionItems>false</EnableDefaultApplicationDefinitionItems>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2"/>
         <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.241114003"/>
         <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742"/>
         <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9"/>
+        <PackageReference Include="MercuryLibrary" Version="1.0.0"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -48,6 +50,19 @@
             <Generator>MSBuild:Compile</Generator>
             <XamlRuntime>WinUI</XamlRuntime>
         </Page>
+        <Page Include="UX\Resources\ApplicationResources.xaml"/>
+        <Page Include="UX\Views\Popups\Progress\ProgressPopup.xaml"/>
+        <Page Include="UX\Views\TopBar\TopBar.xaml"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Content Include="Graphics\**">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <MauiXaml Include="UX\Resources\IconButtonResources.xaml" />
     </ItemGroup>
 
 </Project>

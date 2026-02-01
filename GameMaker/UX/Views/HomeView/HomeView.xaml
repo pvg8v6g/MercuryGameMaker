@@ -5,11 +5,22 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:homeView="using:GameMaker.UX.ViewModels.HomeView"
              xmlns:behaviors="using:GameLibrary.Behaviors"
+             xmlns:ux="using:GameMaker.UX"
+             xmlns:topBar="using:GameMaker.UX.Views.TopBar"
              mc:Ignorable="d"
              d:DesignHeight="300" d:DesignWidth="300"
              d:DataContext="{d:DesignInstance homeView:HomeViewViewModel}"
              behaviors:LoadedBehavior.LoadedCommand="{Binding LoadedCommand}">
-  <StackPanel>
-    <TextBlock Text="Hello from MercuryBlendMode Library!" FontSize="24" HorizontalAlignment="Center" />
-  </StackPanel>
+  <Grid>
+    <Grid.Resources>
+        <ux:ViewLocator x:Key="ViewLocator" />
+    </Grid.Resources>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    <ContentControl Content="{Binding NavigationService.TopBar, Converter={StaticResource ViewLocator}}"
+                    HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Stretch" />
+  </Grid>
 </UserControl>

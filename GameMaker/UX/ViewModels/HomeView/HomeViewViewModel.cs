@@ -1,12 +1,23 @@
-﻿namespace GameMaker.UX.ViewModels.HomeView;
+﻿using GameLibrary.Services.Location;
+using GameMaker.Services.Navigation;
+using GameMaker.UX.ViewModels.TopBar;
 
-public class HomeViewViewModel : BaseViewModel
+namespace GameMaker.UX.ViewModels.HomeView;
+
+public class HomeViewViewModel(ILocationService locationService, INavigationService navigationService) : BaseViewModel
 {
+    #region Properties
+
+    public INavigationService NavigationService => navigationService;
+
+    #endregion
+
     #region Actions
 
     protected override void LoadedAction()
     {
-        Console.WriteLine("hello world");
+        navigationService.SetTopBar<TopBarViewModel>();
+        locationService.CreateGameDirectory();
     }
 
     #endregion

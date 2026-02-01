@@ -10,9 +10,12 @@ public class LoadedBehavior
 
     private static void OnLoadedCommandChanged(DependencyObject depObj, DependencyPropertyChangedEventArgs e)
     {
-        if (depObj is FrameworkElement frameworkElement && e.NewValue is ICommand)
+        if (depObj is FrameworkElement frameworkElement && e.NewValue is ICommand command)
         {
-            frameworkElement.Loaded += (_, _) => { (e.NewValue as ICommand)?.Execute(null); };
+            frameworkElement.Loaded += (s, args) =>
+            {
+                command.Execute(null);
+            };
         }
     }
 
