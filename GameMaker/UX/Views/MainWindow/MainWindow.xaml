@@ -7,5 +7,5 @@
         mc:Ignorable="d"
         Title="Mercury Library Demo App">
 
-    <homeView:HomeView />
+  <homeView:HomeView />
 </Window>
