@@ -14,11 +14,12 @@ public class BaseViewModel : PropertyChangedUpdater
 
     #region Actions
 
-    private RelayCommand? _loadedCommand;
-    public RelayCommand LoadedCommand => _loadedCommand ??= new(LoadedAction);
+    private AsyncRelayCommand? _loadedCommand;
+    public AsyncRelayCommand LoadedCommand => _loadedCommand ??= new(LoadedAction);
 
-    protected virtual void LoadedAction()
+    protected virtual Task LoadedAction()
     {
+        return Task.CompletedTask;
     }
 
     #endregion

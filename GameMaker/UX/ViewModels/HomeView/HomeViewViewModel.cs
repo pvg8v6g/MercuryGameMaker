@@ -1,6 +1,5 @@
 ﻿using GameLibrary.Services.Location;
 using GameMaker.Services.Navigation;
-using GameMaker.UX.ViewModels.TopBar;
 
 namespace GameMaker.UX.ViewModels.HomeView;
 
@@ -14,10 +13,16 @@ public class HomeViewViewModel(ILocationService locationService, INavigationServ
 
     #region Actions
 
-    protected override void LoadedAction()
+    protected override Task LoadedAction()
     {
-        navigationService.SetTopBar<Views.TopBar.TopBar>();
+        NavigationService.SetTopBar<Views.TopBar.TopBar>();
         locationService.CreateGameDirectory();
+
+        var appDirectory = AppContext.BaseDirectory;
+        var gameMakerGraphicsPath = Path.Combine(appDirectory, "Graphics");
+        locationService.SetGameMakerGraphicsDirectory(gameMakerGraphicsPath);
+
+        return Task.CompletedTask;
     }
 
     #endregion

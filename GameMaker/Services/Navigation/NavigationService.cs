@@ -2,8 +2,8 @@
 using GameMaker.UX.Views.MainWindow;
 using GameMaker.UX.Views.Popups.Progress;
 using MercuryLibrary.WinUI3Components;
-using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml;
 
 namespace GameMaker.Services.Navigation;
 
@@ -27,12 +27,12 @@ public class NavigationService(Func<Type, EngineTask> engineTaskFactory) : Prope
 
     #region Functions
 
-    public void SetTopBar<T>() where T : FrameworkElement
+    public void SetTopBar<T>() where T : Page
     {
         TopFrame?.Navigate(typeof(T));
     }
 
-    public void NavigateTo<T>() where T : FrameworkElement
+    public void NavigateTo<T>() where T : Page
     {
         // ActivePage = viewModelFactory.Invoke(typeof(T));
     }

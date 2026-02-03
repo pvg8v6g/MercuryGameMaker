@@ -15,7 +15,7 @@
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
     <Frame x:Name="TopBarFrame" />
-    <Frame x:Name="ActiveFrame" />
+    <Frame Grid.Row="1" x:Name="ActiveFrame" />
   </Grid>
   <!-- <Grid> -->
   <!--   <Grid.Resources> -->

@@ -1,90 +1,127 @@
-﻿using GameLibrary.Commands;
+﻿using System.Collections.ObjectModel;
+using Windows.Foundation;
+using GameLibrary.Commands;
+using GameLibrary.Models;
+using GameLibrary.Services.Graphics;
+using GameLibrary.Services.Location;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace GameMaker.UX.ViewModels.TopBar;
 
-public class TopBarViewModel : BaseViewModel
+public class TopBarViewModel(IGraphicsService graphicsService, ILocationService locationService) : BaseViewModel
 {
     #region Properties
 
-    public BitmapSource? MainImage
+    public Canvas? TestImage
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public BitmapSource? ActorsImage
+    public BitmapImage? MainImage
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public BitmapSource? DisciplinesImage
+    public BitmapImage? ActorsImage
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public BitmapSource? ArtesImage
+    public BitmapImage? DisciplinesImage
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public BitmapSource? ItemsImage
+    public BitmapImage? ArtesImage
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public BitmapSource? EquipmentImage
+    public BitmapImage? ItemsImage
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public BitmapSource? EnemiesImage
+    public BitmapImage? EquipmentImage
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public BitmapSource? TroopsImage
+    public BitmapImage? EnemiesImage
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public BitmapSource? StatesImage
+    public BitmapImage? TroopsImage
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public BitmapSource? AnimationsImage
+    public BitmapImage? StatesImage
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public BitmapSource? SettingsImage
+    public BitmapImage? AnimationsImage
     {
         get;
         set => SetField(ref field, value);
     }
+
+    public BitmapImage? SettingsImage
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public ObservableCollection<EngineImage> EngineImages
+    {
+        get;
+        set => SetField(ref field, value);
+    } = [];
 
     #endregion
 
     #region Actions
 
-    protected override void LoadedAction()
+    protected override async Task LoadedAction()
     {
-        Console.WriteLine("top bar loaded");
+        EngineImages =
+        [
+            new EngineImage
+            {
+                ImageSource = Path.Combine(locationService.GameMakerGraphicsDirectory!, "Icons.png"),
+                Rect = new Rect(0, 0, 48, 48)
+            }
+        ];
+        // TestImage = await graphicsService.GetEngineIconImproved(1);
+        // var filePath = Path.Combine(AppContext.BaseDirectory, "Graphics", "Icons.png");
+        // var uri = new Uri(filePath, UriKind.Absolute);
+        // var bi = await graphicsService.GetEngineIcon(0);
+        // var bi = new BitmapImage(uri);
+        //
+        // bi.ImageOpened += (s, e) => { Console.WriteLine("opened"); };
+
+        // var tcs = new TaskCompletionSource<bool>();
+        // bi.ImageOpened += (s, e) => tcs.SetResult(true);
+        // bi.ImageFailed += (s, e) => tcs.SetResult(false);
+        // await tcs.Task;
+
+        // TestUri = bi;
     }
 
-    private RelayCommand<string>? _topBarCommand;
-
-    public RelayCommand<string> TopBarCommand => _topBarCommand ??= new(TopBarAction);
+    public RelayCommand<string> TopBarCommand => new(TopBarAction);
 
     private void TopBarAction(string index)
     {

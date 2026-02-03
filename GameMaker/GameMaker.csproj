@@ -33,6 +33,7 @@
         <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742"/>
         <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9"/>
         <PackageReference Include="MercuryLibrary" Version="1.0.0"/>
+        <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.3.0" />
     </ItemGroup>
 
     <ItemGroup>
@@ -51,6 +52,7 @@
             <XamlRuntime>WinUI</XamlRuntime>
         </Page>
         <Page Include="UX\Resources\ApplicationResources.xaml"/>
+        <Page Include="UX\Resources\IconButtonResources.xaml"/>
         <Page Include="UX\Views\Popups\Progress\ProgressPopup.xaml"/>
         <Page Include="UX\Views\TopBar\TopBar.xaml"/>
     </ItemGroup>
@@ -61,8 +63,5 @@
         </Content>
     </ItemGroup>
 
-    <ItemGroup>
-      <MauiXaml Include="UX\Resources\IconButtonResources.xaml" />
-    </ItemGroup>
 
 </Project>

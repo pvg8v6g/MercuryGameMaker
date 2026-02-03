@@ -6,5 +6,9 @@ public interface ILocationService
 
     public string? GraphicsDirectory { get; }
 
+    public string? GameMakerGraphicsDirectory { get; }
+
     void CreateGameDirectory();
+
+    void SetGameMakerGraphicsDirectory(string path);
 }

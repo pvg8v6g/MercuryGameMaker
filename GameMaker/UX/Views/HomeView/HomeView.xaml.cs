@@ -11,8 +11,12 @@ public partial class HomeView
     {
         InitializeComponent();
         ViewModel = AppMain.App.Services!.GetRequiredService<HomeViewViewModel>();
-        ViewModel.NavigationService.TopFrame = TopBarFrame;
-        ViewModel.NavigationService.ActiveFrame = ActiveFrame;
         DataContext = ViewModel;
+
+        Loaded += (s, e) =>
+        {
+            ViewModel.NavigationService.TopFrame = TopBarFrame;
+            ViewModel.NavigationService.ActiveFrame = ActiveFrame;
+        };
     }
 }

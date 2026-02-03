@@ -1,5 +1,7 @@
-﻿using Microsoft.UI.Xaml;
+﻿using Windows.UI;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
 
@@ -9,8 +11,8 @@ public class ToggleIconButton : RadioButton
 {
     #region Registration
 
-    public static readonly DependencyProperty BitmapSourceProperty = DependencyProperty.Register(
-        nameof(BitmapSource), typeof(ImageSource), typeof(ToggleIconButton),
+    public static readonly DependencyProperty ImageProperty = DependencyProperty.Register(
+        nameof(Image), typeof(ImageSource), typeof(ToggleIconButton),
         new PropertyMetadata(null, OnBitmapSourcePropertyChanged));
 
     #endregion
@@ -31,10 +33,10 @@ public class ToggleIconButton : RadioButton
 
     public int ToolTipInitialDelay { get; set; }
 
-    public ImageSource BitmapSource
+    public ImageSource? Image
     {
-        get => (GetValue(BitmapSourceProperty) as ImageSource)!;
-        set { SetValue(BitmapSourceProperty, value); }
+        get => GetValue(ImageProperty) as ImageSource;
+        set { SetValue(ImageProperty, value); }
     }
 
     public new CornerRadius CornerRadius
@@ -90,6 +92,47 @@ public class ToggleIconButton : RadioButton
         _border.Width = 0;
         _border.Height = 0;
         Content = _border;
+
+        Loaded += OnLoaded;
+        PointerEntered += OnPointerEntered;
+        PointerExited += OnPointerExited;
+        Checked += OnCheckedChanged;
+        Unchecked += OnCheckedChanged;
+    }
+
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        UpdateBorderBrush();
+    }
+
+    private void OnPointerEntered(object sender, PointerRoutedEventArgs e)
+    {
+        if (!IsChecked.GetValueOrDefault())
+        {
+            _border.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 218, 218, 218)); // LightGrey
+        }
+    }
+
+    private void OnPointerExited(object sender, PointerRoutedEventArgs e)
+    {
+        UpdateBorderBrush();
+    }
+
+    private void OnCheckedChanged(object sender, RoutedEventArgs e)
+    {
+        UpdateBorderBrush();
+    }
+
+    private void UpdateBorderBrush()
+    {
+        if (IsChecked.GetValueOrDefault())
+        {
+            _border.BorderBrush = new SolidColorBrush(Color.FromArgb(255, 171, 9, 8)); // Red
+        }
+        else
+        {
+            _border.BorderBrush = _solidBorderBrush;
+        }
     }
 
     #endregion

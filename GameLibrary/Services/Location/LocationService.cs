@@ -8,6 +8,8 @@ public class LocationService : ILocationService
 
     public string? GraphicsDirectory { get; private set; }
 
+    public string? GameMakerGraphicsDirectory { get; private set; }
+
     #endregion
 
     #region Create Game Directory
@@ -47,6 +49,15 @@ public class LocationService : ILocationService
         Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Faces"));
         Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Icons"));
         Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Maps"));
+    }
+
+    #endregion
+
+    #region Set GameMaker Graphics Directory
+
+    public void SetGameMakerGraphicsDirectory(string path)
+    {
+        GameMakerGraphicsDirectory = path;
     }
 
     #endregion

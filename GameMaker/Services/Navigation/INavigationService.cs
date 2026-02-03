@@ -11,9 +11,9 @@ public interface INavigationService
 
     Frame? ActiveFrame { get; set; }
 
-    void SetTopBar<T>() where T : FrameworkElement;
+    void SetTopBar<T>() where T : Page;
 
-    void NavigateTo<T>() where T : FrameworkElement;
+    void NavigateTo<T>() where T : Page;
 
     void ShowProgressPopup<T>(string? label) where T : EngineTask;
 }

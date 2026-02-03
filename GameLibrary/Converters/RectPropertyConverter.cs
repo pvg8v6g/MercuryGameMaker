@@ -1,0 +1,37 @@
+using Microsoft.UI.Xaml.Data;
+using Windows.Foundation;
+
+namespace GameLibrary.Converters;
+
+public class RectPropertyConverter : IValueConverter
+{
+    public enum Property
+    {
+        Width,
+        Height,
+        Rect
+    }
+
+    public Property PropertyToExtract { get; set; }
+
+    public object Convert(object value, Type targetType, object parameter, string language)
+    {
+        if (value is Rect rect)
+        {
+            return PropertyToExtract switch
+            {
+                Property.Width => rect.Width,
+                Property.Height => rect.Height,
+                Property.Rect => rect,
+                _ => 0.0
+            };
+        }
+
+        return PropertyToExtract == Property.Rect ? new Rect(0, 0, 0, 0) : 0.0;
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    {
+        throw new NotImplementedException();
+    }
+}

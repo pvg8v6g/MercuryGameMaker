@@ -1,4 +1,5 @@
-﻿using GameLibrary.Services.Location;
+﻿using GameLibrary.Services.Graphics;
+using GameLibrary.Services.Location;
 using GameMaker.Services.Navigation;
 using GameMaker.Tasks;
 using GameMaker.UX.ViewModels;
@@ -47,6 +48,7 @@ public partial class App
         services.AddSingleton<Func<Type, EngineTask>>(provider => taskType => (EngineTask) provider.GetRequiredService(taskType));
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<ILocationService, LocationService>();
+        services.AddSingleton<IGraphicsService, GraphicsService>();
 
         #endregion
 
