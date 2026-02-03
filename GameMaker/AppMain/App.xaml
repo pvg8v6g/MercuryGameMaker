@@ -7,7 +7,6 @@
       <ResourceDictionary.MergedDictionaries>
         <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
         <ResourceDictionary Source="ms-appx:///UX/Resources/ApplicationResources.xaml" />
-        <ResourceDictionary Source="ms-appx:///UX/Resources/IconButtonResources.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
     </ResourceDictionary>

@@ -52,7 +52,6 @@
             <XamlRuntime>WinUI</XamlRuntime>
         </Page>
         <Page Include="UX\Resources\ApplicationResources.xaml"/>
-        <Page Include="UX\Resources\IconButtonResources.xaml"/>
         <Page Include="UX\Views\Popups\Progress\ProgressPopup.xaml"/>
         <Page Include="UX\Views\TopBar\TopBar.xaml"/>
     </ItemGroup>
