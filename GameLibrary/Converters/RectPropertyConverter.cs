@@ -9,7 +9,12 @@ public class RectPropertyConverter : IValueConverter
     {
         Width,
         Height,
-        Rect
+        Rect,
+        X,
+        Y,
+        NegativeX,
+        NegativeY,
+        NormalizedRect
     }
 
     public Property PropertyToExtract { get; set; }
@@ -23,6 +28,11 @@ public class RectPropertyConverter : IValueConverter
                 Property.Width => rect.Width,
                 Property.Height => rect.Height,
                 Property.Rect => rect,
+                Property.X => rect.X,
+                Property.Y => rect.Y,
+                Property.NegativeX => -rect.X,
+                Property.NegativeY => -rect.Y,
+                Property.NormalizedRect => new Rect(0, 0, rect.Width, rect.Height),
                 _ => 0.0
             };
         }

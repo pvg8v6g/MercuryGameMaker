@@ -3,7 +3,6 @@ using GameMaker.UX.Views.MainWindow;
 using GameMaker.UX.Views.Popups.Progress;
 using MercuryLibrary.WinUI3Components;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml;
 
 namespace GameMaker.Services.Navigation;
 
@@ -34,7 +33,8 @@ public class NavigationService(Func<Type, EngineTask> engineTaskFactory) : Prope
 
     public void NavigateTo<T>() where T : Page
     {
-        // ActivePage = viewModelFactory.Invoke(typeof(T));
+        if (ActiveFrame?.Content is T) return;
+        ActiveFrame?.Navigate(typeof(T));
     }
 
     public async void ShowProgressPopup<T>(string? label) where T : EngineTask

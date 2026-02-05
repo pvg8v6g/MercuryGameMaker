@@ -8,6 +8,12 @@
   <converters:RectPropertyConverter x:Key="RectWidthConverter" PropertyToExtract="Width" />
   <converters:RectPropertyConverter x:Key="RectHeightConverter" PropertyToExtract="Height" />
   <converters:RectPropertyConverter x:Key="RectValueConverter" PropertyToExtract="Rect" />
+  <converters:RectPropertyConverter x:Key="RectXConverter" PropertyToExtract="X" />
+  <converters:RectPropertyConverter x:Key="RectYConverter" PropertyToExtract="Y" />
+  <converters:RectPropertyConverter x:Key="RectNegativeXConverter" PropertyToExtract="NegativeX" />
+  <converters:RectPropertyConverter x:Key="RectNegativeYConverter" PropertyToExtract="NegativeY" />
+  <converters:RectPropertyConverter x:Key="RectNormalizedConverter" PropertyToExtract="NormalizedRect" />
+  <converters:NegateConverter x:Key="NegateConverter" />
 
   <Color x:Key="WhiteColor">#FBFBFB</Color>
   <Color x:Key="BlackColor">#050505</Color>
@@ -21,6 +27,11 @@
   <Color x:Key="PrimaryColor">#373737</Color>
   <Color x:Key="SecondaryColor">#5E5E5E</Color>
   <Color x:Key="TertiaryColor">#CBCBCB</Color>
+
+  <Color x:Key="DarkPinkColor">#630322</Color>
+  <Color x:Key="MediumPinkColor">#e70756</Color>
+  <Color x:Key="LightPinkColor">#f18eaf</Color>
+
   <SolidColorBrush x:Key="WhiteBrush"
                    Color="{StaticResource WhiteColor}" />
   <SolidColorBrush x:Key="BlackBrush"
@@ -37,6 +48,12 @@
                    Color="{StaticResource LightYellowColor}" />
   <SolidColorBrush x:Key="RedBrush"
                    Color="{StaticResource RedColor}" />
+  <SolidColorBrush x:Key="DarkPinkBrush"
+                   Color="{StaticResource DarkPinkColor}" />
+  <SolidColorBrush x:Key="MediumPinkBrush"
+                   Color="{StaticResource MediumPinkColor}" />
+  <SolidColorBrush x:Key="LightPinkBrush"
+                   Color="{StaticResource LightPinkColor}" />
   <SolidColorBrush x:Key="PrimaryBrush"
                    Color="{StaticResource PrimaryColor}" />
   <SolidColorBrush x:Key="SecondaryBrush"

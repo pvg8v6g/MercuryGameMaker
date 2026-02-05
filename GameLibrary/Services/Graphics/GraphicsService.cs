@@ -2,50 +2,28 @@
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using GameLibrary.Services.Location;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Imaging;
-using Windows.UI;
-using Microsoft.Graphics.Canvas;
-using Microsoft.Graphics.Canvas.UI.Xaml;
-using Microsoft.UI;
 
 namespace GameLibrary.Services.Graphics;
 
-public class GraphicsService : IGraphicsService
+public class GraphicsService(ILocationService locationService) : IGraphicsService
 {
-    #region Fields
-
-    private readonly ILocationService locationService;
-    private readonly CanvasDevice? _canvasDevice;
-    private CanvasBitmap? _iconSpriteSheet;
-
-    #endregion
-
-    #region Constructor
-
-    public GraphicsService(ILocationService locationService)
-    {
-        this.locationService = locationService;
-        _canvasDevice = CanvasDevice.GetSharedDevice();
-    }
-
-    #endregion
-
     #region Icon
 
-    // public static Image getEngineIcon() {
-    //     if (engineIcons == null) engineIcons = new Image(LocationService.engineLocation + "/Icons/Icons.png");
-    //     return engineIcons;
-    // }
-    //
-    // public static Rectangle2D getEngineIconViewport(Image image, int index) {
-    //     var w = image.getWidth() / 48.0;
-    //     return new Rectangle2D(((int) (index % w)) * 48.0, ((int) (index / w)) * 48.0, 48.0, 48.0);
-    // }
+    public string GetEngineIconPath()
+    {
+        return Path.Combine(locationService.GameMakerGraphicsDirectory!, "Icons.png");
+    }
 
-    // public async Task<Image> GetEngineIcon(int index)
+    public async Task<Rect> GetEngineIconViewport(int index)
+    {
+        var imagePath = GetEngineIconPath();
+        var dimensions = await GetImageDimensions(imagePath);
+        var w = dimensions.width / 48.0;
+        return new Rect(((int) (index % w)) * 48.0, ((int) (index / w)) * 48.0, 48.0, 48.0);
+    }
+
+    // public async Task<Canvas> GetEngineIconImproved(int index)
     // {
     //     var imagePath = Path.Combine(locationService.GameMakerGraphicsDirectory!, "Icons.png");
     //     var dimensions = await GetImageDimensions(imagePath);
@@ -55,93 +33,42 @@ public class GraphicsService : IGraphicsService
     //     var y = ((int) (index / width)) * 48.0;
     //
     //     var bitmapImage = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
-    //     var image = new Image
-    //     {
-    //         Source = bitmapImage,
-    //         Width = dimensions.width, // Full sprite sheet width
-    //         Height = dimensions.height, // Full sprite sheet height
-    //         // Margin = new Thickness(-x, -y, 0, 0),
-    //         // HorizontalAlignment = HorizontalAlignment.Left,
-    //         // VerticalAlignment = VerticalAlignment.Top,
-    //         Stretch = Stretch.None
-    //     };
+    //     var image = new Image { Source = bitmapImage };
     //
-    //     // var grid = new Grid
-    //     // {
-    //     //     Width = 48,
-    //     //     Height = 48,
-    //     //     Clip = new RectangleGeometry
-    //     //     {
-    //     //         Rect = new Rect(0, 0, 48, 48)
-    //     //     }
-    //     // };
-    //     //
-    //     // grid.Children.Add(image);
+    //     var clip = new RectangleGeometry { Rect = new Rect(x, y, 48, 48) };
     //
-    //     return image; // var image = new Image
-    //     // {
-    //     //     Source = bitmapImage,
-    //     //     Margin = new Thickness(-x, -y, 0, 0),
-    //     //     HorizontalAlignment = HorizontalAlignment.Left,
-    //     //     VerticalAlignment = VerticalAlignment.Top
-    //     // };
-    //     //
-    //     // var grid = new Grid
-    //     // {
-    //     //     Width = 48,
-    //     //     Height = 48,
-    //     //     Children = { image }
-    //     // };
-    //     //
-    //     // return grid;
+    //     return new Canvas { Width = 48, Height = 48, Clip = clip, Children = { image } };
     // }
-
-    public async Task<Canvas> GetEngineIconImproved(int index)
-    {
-        var imagePath = Path.Combine(locationService.GameMakerGraphicsDirectory!, "Icons.png");
-        var dimensions = await GetImageDimensions(imagePath);
-
-        var width = dimensions.width / 48.0;
-        var x = ((int) (index % width)) * 48.0;
-        var y = ((int) (index / width)) * 48.0;
-
-        var bitmapImage = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
-        var image = new Image { Source = bitmapImage };
-
-        var clip = new RectangleGeometry { Rect = new Rect(x, y, 48, 48) };
-
-        return new Canvas { Width = 48, Height = 48, Clip = clip, Children = { image } };
-    }
-
-    public async Task<CanvasImageSource> GetEngineIcon(int index)
-    {
-        // Load sprite sheet once and cache it
-        if (_iconSpriteSheet == null)
-        {
-            var imagePath = Path.Combine(locationService.GameMakerGraphicsDirectory!, "Icons.png");
-            _iconSpriteSheet = await CanvasBitmap.LoadAsync(_canvasDevice, imagePath);
-        }
-
-        // Calculate sprite position
-        var width = _iconSpriteSheet.SizeInPixels.Width / 48.0;
-        var x = ((int) (index % width)) * 48;
-        var y = ((int) (index / width)) * 48;
-
-        // Create a 48x48 image source
-        var imageSource = new CanvasImageSource(_canvasDevice, 48, 48, 96);
-
-        // Draw the specific sprite
-        using var ds = imageSource.CreateDrawingSession(Colors.Transparent);
-        ds.DrawImage(
-            _iconSpriteSheet,
-            new Rect(0, 0, 48, 48),
-            new Rect(x, y, 48, 48),
-            1.0f,
-            CanvasImageInterpolation.NearestNeighbor
-        );
-
-        return imageSource;
-    }
+    //
+    // public async Task<CanvasImageSource> GetEngineIcon(int index)
+    // {
+    //     // Load sprite sheet once and cache it
+    //     if (_iconSpriteSheet == null)
+    //     {
+    //         var imagePath = Path.Combine(locationService.GameMakerGraphicsDirectory!, "Icons.png");
+    //         _iconSpriteSheet = await CanvasBitmap.LoadAsync(_canvasDevice, imagePath);
+    //     }
+    //
+    //     // Calculate sprite position
+    //     var width = _iconSpriteSheet.SizeInPixels.Width / 48.0;
+    //     var x = ((int) (index % width)) * 48;
+    //     var y = ((int) (index / width)) * 48;
+    //
+    //     // Create a 48x48 image source
+    //     var imageSource = new CanvasImageSource(_canvasDevice, 48, 48, 96);
+    //
+    //     // Draw the specific sprite
+    //     using var ds = imageSource.CreateDrawingSession(Colors.Transparent);
+    //     ds.DrawImage(
+    //         _iconSpriteSheet,
+    //         new Rect(0, 0, 48, 48),
+    //         new Rect(x, y, 48, 48),
+    //         1.0f,
+    //         CanvasImageInterpolation.NearestNeighbor
+    //     );
+    //
+    //     return imageSource;
+    // }
 
     #endregion
 

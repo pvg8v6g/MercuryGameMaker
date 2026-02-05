@@ -1,0 +1,14 @@
+﻿<Page x:Class="GameMaker.UX.Views.ActorsPage.ActorsPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:actorsPage="using:GameMaker.UX.ViewModels.ActorsPage"
+      xmlns:behaviors="using:GameLibrary.Behaviors"
+      mc:Ignorable="d"
+      d:DataContext="{d:DesignInstance actorsPage:ActorsPageViewModel}"
+      behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
+  <Grid>
+    <TextBlock Text="Hello World" />
+  </Grid>
+</Page>

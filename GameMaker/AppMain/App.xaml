@@ -7,6 +7,9 @@
       <ResourceDictionary.MergedDictionaries>
         <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
         <ResourceDictionary Source="ms-appx:///UX/Resources/ApplicationResources.xaml" />
+        <ResourceDictionary Source="ms-appx:///UX/Resources/ImageRadioButtonResource.xaml" />
+        <ResourceDictionary Source="ms-appx:///UX/Resources/ImageButtonResource.xaml" />
+        <ResourceDictionary Source="ms-appx:///UX/Resources/ToolTipResource.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
     </ResourceDictionary>

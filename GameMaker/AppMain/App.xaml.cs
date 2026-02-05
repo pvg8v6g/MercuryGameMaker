@@ -3,8 +3,10 @@ using GameLibrary.Services.Location;
 using GameMaker.Services.Navigation;
 using GameMaker.Tasks;
 using GameMaker.UX.ViewModels;
+using GameMaker.UX.ViewModels.ActorsPage;
 using GameMaker.UX.ViewModels.HomeView;
 using GameMaker.UX.ViewModels.TopBar;
+using GameMaker.UX.Views.ActorsPage;
 using GameMaker.UX.Views.HomeView;
 using GameMaker.UX.Views.MainWindow;
 using GameMaker.UX.Views.TopBar;
@@ -31,6 +33,7 @@ public partial class App
 
         services.AddSingleton<TopBarViewModel>();
         services.AddSingleton<HomeViewViewModel>();
+        services.AddSingleton<ActorsPageViewModel>();
 
         #endregion
 
@@ -39,6 +42,7 @@ public partial class App
         services.AddSingleton<MainWindow>();
         services.AddSingleton<HomeView>();
         services.AddSingleton<TopBar>();
+        services.AddSingleton<ActorsPage>();
 
         #endregion
 

@@ -33,7 +33,7 @@
         <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742"/>
         <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9"/>
         <PackageReference Include="MercuryLibrary" Version="1.0.0"/>
-        <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.3.0" />
+        <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.3.0"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -46,14 +46,9 @@
             <XamlRuntime>WinUI</XamlRuntime>
             <SubType>Designer</SubType>
         </ApplicationDefinition>
-        <Page Include="UX\Views\HomeView\HomeView.xaml"/>
-        <Page Include="UX\Views\MainWindow\MainWindow.xaml">
-            <Generator>MSBuild:Compile</Generator>
-            <XamlRuntime>WinUI</XamlRuntime>
-        </Page>
-        <Page Include="UX\Resources\ApplicationResources.xaml"/>
-        <Page Include="UX\Views\Popups\Progress\ProgressPopup.xaml"/>
-        <Page Include="UX\Views\TopBar\TopBar.xaml"/>
+        <Page Include="UX\Views\**\*.xaml"/>
+        <Page Include="UX\Resources\**\*.xaml"/>
+        <Page Include="UX\Components\**\*.xaml"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -61,6 +56,5 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
-
 
 </Project>
