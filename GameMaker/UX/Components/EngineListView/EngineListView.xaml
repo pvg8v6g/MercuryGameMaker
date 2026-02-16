@@ -1,0 +1,51 @@
+﻿<UserControl x:Class="GameMaker.UX.Components.EngineListView.EngineListView"
+             x:Name="EngineListViewControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:behaviors="using:GameLibrary.Behaviors"
+             xmlns:items="using:GameMaker.UX.Components.EngineListView.Items"
+             xmlns:models="using:GameLibrary.Models"
+             mc:Ignorable="d">
+  <ListView x:Name="ListView"
+            ItemsSource="{x:Bind ItemsSource, Mode=OneWay}"
+            SelectedIndex="{x:Bind SelectedIndex, Mode=TwoWay}"
+            SelectionMode="Single"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Background="{StaticResource MediumGreyBrush}"
+            behaviors:ListViewBehaviors.SelectOnRightClick="True"
+            behaviors:ListViewBehaviors.ManageContextFlyoutSelection="True">
+    <ListView.Resources>
+      <DataTemplate x:Key="DefaultItemTemplate" x:DataType="models:BaseModel">
+        <items:EngineIdNameItem Model="{x:Bind Mode=OneWay}" />
+      </DataTemplate>
+    </ListView.Resources>
+    <ListView.ContextFlyout>
+      <MenuFlyout>
+        <MenuFlyoutItem Text="New" Command="{x:Bind NewCommand, Mode=OneWay}">
+          <MenuFlyoutItem.Icon>
+            <SymbolIcon Symbol="Add" />
+          </MenuFlyoutItem.Icon>
+        </MenuFlyoutItem>
+        <MenuFlyoutItem Text="Copy" Command="{x:Bind CopyCommand, Mode=OneWay}" behaviors:ListViewBehaviors.RequireSelectionForMenuFlyoutItem="True">
+          <MenuFlyoutItem.Icon>
+            <SymbolIcon Symbol="Copy" />
+          </MenuFlyoutItem.Icon>
+        </MenuFlyoutItem>
+        <MenuFlyoutItem Text="Paste" Command="{x:Bind PasteCommand, Mode=OneWay}" IsEnabled="{x:Bind CopiedModel, Mode=OneWay, Converter={StaticResource NullToFalseConverter}}">
+          <MenuFlyoutItem.Icon>
+            <SymbolIcon Symbol="Paste" />
+          </MenuFlyoutItem.Icon>
+        </MenuFlyoutItem>
+        <MenuFlyoutSeparator />
+        <MenuFlyoutItem Text="Delete" Command="{x:Bind DeleteCommand, Mode=OneWay}" behaviors:ListViewBehaviors.RequireSelectionForMenuFlyoutItem="True">
+          <MenuFlyoutItem.Icon>
+            <SymbolIcon Symbol="Delete" />
+          </MenuFlyoutItem.Icon>
+        </MenuFlyoutItem>
+      </MenuFlyout>
+    </ListView.ContextFlyout>
+  </ListView>
+</UserControl>
