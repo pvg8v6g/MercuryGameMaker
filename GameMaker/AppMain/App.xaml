@@ -10,6 +10,7 @@
         <ResourceDictionary Source="ms-appx:///UX/Resources/ImageRadioButtonResource.xaml" />
         <ResourceDictionary Source="ms-appx:///UX/Resources/ImageButtonResource.xaml" />
         <ResourceDictionary Source="ms-appx:///UX/Resources/ToolTipResource.xaml" />
+        <ResourceDictionary Source="ms-appx:///UX/Resources/DefaultResource.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
     </ResourceDictionary>

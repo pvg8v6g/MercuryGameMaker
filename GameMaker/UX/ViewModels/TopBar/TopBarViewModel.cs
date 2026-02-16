@@ -1,8 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using GameLibrary.Commands;
-using GameLibrary.Models;
 using GameLibrary.Services.Graphics;
+using GameLibrary.Utilities.ComponentModels;
 using GameMaker.Services.Navigation;
+using GameMaker.UX.Components.EngineRadioIcon;
 
 namespace GameMaker.UX.ViewModels.TopBar;
 
@@ -10,13 +11,19 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
 {
     #region Properties
 
-    public ObservableCollection<TopBarModel> EngineImages
+    public ObservableCollection<EngineRadioIconModel> EngineImages
     {
         get;
         set => SetField(ref field, value);
     } = [];
 
-    public TopBarModel? SaveImage
+    public EngineRadioIconModel? MediaImage
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public EngineRadioIconModel? SaveImage
     {
         get;
         set => SetField(ref field, value);
@@ -29,140 +36,158 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
     protected override async Task LoadedAction()
     {
         var engineIconPath = graphicsService.GetEngineIconPath();
-        SaveImage = new TopBarModel
+
+        MediaImage = new EngineRadioIconModel
+        {
+            CroppedImage = new CroppedImage
+            {
+                ImageSource = engineIconPath,
+                Rect = await graphicsService.GetEngineIconViewport(15)
+            },
+            CommandIndex = "11",
+            Tooltip = "Media"
+        };
+
+        SaveImage = new EngineRadioIconModel
         {
             CroppedImage = new CroppedImage
             {
                 ImageSource = engineIconPath,
                 Rect = await graphicsService.GetEngineIconViewport(11)
             },
-            CommandIndex = "11",
+            CommandIndex = "12",
             Tooltip = "Save"
         };
-        EngineImages =
+
+        EngineRadioIconModel[] buttonIcons =
         [
-            new TopBarModel
+            new()
             {
                 CroppedImage = new CroppedImage
                 {
                     ImageSource = engineIconPath,
-                    Rect = await graphicsService.GetEngineIconViewport(0)
                 },
                 IsChecked = true,
                 CommandIndex = "0",
                 Tooltip = "Main"
             },
-            new TopBarModel
+            new()
             {
                 CroppedImage = new CroppedImage
                 {
                     ImageSource = engineIconPath,
-                    Rect = await graphicsService.GetEngineIconViewport(1)
                 },
                 IsChecked = false,
                 CommandIndex = "1",
                 Tooltip = "Actors"
             },
-            new TopBarModel
+            new()
             {
                 CroppedImage = new CroppedImage
                 {
                     ImageSource = engineIconPath,
-                    Rect = await graphicsService.GetEngineIconViewport(2)
                 },
                 IsChecked = false,
                 CommandIndex = "2",
                 Tooltip = "Disciplines"
             },
-            new TopBarModel
+            new()
             {
                 CroppedImage = new CroppedImage
                 {
                     ImageSource = engineIconPath,
-                    Rect = await graphicsService.GetEngineIconViewport(3)
                 },
                 IsChecked = false,
                 CommandIndex = "3",
                 Tooltip = "Artes"
             },
-            new TopBarModel
+            new()
             {
                 CroppedImage = new CroppedImage
                 {
                     ImageSource = engineIconPath,
-                    Rect = await graphicsService.GetEngineIconViewport(4)
                 },
                 IsChecked = false,
                 CommandIndex = "4",
                 Tooltip = "Items"
             },
-            new TopBarModel
+            new()
             {
                 CroppedImage = new CroppedImage
                 {
                     ImageSource = engineIconPath,
-                    Rect = await graphicsService.GetEngineIconViewport(5)
                 },
                 IsChecked = false,
                 CommandIndex = "5",
                 Tooltip = "Equipment"
             },
-            new TopBarModel
+            new()
             {
                 CroppedImage = new CroppedImage
                 {
                     ImageSource = engineIconPath,
-                    Rect = await graphicsService.GetEngineIconViewport(6)
                 },
                 IsChecked = false,
                 CommandIndex = "6",
                 Tooltip = "Enemies"
             },
-            new TopBarModel
+            new()
             {
                 CroppedImage = new CroppedImage
                 {
                     ImageSource = engineIconPath,
-                    Rect = await graphicsService.GetEngineIconViewport(7)
                 },
                 IsChecked = false,
                 CommandIndex = "7",
                 Tooltip = "Troops"
             },
-            new TopBarModel
+            new()
             {
                 CroppedImage = new CroppedImage
                 {
                     ImageSource = engineIconPath,
-                    Rect = await graphicsService.GetEngineIconViewport(8)
                 },
                 IsChecked = false,
                 CommandIndex = "8",
                 Tooltip = "States"
             },
-            new TopBarModel
+            new()
             {
                 CroppedImage = new CroppedImage
                 {
                     ImageSource = engineIconPath,
-                    Rect = await graphicsService.GetEngineIconViewport(9)
                 },
                 IsChecked = false,
                 CommandIndex = "9",
                 Tooltip = "Animations"
             },
-            new TopBarModel
+            new()
             {
                 CroppedImage = new CroppedImage
                 {
                     ImageSource = engineIconPath,
-                    Rect = await graphicsService.GetEngineIconViewport(10)
                 },
                 IsChecked = false,
                 CommandIndex = "10",
-                Tooltip = "Settings"
+                Tooltip = "Settings",
+                MenuItems =
+                [
+                    new MenuItemModel { Header = "Attributes", CommandIndex = "10.1" },
+                    new MenuItemModel { Header = "Elements", CommandIndex = "10.2" },
+                    new MenuItemModel { Header = "Growths", CommandIndex = "10.3" },
+                ]
             }
         ];
+
+        var tasks = buttonIcons
+            .Select(async (x, i) =>
+            {
+                x.CroppedImage?.Rect = await graphicsService.GetEngineIconViewport(i);
+                return x;
+            })
+            .ToArray();
+
+        EngineImages = new ObservableCollection<EngineRadioIconModel>(await Task.WhenAll(tasks));
     }
 
     public RelayCommand<string> TopBarCommand => new(TopBarAction);
@@ -192,9 +217,19 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
                 break;
             case "9":
                 break;
-            case "10":
+            case "10.1":
+                EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;
+                navigationService.NavigateTo<Views.AttributesPage.AttributesPage>();
                 break;
-            case "11": // saving
+            case "10.2":
+                EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;
+                break;
+            case "10.3":
+                EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;
+                break;
+            case "11": // media
+                break;
+            case "12": // saving
                 // navigationService.ShowProgressPopup<SaveProjectDataTask>("Saving Project Files");
                 break;
         }

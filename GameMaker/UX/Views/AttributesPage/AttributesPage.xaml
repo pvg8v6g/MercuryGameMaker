@@ -1,0 +1,32 @@
+﻿<Page x:Class="GameMaker.UX.Views.AttributesPage.AttributesPage"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:attributesPage="using:GameMaker.UX.ViewModels.AttributesPage"
+      xmlns:behaviors="using:GameLibrary.Behaviors"
+      xmlns:engineListView="using:GameMaker.UX.Components.EngineListView"
+      xmlns:enginePanel="using:GameMaker.UX.Components.EnginePanel"
+      mc:Ignorable="d"
+      d:DataContext="{d:DesignInstance attributesPage:AttributesPageViewModel}"
+      behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
+  <Grid ColumnSpacing="10" Padding="5">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="300" />
+      <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
+    <engineListView:EngineListView ItemsSource="{x:Bind ViewModel.GameDataService.Attributes}"
+                                   SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}"
+                                   NewCommand="{x:Bind ViewModel.NewEntityCommand}"
+                                   CopyCommand="{x:Bind ViewModel.CopyEntityCommand}"
+                                   PasteCommand="{x:Bind ViewModel.PasteEntityCommand}"
+                                   DeleteCommand="{x:Bind ViewModel.DeleteEntityCommand}"
+                                   CopiedModel="{x:Bind ViewModel.CopiedModel, Mode=OneWay}" />
+    <enginePanel:EnginePanel Grid.Column="1" Title="Attribute Details">
+
+    </enginePanel:EnginePanel>
+  </Grid>
+</Page>

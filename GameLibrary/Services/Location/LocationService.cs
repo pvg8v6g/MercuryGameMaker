@@ -1,6 +1,11 @@
-﻿namespace GameLibrary.Services.Location;
+﻿using GameLibrary.Configuration;
+using GameLibrary.Services.Json;
+using Windows.Storage.Pickers;
+using WinRT.Interop;
 
-public class LocationService : ILocationService
+namespace GameLibrary.Services.Location;
+
+public class LocationService(IJsonService jsonService) : ILocationService
 {
     #region Properties
 
@@ -10,13 +15,62 @@ public class LocationService : ILocationService
 
     public string? GameMakerGraphicsDirectory { get; private set; }
 
+    public string? MercuryGameMakerDirectory { get; private set; }
+
     #endregion
 
     #region Create Game Directory
 
-    public void CreateGameDirectory()
+    public void CreateMercuryGameDirectory()
     {
-        GameDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Tale Of Betrayal 1");
+        MercuryGameMakerDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Mercury Game Maker");
+        if (!Directory.Exists(MercuryGameMakerDirectory)) Directory.CreateDirectory(MercuryGameMakerDirectory);
+        var config = new MercuryGameMakerConfiguration();
+        var configPath = Path.Combine(MercuryGameMakerDirectory, "config.json");
+        jsonService.EncryptFile(config, configPath);
+    }
+
+    public async Task CreateGameDirectory()
+    {
+        if (MercuryGameMakerDirectory is null) CreateMercuryGameDirectory();
+        var configPath = Path.Combine(MercuryGameMakerDirectory!, "config.json");
+        var config = jsonService.DecryptFile<MercuryGameMakerConfiguration>(configPath);
+        if (config is null)
+        {
+            ShowErrorMessageAndExit("Config Not Found", "The application will now exit.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(config.GameDirectory))
+        {
+            var picker = new FolderPicker();
+            picker.FileTypeFilter.Add("*");
+            picker.CommitButtonText = "Select Game Directory";
+
+            var mainWindow = Type.GetType("GameMaker.UX.Views.MainWindow.MainWindow, GameMaker")?.GetProperty("Window")?.GetValue(null);
+            if (mainWindow == null) throw new InvalidOperationException("MainWindow not found");
+
+            var hwnd = WindowNative.GetWindowHandle(mainWindow);
+            InitializeWithWindow.Initialize(picker, hwnd);
+
+            var folder = await picker.PickSingleFolderAsync();
+            if (folder is null)
+            {
+                ShowErrorMessageAndExit("Game Directory Required", "A game directory must be chosen. The application will now exit.");
+                return;
+            }
+
+            config.GameDirectory = folder.Path;
+            jsonService.EncryptFile(config, configPath);
+            GameDirectory = config.GameDirectory;
+        }
+
+        if (GameDirectory is null)
+        {
+            ShowErrorMessageAndExit("Game Directory Required", "A game directory must be chosen. The application will now exit.");
+            return;
+        }
+
         GraphicsDirectory = Path.Combine(GameDirectory, "Graphics");
         Directory.CreateDirectory(GameDirectory);
         Directory.CreateDirectory(GraphicsDirectory);
@@ -49,6 +103,20 @@ public class LocationService : ILocationService
         Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Faces"));
         Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Icons"));
         Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Maps"));
+    }
+
+    private void ShowErrorMessageAndExit(string title, string message)
+    {
+        // Using Win32 MessageBox for a reliable "exit" popup from a class library
+        [System.Runtime.InteropServices.DllImport("user32.dll", CharSet = System.Runtime.InteropServices.CharSet.Auto)]
+        static extern int MessageBox(IntPtr hWnd, string text, string caption, uint type);
+
+        var mainWindow = Type.GetType("GameMaker.UX.Views.MainWindow.MainWindow, GameMaker")?.GetProperty("Window")?.GetValue(null);
+        var hwnd = mainWindow != null ? WindowNative.GetWindowHandle(mainWindow) : IntPtr.Zero;
+
+        MessageBox(hwnd, message, title, 0x00000010); // MB_ICONERROR = 0x00000010
+
+        Environment.Exit(0);
     }
 
     #endregion

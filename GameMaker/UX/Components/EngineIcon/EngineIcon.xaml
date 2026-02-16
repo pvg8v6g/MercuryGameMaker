@@ -4,8 +4,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:models="using:GameLibrary.Models"
+             xmlns:componentModels="using:GameLibrary.Utilities.ComponentModels"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance models:CroppedImage}">
+             d:DataContext="{d:DesignInstance componentModels:CroppedImage}">
   <Grid>
     <!-- Template with Rect (clipped Canvas) -->
     <Canvas Width="{Binding Rect, Converter={StaticResource RectWidthConverter}}"

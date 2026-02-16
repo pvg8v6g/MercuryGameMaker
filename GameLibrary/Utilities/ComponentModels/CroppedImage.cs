@@ -1,6 +1,6 @@
 ﻿using Windows.Foundation;
 
-namespace GameLibrary.Models;
+namespace GameLibrary.Utilities.ComponentModels;
 
 public class CroppedImage
 {

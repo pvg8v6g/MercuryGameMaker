@@ -13,16 +13,15 @@ public class HomeViewViewModel(ILocationService locationService, INavigationServ
 
     #region Actions
 
-    protected override Task LoadedAction()
+    protected override async Task LoadedAction()
     {
-        NavigationService.SetTopBar<Views.TopBar.TopBar>();
-        locationService.CreateGameDirectory();
+        locationService.CreateMercuryGameDirectory();
+        await locationService.CreateGameDirectory();
 
         var appDirectory = AppContext.BaseDirectory;
         var gameMakerGraphicsPath = Path.Combine(appDirectory, "Graphics");
         locationService.SetGameMakerGraphicsDirectory(gameMakerGraphicsPath);
-
-        return Task.CompletedTask;
+        NavigationService.SetTopBar<Views.TopBar.TopBar>();
     }
 
     #endregion

@@ -1,12 +1,12 @@
 ﻿<Page x:Class="GameMaker.UX.Views.TopBar.TopBar"
-      x:Name="TopBarPage"
+      x:Name="TopBarControl"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:topBar="using:GameMaker.UX.ViewModels.TopBar"
       xmlns:behaviors="using:GameLibrary.Behaviors"
-      xmlns:components="using:GameMaker.UX.Components.EngineIcon"
+      xmlns:engineButtonIcon="using:GameMaker.UX.Components.EngineButtonIcon"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance topBar:TopBarViewModel}"
       behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
@@ -18,27 +18,17 @@
         </ItemsPanelTemplate>
       </ItemsControl.ItemsPanel>
       <ItemsControl.ItemTemplate>
-        <DataTemplate xmlns:models="using:GameLibrary.Models" x:DataType="models:TopBarModel">
-          <RadioButton GroupName="EngineImages"
-                       Style="{StaticResource ImageRadioButtonStyle}"
-                       IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                       Command="{Binding ViewModel.TopBarCommand, ElementName=TopBarPage}"
-                       CommandParameter="{Binding CommandIndex}"
-                       ToolTipService.ToolTip="{Binding Tooltip}">
-            <components:EngineIcon DataContext="{Binding CroppedImage}" />
-          </RadioButton>
+        <DataTemplate xmlns:engineRadioIcon="using:GameMaker.UX.Components.EngineRadioIcon" x:DataType="engineRadioIcon:EngineRadioIconModel">
+          <engineRadioIcon:EngineRadioIcon Command="{Binding ViewModel.TopBarCommand, ElementName=TopBarControl}" GroupName="Navigation" />
         </DataTemplate>
       </ItemsControl.ItemTemplate>
     </ItemsControl>
     <Border Width="1"
             Background="{StaticResource LightGreyBrush}"
             Height="48" />
-    <Button Style="{StaticResource ImageButtonStyle}"
-            Command="{x:Bind ViewModel.TopBarCommand}"
-            CommandParameter="11"
-            ToolTipService.ToolTip="Save"
-            VerticalAlignment="Center">
-      <components:EngineIcon DataContext="{x:Bind ViewModel.SaveImage.CroppedImage, Mode=OneWay}" />
-    </Button>
+    <engineButtonIcon:EngineButtonIcon DataContext="{x:Bind ViewModel.MediaImage, Mode=OneWay}"
+                                       Command="{x:Bind ViewModel.TopBarCommand}" />
+    <engineButtonIcon:EngineButtonIcon DataContext="{x:Bind ViewModel.SaveImage, Mode=OneWay}"
+                                       Command="{x:Bind ViewModel.TopBarCommand}" />
   </StackPanel>
 </Page>

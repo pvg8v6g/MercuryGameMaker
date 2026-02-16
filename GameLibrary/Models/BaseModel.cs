@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using MercuryLibrary.WinUI3Components;
+﻿using MercuryLibrary.WinUI3Components;
 
 namespace GameLibrary.Models;
 
@@ -7,8 +6,29 @@ public class BaseModel : PropertyChangedUpdater
 {
     #region Properties
 
-    [JsonIgnore]
-    public Guid Guid { get; } = Guid.NewGuid();
+    public Guid Guid
+    {
+        get;
+        set => SetField(ref field, value);
+    } = Guid.NewGuid();
+
+    public int Id
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public string Name
+    {
+        get;
+        set => SetField(ref field, value);
+    } = string.Empty;
+
+    public int? Icon
+    {
+        get;
+        set => SetField(ref field, value);
+    }
 
     #endregion
 

@@ -1,12 +1,15 @@
-﻿using GameLibrary.Services.Graphics;
+﻿using GameLibrary.Services.GameData;
+using GameLibrary.Services.Graphics;
+using GameLibrary.Services.Json;
 using GameLibrary.Services.Location;
 using GameMaker.Services.Navigation;
 using GameMaker.Tasks;
-using GameMaker.UX.ViewModels;
 using GameMaker.UX.ViewModels.ActorsPage;
+using GameMaker.UX.ViewModels.AttributesPage;
 using GameMaker.UX.ViewModels.HomeView;
 using GameMaker.UX.ViewModels.TopBar;
 using GameMaker.UX.Views.ActorsPage;
+using GameMaker.UX.Views.AttributesPage;
 using GameMaker.UX.Views.HomeView;
 using GameMaker.UX.Views.MainWindow;
 using GameMaker.UX.Views.TopBar;
@@ -34,6 +37,7 @@ public partial class App
         services.AddSingleton<TopBarViewModel>();
         services.AddSingleton<HomeViewViewModel>();
         services.AddSingleton<ActorsPageViewModel>();
+        services.AddSingleton<AttributesPageViewModel>();
 
         #endregion
 
@@ -43,16 +47,18 @@ public partial class App
         services.AddSingleton<HomeView>();
         services.AddSingleton<TopBar>();
         services.AddSingleton<ActorsPage>();
+        services.AddSingleton<AttributesPage>();
 
         #endregion
 
         #region Register Services
 
-        services.AddSingleton<Func<Type, BaseViewModel>>(provider => viewModelType => (BaseViewModel) provider.GetRequiredService(viewModelType));
         services.AddSingleton<Func<Type, EngineTask>>(provider => taskType => (EngineTask) provider.GetRequiredService(taskType));
         services.AddSingleton<INavigationService, NavigationService>();
         services.AddSingleton<ILocationService, LocationService>();
         services.AddSingleton<IGraphicsService, GraphicsService>();
+        services.AddSingleton<IGameDataService, GameDataService>();
+        services.AddSingleton<IJsonService, JsonService>();
 
         #endregion
 

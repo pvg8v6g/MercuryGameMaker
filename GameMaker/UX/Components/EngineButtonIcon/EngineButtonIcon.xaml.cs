@@ -3,15 +3,14 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
+using GameMaker.UX.Components.EngineRadioIcon;
 
-namespace GameMaker.UX.Components.EngineRadioIcon;
+namespace GameMaker.UX.Components.EngineButtonIcon;
 
-public sealed partial class EngineRadioIcon
+public partial class EngineButtonIcon
 {
-    #region Registered Properties
-
     public static readonly DependencyProperty CommandProperty = DependencyProperty.Register(
-        nameof(Command), typeof(ICommand), typeof(EngineRadioIcon), new PropertyMetadata(null));
+        nameof(Command), typeof(ICommand), typeof(EngineButtonIcon), new PropertyMetadata(default(ICommand)));
 
     public ICommand? Command
     {
@@ -19,18 +18,7 @@ public sealed partial class EngineRadioIcon
         set => SetValue(CommandProperty, value);
     }
 
-    public static readonly DependencyProperty GroupNameProperty = DependencyProperty.Register(
-        nameof(GroupName), typeof(string), typeof(EngineRadioIcon), new PropertyMetadata(null));
-
-    public string? GroupName
-    {
-        get => (string?) GetValue(GroupNameProperty);
-        set => SetValue(GroupNameProperty, value);
-    }
-
-    #endregion
-
-    public EngineRadioIcon()
+    public EngineButtonIcon()
     {
         InitializeComponent();
     }
@@ -55,7 +43,6 @@ public sealed partial class EngineRadioIcon
                     flyout.Items.Add(flyoutItem);
                 }
             }
-
             FlyoutBase.ShowAttachedFlyout(element);
         }
     }

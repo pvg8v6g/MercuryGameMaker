@@ -8,7 +8,9 @@ public interface ILocationService
 
     public string? GameMakerGraphicsDirectory { get; }
 
-    void CreateGameDirectory();
+    void CreateMercuryGameDirectory();
+
+    Task CreateGameDirectory();
 
     void SetGameMakerGraphicsDirectory(string path);
 }
