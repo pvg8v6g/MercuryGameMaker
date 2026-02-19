@@ -2,11 +2,13 @@
 
 public interface ILocationService
 {
-    public string? GameDirectory { get; }
+    string? GameDirectory { get; }
 
-    public string? GraphicsDirectory { get; }
+    string? GraphicsDirectory { get; }
 
-    public string? GameMakerGraphicsDirectory { get; }
+    string? GameMakerGraphicsDirectory { get; }
+
+    string? MercuryGameMakerDirectory { get; }
 
     void CreateMercuryGameDirectory();
 

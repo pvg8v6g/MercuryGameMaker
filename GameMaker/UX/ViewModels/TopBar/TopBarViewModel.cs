@@ -1,8 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using GameLibrary.Commands;
 using GameLibrary.Services.Graphics;
-using GameLibrary.Utilities.ComponentModels;
 using GameMaker.Services.Navigation;
+using GameMaker.Tasks;
 using GameMaker.UX.Components.EngineRadioIcon;
 
 namespace GameMaker.UX.ViewModels.TopBar;
@@ -35,26 +35,16 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
 
     protected override async Task LoadedAction()
     {
-        var engineIconPath = graphicsService.GetEngineIconPath();
-
         MediaImage = new EngineRadioIconModel
         {
-            CroppedImage = new CroppedImage
-            {
-                ImageSource = engineIconPath,
-                Rect = await graphicsService.GetEngineIconViewport(15)
-            },
+            CroppedImage = await graphicsService.GetEngineIcon(15),
             CommandIndex = "11",
             Tooltip = "Media"
         };
 
         SaveImage = new EngineRadioIconModel
         {
-            CroppedImage = new CroppedImage
-            {
-                ImageSource = engineIconPath,
-                Rect = await graphicsService.GetEngineIconViewport(11)
-            },
+            CroppedImage = await graphicsService.GetEngineIcon(11),
             CommandIndex = "12",
             Tooltip = "Save"
         };
@@ -63,110 +53,66 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
         [
             new()
             {
-                CroppedImage = new CroppedImage
-                {
-                    ImageSource = engineIconPath,
-                },
                 IsChecked = true,
                 CommandIndex = "0",
                 Tooltip = "Main"
             },
             new()
             {
-                CroppedImage = new CroppedImage
-                {
-                    ImageSource = engineIconPath,
-                },
                 IsChecked = false,
                 CommandIndex = "1",
                 Tooltip = "Actors"
             },
             new()
             {
-                CroppedImage = new CroppedImage
-                {
-                    ImageSource = engineIconPath,
-                },
                 IsChecked = false,
                 CommandIndex = "2",
                 Tooltip = "Disciplines"
             },
             new()
             {
-                CroppedImage = new CroppedImage
-                {
-                    ImageSource = engineIconPath,
-                },
                 IsChecked = false,
                 CommandIndex = "3",
                 Tooltip = "Artes"
             },
             new()
             {
-                CroppedImage = new CroppedImage
-                {
-                    ImageSource = engineIconPath,
-                },
                 IsChecked = false,
                 CommandIndex = "4",
                 Tooltip = "Items"
             },
             new()
             {
-                CroppedImage = new CroppedImage
-                {
-                    ImageSource = engineIconPath,
-                },
                 IsChecked = false,
                 CommandIndex = "5",
                 Tooltip = "Equipment"
             },
             new()
             {
-                CroppedImage = new CroppedImage
-                {
-                    ImageSource = engineIconPath,
-                },
                 IsChecked = false,
                 CommandIndex = "6",
                 Tooltip = "Enemies"
             },
             new()
             {
-                CroppedImage = new CroppedImage
-                {
-                    ImageSource = engineIconPath,
-                },
                 IsChecked = false,
                 CommandIndex = "7",
                 Tooltip = "Troops"
             },
             new()
             {
-                CroppedImage = new CroppedImage
-                {
-                    ImageSource = engineIconPath,
-                },
                 IsChecked = false,
                 CommandIndex = "8",
                 Tooltip = "States"
             },
             new()
             {
-                CroppedImage = new CroppedImage
-                {
-                    ImageSource = engineIconPath,
-                },
                 IsChecked = false,
                 CommandIndex = "9",
                 Tooltip = "Animations"
             },
             new()
             {
-                CroppedImage = new CroppedImage
-                {
-                    ImageSource = engineIconPath,
-                },
                 IsChecked = false,
                 CommandIndex = "10",
                 Tooltip = "Settings",
@@ -182,7 +128,7 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
         var tasks = buttonIcons
             .Select(async (x, i) =>
             {
-                x.CroppedImage?.Rect = await graphicsService.GetEngineIconViewport(i);
+                x.CroppedImage = await graphicsService.GetEngineIcon(i);
                 return x;
             })
             .ToArray();
@@ -230,7 +176,7 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
             case "11": // media
                 break;
             case "12": // saving
-                // navigationService.ShowProgressPopup<SaveProjectDataTask>("Saving Project Files");
+                navigationService.ShowProgressPopup<SaveDataTask>("Saving Game Files");
                 break;
         }
     }

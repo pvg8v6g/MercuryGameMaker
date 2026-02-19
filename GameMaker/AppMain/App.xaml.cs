@@ -2,6 +2,7 @@
 using GameLibrary.Services.Graphics;
 using GameLibrary.Services.Json;
 using GameLibrary.Services.Location;
+using GameLibrary.Tasks;
 using GameMaker.Services.Navigation;
 using GameMaker.Tasks;
 using GameMaker.UX.ViewModels.ActorsPage;
@@ -48,6 +49,13 @@ public partial class App
         services.AddSingleton<TopBar>();
         services.AddSingleton<ActorsPage>();
         services.AddSingleton<AttributesPage>();
+
+        #endregion
+
+        #region Register Tasks
+
+        services.AddSingleton<LoadDataTask>();
+        services.AddSingleton<SaveDataTask>();
 
         #endregion
 

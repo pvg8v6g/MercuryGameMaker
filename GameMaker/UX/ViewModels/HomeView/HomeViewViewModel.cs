@@ -1,5 +1,6 @@
 ﻿using GameLibrary.Services.Location;
 using GameMaker.Services.Navigation;
+using GameMaker.Tasks;
 
 namespace GameMaker.UX.ViewModels.HomeView;
 
@@ -21,6 +22,7 @@ public class HomeViewViewModel(ILocationService locationService, INavigationServ
         var appDirectory = AppContext.BaseDirectory;
         var gameMakerGraphicsPath = Path.Combine(appDirectory, "Graphics");
         locationService.SetGameMakerGraphicsDirectory(gameMakerGraphicsPath);
+        await navigationService.ShowProgressPopup<LoadDataTask>("Loading Game Data");
         NavigationService.SetTopBar<Views.TopBar.TopBar>();
     }
 

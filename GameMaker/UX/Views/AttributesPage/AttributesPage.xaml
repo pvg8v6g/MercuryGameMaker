@@ -7,6 +7,7 @@
       xmlns:behaviors="using:GameLibrary.Behaviors"
       xmlns:engineListView="using:GameMaker.UX.Components.EngineListView"
       xmlns:enginePanel="using:GameMaker.UX.Components.EnginePanel"
+      xmlns:iconView="using:GameMaker.UX.Components.IconView"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance attributesPage:AttributesPageViewModel}"
       behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
@@ -26,7 +27,9 @@
                                    DeleteCommand="{x:Bind ViewModel.DeleteEntityCommand}"
                                    CopiedModel="{x:Bind ViewModel.CopiedModel, Mode=OneWay}" />
     <enginePanel:EnginePanel Grid.Column="1" Title="Attribute Details">
-
+      <StackPanel>
+        <iconView:IconView DataContext="{x:Bind ViewModel.AttributeIcon}" />
+      </StackPanel>
     </enginePanel:EnginePanel>
   </Grid>
 </Page>

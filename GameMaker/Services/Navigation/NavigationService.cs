@@ -1,4 +1,4 @@
-﻿using GameMaker.Tasks;
+﻿using GameLibrary.Tasks;
 using GameMaker.UX.Views.MainWindow;
 using GameMaker.UX.Views.Popups.Progress;
 using MercuryLibrary.WinUI3Components;
@@ -37,7 +37,7 @@ public class NavigationService(Func<Type, EngineTask> engineTaskFactory) : Prope
         ActiveFrame?.Navigate(typeof(T));
     }
 
-    public async void ShowProgressPopup<T>(string? label) where T : EngineTask
+    public async Task ShowProgressPopup<T>(string? label) where T : EngineTask
     {
         var progressPopup = new ProgressPopup
         {

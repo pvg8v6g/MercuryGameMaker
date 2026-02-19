@@ -24,6 +24,8 @@
   <Color x:Key="RedColor">#AB0908</Color>
   <Color x:Key="LightBlueColor">#57DCF1</Color>
   <Color x:Key="LightYellowColor">#FBEDAF</Color>
+  <Color x:Key="DarkBlueColor">#4b2f92</Color>
+  <Color x:Key="MediumGreenColor">#288830</Color>
 
   <Color x:Key="PrimaryColor">#373737</Color>
   <Color x:Key="SecondaryColor">#5E5E5E</Color>
@@ -47,6 +49,10 @@
                    Color="{StaticResource LightBlueColor}" />
   <SolidColorBrush x:Key="LightYellowBrush"
                    Color="{StaticResource LightYellowColor}" />
+  <SolidColorBrush x:Key="DarkBlueBrush"
+                   Color="{StaticResource DarkBlueColor}" />
+  <SolidColorBrush x:Key="MediumGreenBrush"
+                   Color="{StaticResource MediumGreenColor}" />
   <SolidColorBrush x:Key="RedBrush"
                    Color="{StaticResource RedColor}" />
   <SolidColorBrush x:Key="DarkPinkBrush"

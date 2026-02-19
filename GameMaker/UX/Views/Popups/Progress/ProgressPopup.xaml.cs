@@ -1,4 +1,4 @@
-﻿using GameMaker.Tasks;
+﻿using GameLibrary.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
@@ -22,7 +22,6 @@ public partial class ProgressPopup
     public ProgressPopup()
     {
         InitializeComponent();
-        Loaded += OnLoaded;
     }
 
     private void ValueOnChanged(object sender, RangeBaseValueChangedEventArgs e)
@@ -38,7 +37,7 @@ public partial class ProgressPopup
             Source = EngineTask,
             Path = new PropertyPath("Progress"),
             Mode = BindingMode.OneWay,
-            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+            UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
         };
         BindingOperations.SetBinding(ProgressBar, RangeBase.ValueProperty, progressBinding);
         await EngineTask.Call();

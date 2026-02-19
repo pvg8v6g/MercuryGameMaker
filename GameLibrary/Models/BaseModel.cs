@@ -24,11 +24,11 @@ public class BaseModel : PropertyChangedUpdater
         set => SetField(ref field, value);
     } = string.Empty;
 
-    public int? Icon
+    public int Icon
     {
         get;
         set => SetField(ref field, value);
-    }
+    } = 0;
 
     #endregion
 

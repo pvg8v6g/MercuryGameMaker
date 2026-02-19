@@ -14,21 +14,21 @@ namespace GameLibrary.Services.GameData;
 
 public interface IGameDataService
 {
-    decimal ScreenWidth { get; set; }
+    double ScreenWidth { get; set; }
 
-    decimal ScreenHeight { get; set; }
+    double ScreenHeight { get; set; }
 
-    decimal GameWidth { get; set; }
+    double GameWidth { get; set; }
 
-    decimal GameHeight { get; set; }
+    double GameHeight { get; set; }
 
-    decimal ScaleFactor { get; set; }
+    double ScaleFactor { get; set; }
 
     int GridSize { get; set; }
 
     int Division { get; set; }
 
-    decimal FrameRate { get; set; }
+    double FrameRate { get; set; }
 
     int MaxEntities { get; set; }
 

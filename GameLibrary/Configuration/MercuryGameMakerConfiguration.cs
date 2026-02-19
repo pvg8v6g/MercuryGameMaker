@@ -1,7 +1,4 @@
-﻿using GameLibrary.Models;
-using System.Text.Json.Serialization;
-
-namespace GameLibrary.Configuration;
+﻿namespace GameLibrary.Configuration;
 
 public class MercuryGameMakerConfiguration
 {

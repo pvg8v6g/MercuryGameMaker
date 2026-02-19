@@ -2,6 +2,7 @@
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using GameLibrary.Services.Location;
+using GameLibrary.Utilities.ComponentModels;
 using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace GameLibrary.Services.Graphics;
@@ -10,65 +11,28 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
 {
     #region Icon
 
-    public string GetEngineIconPath()
+    public async Task<CroppedImage> GetIcon(int index)
     {
-        return Path.Combine(locationService.GameMakerGraphicsDirectory!, "Icons.png");
+        var path = Path.Combine(locationService.GameDirectory!, "Graphics", "Icons", "~Icon.png");
+        var source = await GetImage(path);
+        var dimensions = await GetImageDimensions(path);
+        var (w, h) = await GetSegmentation(path);
+        var columns = dimensions.width / w;
+        var x = (index % columns) * w;
+        var y = ((int) (index / columns)) * w;
+        var viewport = new Rect(x, y, w, h);
+        return new CroppedImage { ImageSource = source, Rect = viewport };
     }
 
-    public async Task<Rect> GetEngineIconViewport(int index)
+    public async Task<CroppedImage> GetEngineIcon(int index)
     {
-        var imagePath = GetEngineIconPath();
-        var dimensions = await GetImageDimensions(imagePath);
-        var w = dimensions.width / 48.0;
-        return new Rect(((int) (index % w)) * 48.0, ((int) (index / w)) * 48.0, 48.0, 48.0);
+        var path = Path.Combine(locationService.GameMakerGraphicsDirectory!, "Icons.png");
+        var source = await GetImage(path);
+        var dimensions = await GetImageDimensions(path);
+        var w = dimensions.width / 48.0d;
+        var viewport = new Rect(((int) (index % w)) * 48.0, ((int) (index / w)) * 48.0, 48.0, 48.0);
+        return new CroppedImage { ImageSource = source, Rect = viewport };
     }
-
-    // public async Task<Canvas> GetEngineIconImproved(int index)
-    // {
-    //     var imagePath = Path.Combine(locationService.GameMakerGraphicsDirectory!, "Icons.png");
-    //     var dimensions = await GetImageDimensions(imagePath);
-    //
-    //     var width = dimensions.width / 48.0;
-    //     var x = ((int) (index % width)) * 48.0;
-    //     var y = ((int) (index / width)) * 48.0;
-    //
-    //     var bitmapImage = new BitmapImage(new Uri(imagePath, UriKind.Absolute));
-    //     var image = new Image { Source = bitmapImage };
-    //
-    //     var clip = new RectangleGeometry { Rect = new Rect(x, y, 48, 48) };
-    //
-    //     return new Canvas { Width = 48, Height = 48, Clip = clip, Children = { image } };
-    // }
-    //
-    // public async Task<CanvasImageSource> GetEngineIcon(int index)
-    // {
-    //     // Load sprite sheet once and cache it
-    //     if (_iconSpriteSheet == null)
-    //     {
-    //         var imagePath = Path.Combine(locationService.GameMakerGraphicsDirectory!, "Icons.png");
-    //         _iconSpriteSheet = await CanvasBitmap.LoadAsync(_canvasDevice, imagePath);
-    //     }
-    //
-    //     // Calculate sprite position
-    //     var width = _iconSpriteSheet.SizeInPixels.Width / 48.0;
-    //     var x = ((int) (index % width)) * 48;
-    //     var y = ((int) (index / width)) * 48;
-    //
-    //     // Create a 48x48 image source
-    //     var imageSource = new CanvasImageSource(_canvasDevice, 48, 48, 96);
-    //
-    //     // Draw the specific sprite
-    //     using var ds = imageSource.CreateDrawingSession(Colors.Transparent);
-    //     ds.DrawImage(
-    //         _iconSpriteSheet,
-    //         new Rect(0, 0, 48, 48),
-    //         new Rect(x, y, 48, 48),
-    //         1.0f,
-    //         CanvasImageInterpolation.NearestNeighbor
-    //     );
-    //
-    //     return imageSource;
-    // }
 
     #endregion
 
@@ -90,7 +54,7 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
 
     #region Images
 
-    private async Task<(uint width, uint height)> GetImageDimensions(string imagePath)
+    private async Task<(double width, double height)> GetImageDimensions(string imagePath)
     {
         var file = await StorageFile.GetFileFromPathAsync(imagePath);
         using var stream = await file.OpenReadAsync();
@@ -114,13 +78,34 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
         return await Task.FromResult(bitmapImage);
     }
 
+    public async Task<(double width, double height)> GetSegmentation(string fileName)
+    {
+        if (fileName.StartsWith('~')) return (32.0d, 32.0d);
+        var dimensions = await GetImageDimensions(fileName);
+        var divisions = GetCharacterDivisions(fileName);
+        return (dimensions.width / divisions.x, dimensions.height / divisions.y);
+    }
+
+    public (double x, double y) GetCharacterDivisions(string fileName)
+    {
+        if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
+        return fileName[0] switch
+        {
+            '$' => (3.0d, 4.0d),
+            '@' => (4.0d, 2.0d),
+            '#' => (16.0d, 32.0d),
+            '&' => (4.0d, 2.0d),
+            _ => (12.0d, 8.0d),
+        };
+    }
+
     #endregion
 
     #region Cache
 
-    public Dictionary<string, BitmapImage> ImagesCache { get; } = new();
+    private Dictionary<string, BitmapImage> ImagesCache { get; } = new();
 
-    public Dictionary<string, BitmapImage> AnimationsCache { get; } = new();
+    private Dictionary<string, BitmapImage> AnimationsCache { get; } = new();
 
     #endregion
 }

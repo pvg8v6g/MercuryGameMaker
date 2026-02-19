@@ -25,8 +25,9 @@ public class LocationService(IJsonService jsonService) : ILocationService
     {
         MercuryGameMakerDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Mercury Game Maker");
         if (!Directory.Exists(MercuryGameMakerDirectory)) Directory.CreateDirectory(MercuryGameMakerDirectory);
-        var config = new MercuryGameMakerConfiguration();
         var configPath = Path.Combine(MercuryGameMakerDirectory, "config.json");
+        if (File.Exists(configPath)) return;
+        var config = new MercuryGameMakerConfiguration();
         jsonService.EncryptFile(config, configPath);
     }
 
@@ -62,9 +63,9 @@ public class LocationService(IJsonService jsonService) : ILocationService
 
             config.GameDirectory = folder.Path;
             jsonService.EncryptFile(config, configPath);
-            GameDirectory = config.GameDirectory;
         }
 
+        GameDirectory = config.GameDirectory;
         if (GameDirectory is null)
         {
             ShowErrorMessageAndExit("Game Directory Required", "A game directory must be chosen. The application will now exit.");

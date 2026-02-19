@@ -1,6 +1,4 @@
-﻿using GameMaker.Tasks;
-using GameMaker.UX.ViewModels;
-using Microsoft.UI.Xaml;
+﻿using GameLibrary.Tasks;
 using Microsoft.UI.Xaml.Controls;
 
 namespace GameMaker.Services.Navigation;
@@ -15,5 +13,5 @@ public interface INavigationService
 
     void NavigateTo<T>() where T : Page;
 
-    void ShowProgressPopup<T>(string? label) where T : EngineTask;
+    Task ShowProgressPopup<T>(string? label) where T : EngineTask;
 }

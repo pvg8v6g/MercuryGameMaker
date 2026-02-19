@@ -16,21 +16,21 @@ public class GameDataService : IGameDataService
 {
     #region Properties
 
-    public decimal ScreenWidth { get; set; } = 0.0m;
+    public double ScreenWidth { get; set; } = 0.0d;
 
-    public decimal ScreenHeight { get; set; } = 0.0m;
+    public double ScreenHeight { get; set; } = 0.0d;
 
-    public decimal GameWidth { get; set; } = 0.0m;
+    public double GameWidth { get; set; } = 0.0d;
 
-    public decimal GameHeight { get; set; } = 0.0m;
+    public double GameHeight { get; set; } = 0.0d;
 
-    public decimal ScaleFactor { get; set; } = 1.0m;
+    public double ScaleFactor { get; set; } = 1.0d;
 
     public int GridSize { get; set; } = 48;
 
     public int Division { get; set; } = 12;
 
-    public decimal FrameRate { get; set; } = 16.6666667m; // 60fps
+    public double FrameRate { get; set; } = 16.6666667d; // 60fps
 
     public int MaxEntities { get; set; } = 5000;
 

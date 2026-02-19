@@ -1,6 +1,6 @@
 ﻿using MercuryLibrary.WinUI3Components;
 
-namespace GameMaker.Tasks;
+namespace GameLibrary.Tasks;
 
 public abstract class EngineTask : PropertyChangedUpdater
 {
@@ -12,11 +12,19 @@ public abstract class EngineTask : PropertyChangedUpdater
         set
         {
             SetField(ref field, value);
-            Progress = (int) (100 * ((decimal) value / (decimal) MaxWork));
+            Progress = MaxWork <= 0 ? 100 : (int) (100 * ((decimal) Work / (decimal) MaxWork));
         }
     }
 
-    protected int MaxWork { get; set; }
+    protected int MaxWork
+    {
+        get;
+        set
+        {
+            SetField(ref field, value);
+            Progress = MaxWork <= 0 ? 100 : (int) (100 * ((decimal) Work / (decimal) MaxWork));
+        }
+    }
 
     public int Progress
     {
@@ -26,22 +34,9 @@ public abstract class EngineTask : PropertyChangedUpdater
 
     #endregion
 
-    #region Functions
+    #region Abstract Methods
 
     public abstract Task Call();
-
-    protected async Task CreateWorkTask(Task task)
-    {
-        await task;
-        Work++;
-    }
-
-    protected async Task<T> CreateWorkTask<T>(Task<T> task)
-    {
-        var t = await task;
-        Work++;
-        return t;
-    }
 
     #endregion
 }
