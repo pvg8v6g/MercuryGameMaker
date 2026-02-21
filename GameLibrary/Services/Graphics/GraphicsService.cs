@@ -11,9 +11,14 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
 {
     #region Icon
 
+    public string GetIconsPath()
+    {
+        return Path.Combine(locationService.GameDirectory!, "Graphics", "Icons", "~Icons.png");
+    }
+
     public async Task<CroppedImage> GetIcon(int index)
     {
-        var path = Path.Combine(locationService.GameDirectory!, "Graphics", "Icons", "~Icon.png");
+        var path = GetIconsPath();
         var source = await GetImage(path);
         var dimensions = await GetImageDimensions(path);
         var (w, h) = await GetSegmentation(path);
@@ -65,22 +70,22 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
 
     public async Task<BitmapImage> GetImage(string imagePath)
     {
-        var path = Path.Combine(locationService.GraphicsDirectory!, imagePath);
+        var path = Path.IsPathRooted(imagePath) ? imagePath : Path.Combine(locationService.GraphicsDirectory!, imagePath);
 
         if (ImagesCache.Count > 200) ImagesCache.Clear(); // Clear cache if it gets too big
-        if (ImagesCache.TryGetValue(imagePath, out var cachedImage))
+        if (ImagesCache.TryGetValue(path, out var cachedImage))
         {
             return cachedImage;
         }
 
         var bitmapImage = new BitmapImage(new Uri(path, UriKind.Absolute));
-        ImagesCache[imagePath] = bitmapImage;
+        ImagesCache[path] = bitmapImage;
         return await Task.FromResult(bitmapImage);
     }
 
     public async Task<(double width, double height)> GetSegmentation(string fileName)
     {
-        if (fileName.StartsWith('~')) return (32.0d, 32.0d);
+        if (Path.GetFileName(fileName).StartsWith('~')) return (32.0d, 32.0d);
         var dimensions = await GetImageDimensions(fileName);
         var divisions = GetCharacterDivisions(fileName);
         return (dimensions.width / divisions.x, dimensions.height / divisions.y);

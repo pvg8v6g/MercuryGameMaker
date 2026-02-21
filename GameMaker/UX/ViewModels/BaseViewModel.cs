@@ -20,10 +20,30 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
     public int SelectedIndex
     {
         get;
-        set => SetField(ref field, value);
+        set
+        {
+            if (!SetField(ref field, value)) return;
+            OnSelectedIndexChanged(value);
+            // Re-trigger notification for SelectedEntity by using a dummy field since OnPropertyChanged is private
+            // We use the same value to make it look like a real change to SelectedEntity for subscribers
+            bool dummy = false;
+            SetField(ref dummy, true, nameof(SelectedEntity));
+        }
     }
 
+    public T? SelectedEntity => SelectedIndex < 0 || SelectedIndex >= EntityCollection.Count || EntityCollection.Count < 1
+        ? null
+        : EntityCollection[SelectedIndex];
+
     protected abstract ObservableCollection<T> EntityCollection { get; }
+
+    #endregion
+
+    #region Abstractions
+
+    protected virtual void OnSelectedIndexChanged(int index)
+    {
+    }
 
     #endregion
 
@@ -93,6 +113,9 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
         else
         {
             SelectedIndex = index;
+            // Notify SelectedEntity since the object at this index has changed
+            bool dummy = false;
+            SetField(ref dummy, true, nameof(SelectedEntity));
         }
     }
 

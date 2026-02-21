@@ -1,4 +1,6 @@
-﻿using GameLibrary.Services.GameData;
+﻿using System.Collections.ObjectModel;
+using GameLibrary.Models;
+using GameLibrary.Services.GameData;
 using GameLibrary.Services.Json;
 using GameLibrary.Services.Location;
 using GameLibrary.Tasks;
@@ -10,7 +12,7 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
     public override Task Call()
     {
         GatherWorkload();
-        LoadData();
+        SaveData();
         Work = MaxWork;
         return Task.CompletedTask;
     }
@@ -20,12 +22,28 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
         MaxWork += gameDataService.Attributes.Count;
     }
 
-    private void LoadData()
+    private void SaveData()
     {
-        var attributeDirectory = Path.Combine(locationService.GameDirectory!, "Settings", "Attributes");
-        foreach (var attribute in gameDataService.Attributes)
+        DataWork(Path.Combine(locationService.GameDirectory!, "Settings", "Attributes"), gameDataService.Attributes); // attributes
+    }
+
+    private void DataWork<T>(string directory, ObservableCollection<T> collection) where T : BaseModel
+    {
+        DeleteOldData(directory);
+        CreateNewData(directory, collection);
+    }
+
+    private void DeleteOldData(string directory)
+    {
+        var oldFiles = Directory.GetFiles(directory);
+        foreach (var oldFile in oldFiles) File.Delete(oldFile);
+    }
+
+    private void CreateNewData<T>(string directory, ObservableCollection<T> collection) where T : BaseModel
+    {
+        foreach (var entity in collection)
         {
-            jsonService.EncryptFile(attribute, Path.Combine(attributeDirectory, $"{attribute.Guid}.data"));
+            jsonService.EncryptFile(entity, Path.Combine(directory, $"{entity.Guid}.data"));
             Work++;
         }
     }
