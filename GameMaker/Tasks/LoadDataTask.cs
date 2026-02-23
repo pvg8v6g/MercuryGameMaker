@@ -1,19 +1,15 @@
-﻿using GameLibrary.Services.GameData;
+﻿using System.Collections.ObjectModel;
+using GameLibrary.Models;
+using GameLibrary.Services.GameData;
 using GameLibrary.Services.Json;
 using GameLibrary.Services.Location;
 using GameLibrary.Tasks;
-using Attribute = GameLibrary.Models.Attributes.Attribute;
+using GameLibrary.Utilities.ComponentModels;
 
 namespace GameMaker.Tasks;
 
 public class LoadDataTask(ILocationService locationService, IJsonService jsonService, IGameDataService gameDataService) : EngineTask
 {
-    #region Fields
-
-    private string[] _attributeFiles = [];
-
-    #endregion
-
     public override Task Call()
     {
         GatherWorkload();
@@ -24,24 +20,33 @@ public class LoadDataTask(ILocationService locationService, IJsonService jsonSer
 
     private void GatherWorkload()
     {
-        var attributeDirectory = Path.Combine(locationService.GameDirectory!, "Settings", "Attributes");
-        _attributeFiles = Directory.GetFiles(attributeDirectory).Where(x => x.EndsWith(".data")).ToArray();
-        MaxWork += _attributeFiles.Length;
+        MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Settings", "Attributes")).Length; // attributes
+        MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Settings", "Elements")).Length; // elements
     }
 
     private void LoadData()
     {
-        foreach (var attributeFile in _attributeFiles)
+        DecryptData(Path.Combine("Settings", "Attributes"), gameDataService.Attributes);
+        DecryptData(Path.Combine("Settings", "Elements"), gameDataService.Elements);
+    }
+
+    private void DecryptData<T>(string path, ObservableCollection<T> collection) where T : BaseModel
+    {
+        var directoryPath = Path.Combine(locationService.GameDirectory!, path);
+        foreach (var entityFile in Directory.GetFiles(directoryPath))
         {
-            var attribute = jsonService.DecryptData<Attribute>(attributeFile);
-            if (attribute is null)
+            if (!entityFile.EndsWith(".data")) continue;
+            var entity = jsonService.DecryptData<T>(entityFile);
+            if (entity is null)
             {
                 Work++;
                 continue;
             }
 
-            gameDataService.Attributes.Add(attribute);
+            collection.Add(entity);
             Work++;
         }
+
+        collection.OrderBy(x => x.Id).Apply();
     }
 }

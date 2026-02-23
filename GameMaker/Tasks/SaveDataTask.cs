@@ -20,11 +20,13 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
     private void GatherWorkload()
     {
         MaxWork += gameDataService.Attributes.Count;
+        MaxWork += gameDataService.Elements.Count;
     }
 
     private void SaveData()
     {
         DataWork(Path.Combine(locationService.GameDirectory!, "Settings", "Attributes"), gameDataService.Attributes); // attributes
+        DataWork(Path.Combine(locationService.GameDirectory!, "Settings", "Elements"), gameDataService.Elements); // elements
     }
 
     private void DataWork<T>(string directory, ObservableCollection<T> collection) where T : BaseModel

@@ -5,8 +5,7 @@ using Attribute = GameLibrary.Models.Attributes.Attribute;
 
 namespace GameMaker.UX.ViewModels.AttributesPage;
 
-public class AttributesPageViewModel(IGameDataService gameDataService, IJsonService jsonService)
-    : BaseViewModel<Attribute>(jsonService)
+public class AttributesPageViewModel(IGameDataService gameDataService, IJsonService jsonService) : BaseViewModel<Attribute>(jsonService)
 {
     #region Properties
 
@@ -19,14 +18,6 @@ public class AttributesPageViewModel(IGameDataService gameDataService, IJsonServ
     #region Actions
 
     protected override async Task LoadedAction()
-    {
-    }
-
-    #endregion
-
-    #region Listeners
-
-    protected override void OnSelectedIndexChanged(int index)
     {
     }
 

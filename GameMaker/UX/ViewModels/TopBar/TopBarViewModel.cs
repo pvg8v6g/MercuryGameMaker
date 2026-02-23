@@ -169,6 +169,7 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
                 break;
             case "10.2":
                 EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;
+                navigationService.NavigateTo<Views.ElementsPage.ElementsPage>();
                 break;
             case "10.3":
                 EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;

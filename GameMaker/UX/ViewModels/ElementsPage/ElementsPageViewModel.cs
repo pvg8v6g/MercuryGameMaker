@@ -1,0 +1,30 @@
+﻿using System.Collections.ObjectModel;
+using GameLibrary.Services.GameData;
+using GameLibrary.Services.Json;
+using Attribute = GameLibrary.Models.Attributes.Attribute;
+
+namespace GameMaker.UX.ViewModels.ElementsPage;
+
+public class ElementsPageViewModel(IGameDataService gameDataService, IJsonService jsonService) : BaseViewModel<Attribute>(jsonService)
+{
+    #region Properties
+
+    public IGameDataService GameDataService => gameDataService;
+
+    protected override ObservableCollection<Attribute> EntityCollection => gameDataService.Elements;
+
+    #endregion
+
+    #region Actions
+
+    protected override async Task LoadedAction()
+    {
+    }
+
+    protected override void NewEntity(string? newEntityName = null)
+    {
+        base.NewEntity(newEntityName);
+    }
+
+    #endregion
+}

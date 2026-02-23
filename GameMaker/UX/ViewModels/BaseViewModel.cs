@@ -3,6 +3,7 @@ using GameLibrary.Commands;
 using GameLibrary.Models;
 using GameLibrary.Services.Json;
 using GameLibrary.Utilities.Calculations;
+using GameLibrary.Utilities.ComponentModels;
 using MercuryLibrary.WinUI3Components;
 
 namespace GameMaker.UX.ViewModels;
@@ -24,10 +25,7 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
         {
             if (!SetField(ref field, value)) return;
             OnSelectedIndexChanged(value);
-            // Re-trigger notification for SelectedEntity by using a dummy field since OnPropertyChanged is private
-            // We use the same value to make it look like a real change to SelectedEntity for subscribers
-            bool dummy = false;
-            SetField(ref dummy, true, nameof(SelectedEntity));
+            OnPropertyChanged(nameof(SelectedEntity));
         }
     }
 
@@ -49,7 +47,7 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
 
     #region Relays
 
-    public RelayCommand NewEntityCommand => new(NewEntity);
+    public RelayCommand<string?> NewEntityCommand => new(NewEntity);
 
     public RelayCommand CopyEntityCommand => new(CopyEntity);
 
@@ -68,15 +66,17 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
         return Task.CompletedTask;
     }
 
-    protected virtual void NewEntity()
+    protected virtual void NewEntity(string? newEntityName = null)
     {
+        newEntityName ??= $"New {typeof(T).Name}";
         var newObject = new T
         {
             Id = Calculations.GetNextId(EntityCollection.Select(x => x.Id).ToArray()),
-            Name = $"New {typeof(T).Name}"
+            Name = newEntityName
         };
-        EntityCollection.Add(newObject);
-        SelectedIndex = EntityCollection.Count - 1;
+
+        var index = EntityCollection.AddSorted(newObject, x => x.Id);
+        SelectedIndex = index;
     }
 
     protected virtual void CopyEntity()
@@ -91,8 +91,9 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
 
         clone.Guid = Guid.NewGuid();
         clone.Id = Calculations.GetNextId(EntityCollection.Select(x => x.Id).ToArray());
-        EntityCollection.Add(clone);
-        SelectedIndex = EntityCollection.Count - 1;
+
+        var index = EntityCollection.AddSorted(clone, x => x.Id);
+        SelectedIndex = index;
     }
 
     protected virtual void DeleteEntity()
@@ -114,8 +115,7 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
         {
             SelectedIndex = index;
             // Notify SelectedEntity since the object at this index has changed
-            bool dummy = false;
-            SetField(ref dummy, true, nameof(SelectedEntity));
+            OnPropertyChanged(nameof(SelectedEntity));
         }
     }
 

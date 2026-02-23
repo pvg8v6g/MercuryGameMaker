@@ -8,11 +8,12 @@ using GameLibrary.Models.Growths;
 using GameLibrary.Models.Items;
 using GameLibrary.Models.States;
 using GameLibrary.Models.Troops;
+using MercuryLibrary.WinUI3Components;
 using Attribute = GameLibrary.Models.Attributes.Attribute;
 
 namespace GameLibrary.Services.GameData;
 
-public class GameDataService : IGameDataService
+public class GameDataService : PropertyChangedUpdater, IGameDataService
 {
     #region Properties
 
