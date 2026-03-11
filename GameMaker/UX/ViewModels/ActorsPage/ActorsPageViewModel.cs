@@ -1,6 +1,6 @@
 ﻿namespace GameMaker.UX.ViewModels.ActorsPage;
 
-public class ActorsPageViewModel : BaseViewModel
+public partial class ActorsPageViewModel : BaseViewModel
 {
     #region Properties
 

@@ -57,6 +57,15 @@ public sealed partial class EngineListView
         set => SetValue(NewCommandProperty, value);
     }
 
+    public static readonly DependencyProperty NewCommandParameterProperty = DependencyProperty.Register(
+        nameof(NewCommandParameter), typeof(object), typeof(EngineListView), new PropertyMetadata(null));
+
+    public object? NewCommandParameter
+    {
+        get => GetValue(NewCommandParameterProperty);
+        set => SetValue(NewCommandParameterProperty, value);
+    }
+
     public static readonly DependencyProperty CopyCommandProperty = DependencyProperty.Register(
         nameof(CopyCommand), typeof(ICommand), typeof(EngineListView), new PropertyMetadata(null));
 

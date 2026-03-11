@@ -2,7 +2,7 @@
 
 namespace GameLibrary.Commands;
 
-public class RelayCommand(Action execute, Func<bool>? canExecute = null) : ICommand
+public partial class RelayCommand(Action execute, Func<bool>? canExecute = null) : ICommand
 {
     public event EventHandler? CanExecuteChanged;
 
@@ -23,7 +23,7 @@ public class RelayCommand(Action execute, Func<bool>? canExecute = null) : IComm
     public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
 }
 
-public class RelayCommand<T>(Action<T> execute, Func<T, bool>? canExecute = null) : ICommand
+public partial class RelayCommand<T>(Action<T> execute, Func<T, bool>? canExecute = null) : ICommand
 {
     public event EventHandler? CanExecuteChanged;
 

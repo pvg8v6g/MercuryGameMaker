@@ -3,7 +3,7 @@ using Microsoft.UI.Xaml.Data;
 
 namespace GameLibrary.Converters;
 
-public class NullToVisibilityConverter : IValueConverter
+public partial class NullToVisibilityConverter : IValueConverter
 {
     public bool Invert { get; set; }
 

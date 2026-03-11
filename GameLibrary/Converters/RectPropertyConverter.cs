@@ -3,7 +3,7 @@ using Windows.Foundation;
 
 namespace GameLibrary.Converters;
 
-public class RectPropertyConverter : IValueConverter
+public partial class RectPropertyConverter : IValueConverter
 {
     public enum Property
     {

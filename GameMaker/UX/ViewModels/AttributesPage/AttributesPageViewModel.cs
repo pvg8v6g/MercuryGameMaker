@@ -5,7 +5,7 @@ using Attribute = GameLibrary.Models.Attributes.Attribute;
 
 namespace GameMaker.UX.ViewModels.AttributesPage;
 
-public class AttributesPageViewModel(IGameDataService gameDataService, IJsonService jsonService) : BaseViewModel<Attribute>(jsonService)
+public partial class AttributesPageViewModel(IGameDataService gameDataService, IJsonService jsonService) : BaseViewModel<Attribute>(jsonService)
 {
     #region Properties
 

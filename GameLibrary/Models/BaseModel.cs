@@ -2,7 +2,7 @@
 
 namespace GameLibrary.Models;
 
-public class BaseModel : PropertyChangedUpdater
+public partial class BaseModel : PropertyChangedUpdater
 {
     #region Properties
 

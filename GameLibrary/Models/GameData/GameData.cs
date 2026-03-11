@@ -1,6 +1,6 @@
 ﻿namespace GameLibrary.Models.GameData;
 
-public class GameData : BaseModel
+public partial class GameData : BaseModel
 {
     #region Properties
 

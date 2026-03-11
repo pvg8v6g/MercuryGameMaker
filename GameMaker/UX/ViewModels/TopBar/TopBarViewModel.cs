@@ -147,7 +147,8 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
             case "1":
                 navigationService.NavigateTo<Views.ActorsPage.ActorsPage>();
                 break;
-            case "2":
+            case "2": // disciplines
+                navigationService.NavigateTo<Views.DisciplinesPage.DisciplinesPage>();
                 break;
             case "3":
                 break;
@@ -163,16 +164,17 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
                 break;
             case "9":
                 break;
-            case "10.1":
+            case "10.1": // attributes
                 EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;
                 navigationService.NavigateTo<Views.AttributesPage.AttributesPage>();
                 break;
-            case "10.2":
+            case "10.2": // elements
                 EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;
                 navigationService.NavigateTo<Views.ElementsPage.ElementsPage>();
                 break;
-            case "10.3":
+            case "10.3": // growths
                 EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;
+                navigationService.NavigateTo<Views.GrowthsPage.GrowthsPage>();
                 break;
             case "11": // media
                 break;

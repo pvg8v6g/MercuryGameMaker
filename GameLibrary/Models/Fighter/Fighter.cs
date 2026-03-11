@@ -1,5 +1,5 @@
 ﻿namespace GameLibrary.Models.Fighter;
 
-public class Fighter : BaseModel
+public partial class Fighter : BaseModel
 {
 }

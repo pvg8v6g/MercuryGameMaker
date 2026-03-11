@@ -1,7 +1,7 @@
 ﻿using GameLibrary.Models;
 namespace GameLibrary.Models.Items;
 
-public class Item : BaseModel
+public partial class Item : BaseModel
 {
 
 }

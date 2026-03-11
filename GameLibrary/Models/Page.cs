@@ -1,6 +1,6 @@
 ﻿namespace GameLibrary.Models;
 
-public class Page : BaseModel
+public partial class Page : BaseModel
 {
 
 }

@@ -6,7 +6,7 @@ using Microsoft.UI.Xaml.Controls;
 
 namespace GameMaker.Services.Navigation;
 
-public class NavigationService(Func<Type, EngineTask> engineTaskFactory) : PropertyChangedUpdater, INavigationService
+public partial class NavigationService(Func<Type, EngineTask> engineTaskFactory) : PropertyChangedUpdater, INavigationService
 {
     #region Properties
 

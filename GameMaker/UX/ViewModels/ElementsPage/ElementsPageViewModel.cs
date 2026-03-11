@@ -5,7 +5,7 @@ using Attribute = GameLibrary.Models.Attributes.Attribute;
 
 namespace GameMaker.UX.ViewModels.ElementsPage;
 
-public class ElementsPageViewModel(IGameDataService gameDataService, IJsonService jsonService) : BaseViewModel<Attribute>(jsonService)
+public partial class ElementsPageViewModel(IGameDataService gameDataService, IJsonService jsonService) : BaseViewModel<Attribute>(jsonService)
 {
     #region Properties
 
@@ -19,11 +19,6 @@ public class ElementsPageViewModel(IGameDataService gameDataService, IJsonServic
 
     protected override async Task LoadedAction()
     {
-    }
-
-    protected override void NewEntity(string? newEntityName = null)
-    {
-        base.NewEntity(newEntityName);
     }
 
     #endregion

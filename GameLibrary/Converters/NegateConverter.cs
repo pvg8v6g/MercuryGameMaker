@@ -2,7 +2,7 @@
 
 namespace GameLibrary.Converters;
 
-public class NegateConverter : IValueConverter
+public partial class NegateConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language)
     {

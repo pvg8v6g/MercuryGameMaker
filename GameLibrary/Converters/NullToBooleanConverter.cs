@@ -2,7 +2,7 @@ using Microsoft.UI.Xaml.Data;
 
 namespace GameLibrary.Converters;
 
-public class NullToBooleanConverter : IValueConverter
+public partial class NullToBooleanConverter : IValueConverter
 {
     public bool Invert { get; set; }
 

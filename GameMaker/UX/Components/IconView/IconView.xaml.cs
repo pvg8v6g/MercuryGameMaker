@@ -86,7 +86,7 @@ public partial class IconView
         IconScrollViewer.UpdateLayout();
 
         // Center the 32x32 icon in the view if possible
-        var offsetY = y - (IconScrollViewer.ViewportHeight / 2) + (CroppedImage.Rect.Value.Y / 2);
+        var offsetY = y - IconScrollViewer.ViewportHeight / 2 + CroppedImage.Rect.Value.Y / 2;
 
         IconScrollViewer.ChangeView(0, offsetY, null);
     }

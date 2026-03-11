@@ -4,7 +4,7 @@ using GameMaker.Tasks;
 
 namespace GameMaker.UX.ViewModels.HomeView;
 
-public class HomeViewViewModel(ILocationService locationService, INavigationService navigationService) : BaseViewModel
+public partial class HomeViewViewModel(ILocationService locationService, INavigationService navigationService) : BaseViewModel
 {
     #region Properties
 

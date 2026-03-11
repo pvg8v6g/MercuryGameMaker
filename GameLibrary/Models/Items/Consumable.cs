@@ -1,7 +1,7 @@
 ﻿using GameLibrary.Models;
 namespace GameLibrary.Models.Items;
 
-public class Consumable : BaseModel
+public partial class Consumable : BaseModel
 {
 
 }

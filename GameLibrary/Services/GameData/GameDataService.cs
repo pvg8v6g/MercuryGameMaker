@@ -13,7 +13,7 @@ using Attribute = GameLibrary.Models.Attributes.Attribute;
 
 namespace GameLibrary.Services.GameData;
 
-public class GameDataService : PropertyChangedUpdater, IGameDataService
+public partial class GameDataService : PropertyChangedUpdater, IGameDataService
 {
     #region Properties
 

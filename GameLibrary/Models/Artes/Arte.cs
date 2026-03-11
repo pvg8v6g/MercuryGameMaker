@@ -1,7 +1,7 @@
 ﻿using GameLibrary.Models;
 namespace GameLibrary.Models.Artes;
 
-public class Arte : BaseModel
+public partial class Arte : BaseModel
 {
 
 }

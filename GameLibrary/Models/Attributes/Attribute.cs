@@ -1,6 +1,6 @@
 ﻿namespace GameLibrary.Models.Attributes;
 
-public class Attribute : BaseModel
+public partial class Attribute : BaseModel
 {
     #region Properties
 

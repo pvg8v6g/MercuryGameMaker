@@ -1,7 +1,7 @@
 ﻿using GameLibrary.Models;
 namespace GameLibrary.Models.Areas;
 
-public class Hitbox : BaseModel
+public partial class Hitbox : BaseModel
 {
 
 }

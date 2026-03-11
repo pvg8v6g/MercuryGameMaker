@@ -2,7 +2,7 @@ using System.Windows.Input;
 
 namespace GameLibrary.Commands;
 
-public class AsyncRelayCommand(Func<Task> execute, Func<bool>? canExecute = null) : ICommand
+public partial class AsyncRelayCommand(Func<Task> execute, Func<bool>? canExecute = null) : ICommand
 {
     public event EventHandler? CanExecuteChanged;
 
@@ -23,7 +23,7 @@ public class AsyncRelayCommand(Func<Task> execute, Func<bool>? canExecute = null
     public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
 }
 
-public class AsyncRelayCommand<T>(Func<T, Task> execute, Func<T, bool>? canExecute = null) : ICommand
+public partial class AsyncRelayCommand<T>(Func<T, Task> execute, Func<T, bool>? canExecute = null) : ICommand
 {
     public event EventHandler? CanExecuteChanged;
 

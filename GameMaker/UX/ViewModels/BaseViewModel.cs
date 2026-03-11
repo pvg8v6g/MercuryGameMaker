@@ -23,11 +23,11 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
         get;
         set
         {
-            if (!SetField(ref field, value)) return;
+            SetField(ref field, value);
             OnSelectedIndexChanged(value);
             OnPropertyChanged(nameof(SelectedEntity));
         }
-    }
+    } = -1;
 
     public T? SelectedEntity => SelectedIndex < 0 || SelectedIndex >= EntityCollection.Count || EntityCollection.Count < 1
         ? null

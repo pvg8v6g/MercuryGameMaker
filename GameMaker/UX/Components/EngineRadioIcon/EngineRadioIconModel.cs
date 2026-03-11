@@ -5,7 +5,7 @@ using MercuryLibrary.WinUI3Components;
 
 namespace GameMaker.UX.Components.EngineRadioIcon;
 
-public class EngineRadioIconModel : PropertyChangedUpdater
+public partial class EngineRadioIconModel : PropertyChangedUpdater
 {
     public CroppedImage? CroppedImage
     {
@@ -38,7 +38,7 @@ public class EngineRadioIconModel : PropertyChangedUpdater
     } = [];
 }
 
-public class MenuItemModel : PropertyChangedUpdater
+public partial class MenuItemModel : PropertyChangedUpdater
 {
     public string Header
     {

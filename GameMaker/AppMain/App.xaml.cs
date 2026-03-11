@@ -7,12 +7,16 @@ using GameMaker.Services.Navigation;
 using GameMaker.Tasks;
 using GameMaker.UX.ViewModels.ActorsPage;
 using GameMaker.UX.ViewModels.AttributesPage;
+using GameMaker.UX.ViewModels.DisciplinesPage;
 using GameMaker.UX.ViewModels.ElementsPage;
+using GameMaker.UX.ViewModels.GrowthsPage;
 using GameMaker.UX.ViewModels.HomeView;
 using GameMaker.UX.ViewModels.TopBar;
 using GameMaker.UX.Views.ActorsPage;
 using GameMaker.UX.Views.AttributesPage;
+using GameMaker.UX.Views.DisciplinesPage;
 using GameMaker.UX.Views.ElementsPage;
+using GameMaker.UX.Views.GrowthsPage;
 using GameMaker.UX.Views.HomeView;
 using GameMaker.UX.Views.MainWindow;
 using GameMaker.UX.Views.TopBar;
@@ -42,6 +46,8 @@ public partial class App
         services.AddSingleton<ActorsPageViewModel>();
         services.AddSingleton<AttributesPageViewModel>();
         services.AddSingleton<ElementsPageViewModel>();
+        services.AddSingleton<GrowthsPageViewModel>();
+        services.AddSingleton<DisciplinesPageViewModel>();
 
         #endregion
 
@@ -53,6 +59,8 @@ public partial class App
         services.AddSingleton<ActorsPage>();
         services.AddSingleton<AttributesPage>();
         services.AddSingleton<ElementsPage>();
+        services.AddSingleton<GrowthsPage>();
+        services.AddSingleton<DisciplinesPage>();
 
         #endregion
 

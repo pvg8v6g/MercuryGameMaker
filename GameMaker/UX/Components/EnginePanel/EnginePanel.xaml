@@ -21,8 +21,12 @@
                  FontSize="{StaticResource TitleFontSize}"
                  FontWeight="Bold" />
 
-      <ContentControl Grid.Row="2"
-                      Content="{x:Bind InnerContent, Mode=OneWay}" />
+      <ScrollViewer Grid.Row="2"
+                    HorizontalScrollBarVisibility="Auto"
+                    VerticalScrollBarVisibility="Auto">
+        <ContentControl Content="{x:Bind InnerContent, Mode=OneWay}"
+                        Padding="0,0,10,10" />
+      </ScrollViewer>
     </Grid>
   </Border>
 </UserControl>

@@ -22,23 +22,28 @@
     <engineListView:EngineListView ItemsSource="{x:Bind ViewModel.GameDataService.Elements}"
                                    SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}"
                                    NewCommand="{x:Bind ViewModel.NewEntityCommand}"
+                                   NewCommandParameter="New Element"
                                    CopyCommand="{x:Bind ViewModel.CopyEntityCommand}"
                                    PasteCommand="{x:Bind ViewModel.PasteEntityCommand}"
                                    DeleteCommand="{x:Bind ViewModel.DeleteEntityCommand}"
                                    CopiedModel="{x:Bind ViewModel.CopiedModel, Mode=OneWay}" />
-    <enginePanel:EnginePanel Grid.Column="1" Title="Element Details"
+    <enginePanel:EnginePanel Grid.Column="1"
+                             Title="Element Details"
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-      <StackPanel Orientation="Horizontal" Spacing="40">
-        <TextBox Header="Name"
-                 Text="{x:Bind ViewModel.SelectedEntity.Name,
+      <StackPanel Orientation="Vertical" Spacing="40">
+        <StackPanel Orientation="Horizontal" Spacing="40">
+          <TextBox Header="Name"
+                   Text="{x:Bind ViewModel.SelectedEntity.Name,
                  Mode=TwoWay,
                  FallbackValue='',
                  UpdateSourceTrigger=PropertyChanged}"
-                 VerticalAlignment="Bottom" />
-        <StackPanel VerticalAlignment="Bottom">
-          <TextBlock HorizontalAlignment="Center">Icon</TextBlock>
-          <iconView:IconView IconIndex="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay, FallbackValue=0}" HorizontalAlignment="Center" />
+                   VerticalAlignment="Bottom" />
+          <StackPanel VerticalAlignment="Bottom">
+            <TextBlock HorizontalAlignment="Center">Icon</TextBlock>
+            <iconView:IconView IconIndex="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay, FallbackValue=0}" HorizontalAlignment="Center" />
+          </StackPanel>
         </StackPanel>
+        <CheckBox IsChecked="{x:Bind ViewModel.SelectedEntity.IsMagicBased, Mode=TwoWay, FallbackValue=False}">Is Magic Based?</CheckBox>
       </StackPanel>
     </enginePanel:EnginePanel>
   </Grid>

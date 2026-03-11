@@ -21,12 +21,16 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
     {
         MaxWork += gameDataService.Attributes.Count;
         MaxWork += gameDataService.Elements.Count;
+        MaxWork += gameDataService.Growths.Count;
+        MaxWork += gameDataService.Disciplines.Count;
     }
 
     private void SaveData()
     {
         DataWork(Path.Combine(locationService.GameDirectory!, "Settings", "Attributes"), gameDataService.Attributes); // attributes
         DataWork(Path.Combine(locationService.GameDirectory!, "Settings", "Elements"), gameDataService.Elements); // elements
+        DataWork(Path.Combine(locationService.GameDirectory!, "Settings", "Growths"), gameDataService.Growths); // growths
+        DataWork(Path.Combine(locationService.GameDirectory!, "Disciplines"), gameDataService.Disciplines); // disciplines
     }
 
     private void DataWork<T>(string directory, ObservableCollection<T> collection) where T : BaseModel

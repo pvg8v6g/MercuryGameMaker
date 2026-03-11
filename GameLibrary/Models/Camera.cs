@@ -1,6 +1,6 @@
 ﻿namespace GameLibrary.Models;
 
-public class Camera : BaseModel
+public partial class Camera : BaseModel
 {
 
 }

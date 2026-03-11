@@ -24,7 +24,7 @@
     </ListView.Resources>
     <ListView.ContextFlyout>
       <MenuFlyout>
-        <MenuFlyoutItem Text="New" Command="{x:Bind NewCommand, Mode=OneWay}">
+        <MenuFlyoutItem Text="New" Command="{x:Bind NewCommand, Mode=OneWay}" CommandParameter="{x:Bind NewCommandParameter, Mode=OneWay}">
           <MenuFlyoutItem.Icon>
             <SymbolIcon Symbol="Add" />
           </MenuFlyoutItem.Icon>
