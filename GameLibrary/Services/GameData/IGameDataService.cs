@@ -38,6 +38,10 @@ public interface IGameDataService
 
     int LevelCap { get; set; }
 
+    public Guid LifeAttributeGuid { get; set; }
+
+    public Guid ManaAttributeGuid { get; set; }
+
     ObservableCollection<GameMap> GameMaps { get; }
 
     ObservableCollection<Fighter> Actors { get; }

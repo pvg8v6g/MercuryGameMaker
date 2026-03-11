@@ -41,6 +41,10 @@ public partial class GameDataService : PropertyChangedUpdater, IGameDataService
 
     public int LevelCap { get; set; } = 99;
 
+    public Guid LifeAttributeGuid { get; set; } = new("0581680B-6BCC-4668-AA4A-FA2BCE8160DA");
+
+    public Guid ManaAttributeGuid { get; set; } = new("22F0A795-4295-45AB-9EEC-909164E58E91");
+
     #endregion
 
     #region Game Objects

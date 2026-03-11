@@ -62,4 +62,8 @@
         <MauiXaml Include="UX\Resources\DefaultResource.xaml" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="UX\Models\GrowthsPage\" />
+    </ItemGroup>
+
 </Project>

@@ -9,6 +9,8 @@
       xmlns:iconView="using:GameMaker.UX.Components.IconView"
       xmlns:behaviors="using:GameLibrary.Behaviors"
       xmlns:disciplinesPage="using:GameMaker.UX.ViewModels.DisciplinesPage"
+      xmlns:disciplinesPage1="using:GameMaker.UX.Models.DisciplinesPage"
+      xmlns:engineIcon="using:GameMaker.UX.Components.EngineIcon"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance disciplinesPage:DisciplinesPageViewModel}"
       behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
@@ -69,17 +71,21 @@
                              Title="Attribute Data"
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
       <ItemsControl ItemsSource="{x:Bind ViewModel.AttributeSettings}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Spacing="15" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="disciplinesPage:AttributeGrowthSetting">
+          <DataTemplate x:DataType="disciplinesPage1:AttributeGrowthSetting">
             <Grid ColumnSpacing="10">
               <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="100" />
                 <ColumnDefinition Width="200" />
               </Grid.ColumnDefinitions>
-
-              <iconView:IconView IconIndex="{x:Bind Icon, Mode=TwoWay, FallbackValue=0}"
-                                 HorizontalAlignment="Center" />
+              <engineIcon:EngineIcon DataContext="{x:Bind IconImage, Mode=OneWay}"
+                                     HorizontalAlignment="Center" />
               <TextBlock Grid.Column="1" Text="{x:Bind Name}" VerticalAlignment="Center" />
               <ComboBox Grid.Column="2"
                         ItemsSource="{Binding DataContext.GameDataService.Growths, ElementName=DisciplinesPageRoot}"
