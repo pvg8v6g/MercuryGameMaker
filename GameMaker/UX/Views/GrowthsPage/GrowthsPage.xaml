@@ -8,6 +8,7 @@
       xmlns:engineListView="using:GameMaker.UX.Components.EngineListView"
       xmlns:enginePanel="using:GameMaker.UX.Components.EnginePanel"
       xmlns:lvc="using:LiveChartsCore.SkiaSharpView.WinUI"
+      xmlns:growthsPage1="using:GameMaker.UX.Models.GrowthsPage"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance growthsPage:GrowthsPageViewModel}"
       behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
@@ -79,7 +80,7 @@
           </ItemsPanelTemplate>
         </ItemsControl.ItemsPanel>
         <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="growthsPage:GrowthDataEntry">
+          <DataTemplate x:DataType="growthsPage1:GrowthDataEntry">
             <StackPanel Orientation="Horizontal">
               <TextBlock Text="{x:Bind Level}" FontSize="12" />
               <TextBlock Text=" => " FontSize="12" />

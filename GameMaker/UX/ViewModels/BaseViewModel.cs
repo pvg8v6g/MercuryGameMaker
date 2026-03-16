@@ -23,8 +23,9 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
         get;
         set
         {
+            if (field == value) return;
             SetField(ref field, value);
-            OnSelectedIndexChanged(value);
+            _ = OnSelectedIndexChanged(value);
             OnPropertyChanged(nameof(SelectedEntity));
         }
     } = -1;
@@ -39,8 +40,9 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
 
     #region Abstractions
 
-    protected virtual void OnSelectedIndexChanged(int index)
+    protected virtual Task OnSelectedIndexChanged(int index)
     {
+        return Task.CompletedTask;
     }
 
     #endregion

@@ -25,6 +25,8 @@
                     HorizontalScrollBarVisibility="Auto"
                     VerticalScrollBarVisibility="Auto">
         <ContentControl Content="{x:Bind InnerContent, Mode=OneWay}"
+                        HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Stretch"
                         Padding="0,0,10,10" />
       </ScrollViewer>
     </Grid>

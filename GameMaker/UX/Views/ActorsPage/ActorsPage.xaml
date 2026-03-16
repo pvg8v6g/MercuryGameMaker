@@ -5,10 +5,120 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:actorsPage="using:GameMaker.UX.ViewModels.ActorsPage"
       xmlns:behaviors="using:GameLibrary.Behaviors"
+      xmlns:enginePanel="using:GameMaker.UX.Components.EnginePanel"
+      xmlns:engineListView="using:GameMaker.UX.Components.EngineListView"
+      xmlns:imageChooser="using:GameMaker.UX.Components.ImageChooser"
+      xmlns:engineIcon="using:GameMaker.UX.Components.EngineIcon"
+      xmlns:disciplines="using:GameLibrary.Models.Disciplines"
+      xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance actorsPage:ActorsPageViewModel}"
       behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
-  <Grid>
-    <TextBlock Text="Hello World" />
+  <Grid ColumnSpacing="10" Padding="5">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="300" />
+      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
+    <engineListView:EngineListView ItemsSource="{x:Bind ViewModel.GameDataService.Actors}"
+                                   SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}"
+                                   NewCommand="{x:Bind ViewModel.NewEntityCommand}"
+                                   NewCommandParameter="New Actor"
+                                   CopyCommand="{x:Bind ViewModel.CopyEntityCommand}"
+                                   PasteCommand="{x:Bind ViewModel.PasteEntityCommand}"
+                                   DeleteCommand="{x:Bind ViewModel.DeleteEntityCommand}"
+                                   CopiedModel="{x:Bind ViewModel.CopiedModel, Mode=OneWay}" />
+    <enginePanel:EnginePanel Grid.Column="1"
+                             Title="Fighter Metadata"
+                             Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+      <StackPanel Orientation="Vertical"
+                  Spacing="20">
+        <StackPanel Spacing="20" Orientation="Horizontal">
+          <StackPanel Spacing="5">
+            <TextBlock Text="Face Image" />
+            <imageChooser:ImageChooser FolderPath="{x:Bind ViewModel.FaceFolderPath, Mode=OneWay}"
+                                       FileName="{x:Bind ViewModel.SelectedEntity.FaceName, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
+                                       Index="{x:Bind ViewModel.SelectedEntity.FaceIndex, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                       ChooserWidth="148"
+                                       ChooserHeight="148" />
+          </StackPanel>
+
+          <StackPanel Spacing="5">
+            <TextBlock Text="Character Image" />
+            <imageChooser:ImageChooser FolderPath="{x:Bind ViewModel.CharacterFolderPath, Mode=OneWay}"
+                                       FileName="{x:Bind ViewModel.SelectedEntity.CharacterName, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
+                                       Index="{x:Bind ViewModel.CharacterIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                       ChooserWidth="148"
+                                       ChooserHeight="148" />
+          </StackPanel>
+        </StackPanel>
+        <Grid ColumnSpacing="40"
+              RowSpacing="10">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+
+          <TextBox Grid.Column="0"
+                   Grid.Row="0"
+                   Header="Name"
+                   Text="{x:Bind ViewModel.SelectedEntity.Name, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
+                   VerticalAlignment="Bottom" />
+
+          <ComboBox Grid.Column="1"
+                    Grid.Row="0"
+                    PlaceholderText="Discipline"
+                    ItemsSource="{x:Bind ViewModel.GameDataService.Disciplines, Mode=OneWay}"
+                    SelectedValue="{x:Bind ViewModel.SelectedEntity.DisciplineGuid, Mode=TwoWay}"
+                    SelectedValuePath="Guid"
+                    MinHeight="48"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="disciplines:Discipline">
+                <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
+                  <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}"
+                                         VerticalAlignment="Center" />
+                  <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
+                </StackPanel>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+
+          <engineTextBox:EngineTextBox Grid.Column="0"
+                                       Grid.Row="1"
+                                       Header="Level"
+                                       InputType="Integer"
+                                       Text="{x:Bind ViewModel.SelectedEntity.Level, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}" />
+
+          <CheckBox Grid.Column="1"
+                    Grid.Row="1"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.Medic, Mode=TwoWay, FallbackValue='False', UpdateSourceTrigger=PropertyChanged}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="Medic healing items heal for twice the amount."
+                    VerticalAlignment="Bottom">
+            Medic
+          </CheckBox>
+
+          <TextBox Grid.Column="0"
+                   Grid.Row="2"
+                   Grid.ColumnSpan="2"
+                   Header="Description"
+                   Text="{x:Bind ViewModel.SelectedEntity.Description, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
+                   AcceptsReturn="True"
+                   TextWrapping="Wrap"
+                   MinHeight="100"
+                   VerticalAlignment="Top" />
+        </Grid>
+      </StackPanel>
+    </enginePanel:EnginePanel>
   </Grid>
 </Page>

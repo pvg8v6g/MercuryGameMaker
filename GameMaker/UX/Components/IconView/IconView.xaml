@@ -11,45 +11,6 @@
              MinHeight="48"
              MaxHeight="48">
   <Grid x:Name="RootGrid" Tapped="OnTapped" Background="Transparent" DataContext="{x:Bind CroppedImage}">
-    <FlyoutBase.AttachedFlyout>
-      <Flyout x:Name="IconFlyout">
-        <Flyout.FlyoutPresenterStyle>
-          <Style TargetType="FlyoutPresenter">
-            <Setter Property="Padding" Value="5" />
-            <Setter Property="MinWidth" Value="0" />
-            <Setter Property="MaxWidth" Value="1000" />
-          </Style>
-        </Flyout.FlyoutPresenterStyle>
-        <ScrollViewer x:Name="IconScrollViewer"
-                      MaxHeight="500"
-                      HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Auto"
-                      Padding="0,0,16,0">
-          <Grid x:Name="IconsContainer"
-                PointerMoved="IconsContainer_OnPointerMoved"
-                PointerExited="IconsContainer_OnPointerExited"
-                Tapped="FullIconsImage_OnTapped"
-                behaviors:PointerCursorBehavior.CursorType="Hand">
-            <Image x:Name="FullIconsImage" Stretch="None" />
-            <Canvas x:Name="OverlayCanvas" IsHitTestVisible="False">
-              <Border x:Name="HoverBorder"
-                      Width="32"
-                      Height="32"
-                      BorderBrush="{StaticResource LightYellowBrush}"
-                      BorderThickness="2"
-                      Visibility="Collapsed" />
-              <Border x:Name="SelectedBorder"
-                      Width="32"
-                      Height="32"
-                      BorderBrush="{StaticResource MediumPinkBrush}"
-                      BorderThickness="2"
-                      Visibility="Collapsed" />
-            </Canvas>
-          </Grid>
-        </ScrollViewer>
-      </Flyout>
-    </FlyoutBase.AttachedFlyout>
-
     <Border Background="{StaticResource MediumGreenBrush}"
             BorderBrush="{StaticResource DarkBlueBrush}"
             BorderThickness="2"
@@ -58,6 +19,44 @@
             Height="48"
             HorizontalAlignment="Center"
             VerticalAlignment="Center">
+      <FlyoutBase.AttachedFlyout>
+        <Flyout x:Name="IconFlyout">
+          <Flyout.FlyoutPresenterStyle>
+            <Style TargetType="FlyoutPresenter">
+              <Setter Property="Padding" Value="5" />
+              <Setter Property="MinWidth" Value="0" />
+              <Setter Property="MaxWidth" Value="1000" />
+            </Style>
+          </Flyout.FlyoutPresenterStyle>
+          <ScrollViewer x:Name="IconScrollViewer"
+                        MaxHeight="500"
+                        HorizontalScrollBarVisibility="Auto"
+                        VerticalScrollBarVisibility="Auto"
+                        Padding="0,0,16,0">
+            <Grid x:Name="IconsContainer"
+                  PointerMoved="IconsContainer_OnPointerMoved"
+                  PointerExited="IconsContainer_OnPointerExited"
+                  Tapped="FullIconsImage_OnTapped"
+                  behaviors:PointerCursorBehavior.CursorType="Hand">
+              <Image x:Name="FullIconsImage" Stretch="None" />
+              <Canvas x:Name="OverlayCanvas" IsHitTestVisible="False">
+                <Border x:Name="HoverBorder"
+                        Width="32"
+                        Height="32"
+                        BorderBrush="{StaticResource LightYellowBrush}"
+                        BorderThickness="2"
+                        Visibility="Collapsed" />
+                <Border x:Name="SelectedBorder"
+                        Width="32"
+                        Height="32"
+                        BorderBrush="{StaticResource MediumPinkBrush}"
+                        BorderThickness="2"
+                        Visibility="Collapsed" />
+              </Canvas>
+            </Grid>
+          </ScrollViewer>
+        </Flyout>
+      </FlyoutBase.AttachedFlyout>
       <Canvas Width="{Binding Rect, Converter={StaticResource RectWidthConverter}}"
               Height="{Binding Rect, Converter={StaticResource RectHeightConverter}}"
               Visibility="{Binding Rect, Converter={StaticResource NullToCollapsedConverter}}"

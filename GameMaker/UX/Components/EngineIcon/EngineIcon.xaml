@@ -3,10 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:componentModels="using:GameLibrary.Utilities.ComponentModels"
              mc:Ignorable="d"
-             d:DataContext="{d:DesignInstance componentModels:CroppedImage}">
-  <Grid>
+             Width="32"
+             Height="32">
+  <Grid DataContext="{x:Bind CroppedImage, Mode=OneWay}">
     <!-- Template with Rect (clipped Canvas) -->
     <Canvas Width="{Binding Rect, Converter={StaticResource RectWidthConverter}}"
             Height="{Binding Rect, Converter={StaticResource RectHeightConverter}}"

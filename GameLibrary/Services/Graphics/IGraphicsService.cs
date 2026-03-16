@@ -1,4 +1,5 @@
-﻿using GameLibrary.Utilities.ComponentModels;
+﻿using GameLibrary.Enumerations;
+using GameLibrary.Utilities.ComponentModels;
 using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace GameLibrary.Services.Graphics;
@@ -14,6 +15,8 @@ public interface IGraphicsService
     string GetIconsPath();
     Task<CroppedImage> GetIcon(int index);
     Task<CroppedImage> GetEngineIcon(int index);
+    string GetCharacterPath();
+    Task<CroppedImage> GetCharacter(string fileName, int index);
     Task<BitmapImage> GetImage(string imagePath);
     Task<(double width, double height)> GetSegmentation(string fileName);
     (double x, double y) GetCharacterDivisions(string fileName);

@@ -78,7 +78,7 @@ public static class ListViewBehaviors
 
         if ((bool) e.NewValue)
         {
-            listView.RegisterPropertyChangedCallback(UIElement.ContextFlyoutProperty, (s, p) => HookFlyout(listView));
+            listView.RegisterPropertyChangedCallback(UIElement.ContextFlyoutProperty, (_, _) => HookFlyout(listView));
             HookFlyout(listView);
         }
     }
@@ -87,39 +87,33 @@ public static class ListViewBehaviors
 
     private static void HookFlyout(ListView listView)
     {
-        if (listView.ContextFlyout is MenuFlyout flyout)
-        {
-            flyout.Opening -= Flyout_Opening;
-            flyout.Opening += Flyout_Opening;
+        if (listView.ContextFlyout is not MenuFlyout flyout) return;
+        flyout.Opening -= Flyout_Opening;
+        flyout.Opening += Flyout_Opening;
 
-            FlyoutToListViewMap.Remove(flyout);
-            FlyoutToListViewMap.Add(flyout, listView);
-        }
+        FlyoutToListViewMap.Remove(flyout);
+        FlyoutToListViewMap.Add(flyout, listView);
     }
 
-    private static void Flyout_Opening(object sender, object e)
+    private static void Flyout_Opening(object? sender, object e)
     {
-        if (sender is MenuFlyout flyout)
+        if (sender is not MenuFlyout flyout) return;
+        if (!FlyoutToListViewMap.TryGetValue(flyout, out var listView))
         {
-            if (!FlyoutToListViewMap.TryGetValue(flyout, out var listView))
-            {
-                listView = flyout.Target as ListView;
-            }
+            listView = flyout.Target as ListView;
+        }
 
-            if (listView != null)
-            {
-                // We use DispatcherQueue to ensure that any selection changes from RightTapped
-                // are processed before we update the menu items' IsEnabled state.
-                var dispatcherQueue = flyout.DispatcherQueue ?? listView.DispatcherQueue;
-                if (dispatcherQueue != null)
-                {
-                    dispatcherQueue.TryEnqueue(() => { UpdateMenuItems(flyout.Items, listView); });
-                }
-                else
-                {
-                    UpdateMenuItems(flyout.Items, listView);
-                }
-            }
+        if (listView == null) return;
+        // We use DispatcherQueue to ensure that any selection changes from RightTapped
+        // are processed before we update the menu items' IsEnabled state.
+        var dispatcherQueue = flyout.DispatcherQueue ?? listView.DispatcherQueue;
+        if (dispatcherQueue != null)
+        {
+            dispatcherQueue.TryEnqueue(() => { UpdateMenuItems(flyout.Items, listView); });
+        }
+        else
+        {
+            UpdateMenuItems(flyout.Items, listView);
         }
     }
 

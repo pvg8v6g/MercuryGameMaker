@@ -49,7 +49,7 @@ public partial class IconView
     private void OnTapped(object sender, TappedRoutedEventArgs e)
     {
         UpdateSelectedBorder();
-        FlyoutBase.ShowAttachedFlyout(RootGrid);
+        FlyoutBase.ShowAttachedFlyout(sender as FrameworkElement);
     }
 
     private async void IconFlyout_Opened(object? sender, object e)
@@ -116,7 +116,7 @@ public partial class IconView
     private void IconsContainer_OnPointerMoved(object sender, PointerRoutedEventArgs e)
     {
         var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
-        var (w, h) = graphicsService.GetSegmentation("~Icons.png").Result;
+        var (w, h) = graphicsService.GetSegmentation(graphicsService.GetIconsPath()).Result;
         var position = e.GetCurrentPoint(IconsContainer).Position;
 
         var x = (int) (position.X / w) * w;
@@ -135,7 +135,7 @@ public partial class IconView
     private void FullIconsImage_OnTapped(object sender, TappedRoutedEventArgs e)
     {
         var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
-        var (w, h) = graphicsService.GetSegmentation("~Icons.png").Result;
+        var (w, h) = graphicsService.GetSegmentation(graphicsService.GetIconsPath()).Result;
         var position = e.GetPosition(IconsContainer);
         var xIndex = (int) (position.X / w);
         var yIndex = (int) (position.Y / h);

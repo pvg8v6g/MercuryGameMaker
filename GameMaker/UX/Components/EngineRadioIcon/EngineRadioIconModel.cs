@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using GameLibrary.Models;
 using GameLibrary.Utilities.ComponentModels;
 using MercuryLibrary.WinUI3Components;
 

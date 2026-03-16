@@ -4,6 +4,7 @@ using GameLibrary.Models.Growths;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Json;
 using GameLibrary.Utilities.Calculations;
+using GameMaker.UX.Models.GrowthsPage;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
@@ -96,9 +97,9 @@ public partial class GrowthsPageViewModel(IGameDataService gameDataService, IJso
         return Task.CompletedTask;
     }
 
-    protected override void OnSelectedIndexChanged(int index)
+    protected override async Task OnSelectedIndexChanged(int index)
     {
-        base.OnSelectedIndexChanged(index);
+        await base.OnSelectedIndexChanged(index);
         var levelCap = gameDataService.LevelCap;
         var customSeparators = new double[] { 0, 20, 40, 60, 80, levelCap }.Distinct().OrderBy(x => x).ToArray();
 

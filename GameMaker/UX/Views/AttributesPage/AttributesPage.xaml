@@ -22,6 +22,7 @@
     <engineListView:EngineListView ItemsSource="{x:Bind ViewModel.GameDataService.Attributes}"
                                    SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}"
                                    NewCommand="{x:Bind ViewModel.NewEntityCommand}"
+                                   NewCommandParameter="New Attribute"
                                    CopyCommand="{x:Bind ViewModel.CopyEntityCommand}"
                                    PasteCommand="{x:Bind ViewModel.PasteEntityCommand}"
                                    DeleteCommand="{x:Bind ViewModel.DeleteEntityCommand}"

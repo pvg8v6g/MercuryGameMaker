@@ -43,9 +43,58 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
 
     #region Character
 
+    public string GetCharacterPath()
+    {
+        return Path.Combine(locationService.GameDirectory!, "Graphics", "Characters");
+    }
+
+    // public static Image getCharacterImage(String fileName, boolean scaling) {
+    //     var scale = scaling ? GameData.scaleFactor : 1.0;
+    //     return getCachedBitmap(Cache.Regular, "Characters/" + fileName, scale, scale);
+    // }
+    //
+    // public static Rectangle2D getCharacterViewport(Image image, String fileName, Direction direction, int index) {
+    //     var w = image.getWidth();
+    //     var h = image.getHeight();
+    //     var divisions = getCharacterDivisions(fileName);
+    //     w /= divisions.a;
+    //     h /= divisions.b;
+    //     var bitIndex = direction.getDirection() * divisions.a + index;
+    //     var x = ((int) (bitIndex % divisions.a)) * w;
+    //     var y = ((int) (bitIndex / divisions.a)) * h;
+    //     return new Rectangle2D(x, y, w, h);
+    // }
+    //
+    // public static Pair<Double, Double> getCharacterDivisions(String fileName) {
+    //     if (fileName.contains("$")) return new Pair<>(3.0, 4.0);
+    //     else if (fileName.contains("@")) return new Pair<>(4.0, 2.0);
+    //     else if (fileName.contains("#")) return new Pair<>(16.0, 32.0);
+    //     else if (fileName.contains("&")) return new Pair<>(4.0, 2.0);
+    //     else return new Pair<>(12.0, 8.0);
+    // }
+
+
+    public async Task<CroppedImage> GetCharacter(string fileName, int index)
+    {
+        var path = Path.Combine(GetCharacterPath(), fileName);
+        var source = await GetImage(path);
+        var dimensions = await GetImageDimensions(path);
+        var divisions = GetCharacterDivisions(fileName);
+        var w = dimensions.width / divisions.x;
+        var h = dimensions.height / divisions.y;
+        var columns = (int) divisions.x;
+        var x = (index % columns) * w;
+        var y = (index / columns) * h;
+        return new CroppedImage { ImageSource = source, Rect = new Rect(x, y, w, h) };
+    }
+
     #endregion
 
     #region Face
+
+    public void GetFace(string fileName)
+    {
+    }
 
     #endregion
 
@@ -94,7 +143,8 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
     public (double x, double y) GetCharacterDivisions(string fileName)
     {
         if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
-        return fileName[0] switch
+        var name = Path.GetFileName(fileName);
+        return name[0] switch
         {
             '$' => (3.0d, 4.0d),
             '@' => (4.0d, 2.0d),
