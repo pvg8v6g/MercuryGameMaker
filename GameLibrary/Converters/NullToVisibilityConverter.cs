@@ -7,10 +7,10 @@ public partial class NullToVisibilityConverter : IValueConverter
 {
     public bool Invert { get; set; }
 
-    public object Convert(object value, Type targetType, object parameter, string language)
+    public object Convert(object? value, Type targetType, object parameter, string language)
     {
-        bool isNull = value == null;
-        bool shouldBeVisible = Invert ? isNull : !isNull;
+        var isNull = value == null;
+        var shouldBeVisible = Invert ? isNull : !isNull;
         return shouldBeVisible ? Visibility.Visible : Visibility.Collapsed;
     }
 

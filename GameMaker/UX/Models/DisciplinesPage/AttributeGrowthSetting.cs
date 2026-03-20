@@ -16,7 +16,7 @@ public partial class AttributeGrowthSetting : PropertyChangedUpdater
 
     public Guid AttributeGuid { get; set; }
 
-    public Guid GrowthGuid
+    public Guid? GrowthGuid
     {
         get;
         set => SetField(ref field, value);

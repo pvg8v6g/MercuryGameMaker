@@ -8,7 +8,7 @@ public partial class NullToBooleanConverter : IValueConverter
 
     public object Convert(object value, Type targetType, object parameter, string language)
     {
-        bool isNull = value == null;
+        var isNull = value == null;
         return Invert ? isNull : !isNull;
     }
 

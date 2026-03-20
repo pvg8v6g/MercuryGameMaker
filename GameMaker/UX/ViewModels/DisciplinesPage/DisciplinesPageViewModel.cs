@@ -7,7 +7,6 @@ using GameMaker.UX.Models.DisciplinesPage;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
-using GameLibrary.Models.Growths;
 
 namespace GameMaker.UX.ViewModels.DisciplinesPage;
 
@@ -45,33 +44,8 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
 
     protected override async Task LoadedAction()
     {
-        if (SelectedEntity is not null)
-        {
-            await LoadAttributeSettings(SelectedEntity);
-        }
-    }
-
-    private void OnSettingPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (sender is not AttributeGrowthSetting setting || SelectedEntity == null) return;
-
-        if (e.PropertyName == nameof(AttributeGrowthSetting.GrowthGuid))
-        {
-            if (setting.AttributeGuid == gameDataService.LifeAttributeGuid)
-            {
-                SelectedEntity.LifeGrowthGuid = setting.GrowthGuid;
-            }
-            else if (setting.AttributeGuid == gameDataService.ManaAttributeGuid)
-            {
-                SelectedEntity.ManaGrowthGuid = setting.GrowthGuid;
-            }
-            else
-            {
-                SelectedEntity.AttributeGrowths[setting.AttributeGuid] = setting.GrowthGuid;
-            }
-
-            UpdateSettingChart(setting);
-        }
+        if (SelectedEntity is null) return;
+        await LoadAttributeSettings(SelectedEntity);
     }
 
     #endregion
@@ -82,7 +56,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
     {
         var lifeSetting = new AttributeGrowthSetting
         {
-            AvailableGrowths = gameDataService.Growths ?? new ObservableCollection<Growth>(),
+            AvailableGrowths = gameDataService.Growths,
             IconIndex = 478,
             AttributeGuid = gameDataService.LifeAttributeGuid,
             Name = "Life",
@@ -93,7 +67,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
 
         var manaSetting = new AttributeGrowthSetting
         {
-            AvailableGrowths = gameDataService.Growths ?? new ObservableCollection<Growth>(),
+            AvailableGrowths = gameDataService.Growths,
             IconIndex = 523,
             AttributeGuid = gameDataService.ManaAttributeGuid,
             Name = "Mana",
@@ -143,7 +117,8 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
 
     private void UpdateSettingChart(AttributeGrowthSetting setting)
     {
-        var growth = (gameDataService.Growths ?? Enumerable.Empty<Growth>()).FirstOrDefault(x => x.Guid == setting.GrowthGuid);
+        var targetGuid = setting.GrowthGuid ?? Guid.Empty;
+        var growth = gameDataService.Growths.FirstOrDefault(x => x.Guid == targetGuid);
         if (growth is null || growth.GrowthValues.Count == 0)
         {
             setting.Series = [];
@@ -164,6 +139,28 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
                 Name = growth.Name
             }
         ];
+    }
+
+    private void OnSettingPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (sender is not AttributeGrowthSetting setting || SelectedEntity == null) return;
+
+        if (e.PropertyName is not nameof(AttributeGrowthSetting.GrowthGuid)) return;
+        var growthGuid = setting.GrowthGuid ?? Guid.Empty;
+        if (setting.AttributeGuid == gameDataService.LifeAttributeGuid)
+        {
+            SelectedEntity.LifeGrowthGuid = growthGuid;
+        }
+        else if (setting.AttributeGuid == gameDataService.ManaAttributeGuid)
+        {
+            SelectedEntity.ManaGrowthGuid = growthGuid;
+        }
+        else
+        {
+            SelectedEntity.AttributeGrowths[setting.AttributeGuid] = growthGuid;
+        }
+
+        UpdateSettingChart(setting);
     }
 
     #endregion

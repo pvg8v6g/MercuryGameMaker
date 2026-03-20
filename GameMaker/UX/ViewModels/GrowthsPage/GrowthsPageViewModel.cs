@@ -137,7 +137,7 @@ public partial class GrowthsPageViewModel(IGameDataService gameDataService, IJso
         var rate = Calculations.RandomBetween(v - 0.125, v + 0.125);
 
         var levelCap = gameDataService.LevelCap;
-        for (int x = 0; x <= levelCap; x++)
+        for (var x = 0; x <= levelCap; x++)
         {
             var y = (int) Calculations.GetLevelValue(x, rate, lower, upper);
             y = Math.Max(y, 0);

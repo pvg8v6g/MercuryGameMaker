@@ -1,4 +1,5 @@
-﻿using Windows.Foundation;
+﻿using System.Reflection;
+using Windows.Foundation;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -28,69 +29,76 @@ public static class SelectAllBehavior
 
     private static void OnEnableTrailingDoubleClickSelectAllChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is TextBox tb)
+        if (d is not TextBox tb) return;
+        var state = GetOrCreateState(tb);
+        var enabled = (bool) e.NewValue;
+        if (enabled)
         {
-            bool enabled = (bool) e.NewValue;
-            if (enabled)
+            state.OnLoadedHandler ??= OnTextBoxLoaded;
+            tb.Loaded += state.OnLoadedHandler;
+            TryAttach(tb, state);
+        }
+        else
+        {
+            Detach(state);
+            if (state.OnLoadedHandler is not null)
             {
-                Console.WriteLine("Attached");
-                tb.PointerPressed += OnPointerPressed;
+                tb.Loaded -= state.OnLoadedHandler;
+                state.OnLoadedHandler = null;
             }
-            else
-            {
-                tb.PointerPressed -= OnPointerPressed;
-                _states.Remove(tb);
-            }
+
+            States.Remove(tb);
         }
     }
 
-    private static bool TryAttach(TextBox tb, State state)
+    private static void TryAttach(TextBox tb, State state)
     {
-        var svObj = tb.GetType().GetMethod("GetTemplateChild", new[] { typeof(string) })?.Invoke(tb, new object[] { "ContentElement" });
-        var sv = svObj as ScrollViewer;
-        if (sv == null) return false;
-        sv.PointerPressed += OnPointerPressed;
-        state.ScrollViewer = sv;
-        return true;
+        try
+        {
+            var getTemplateChild = tb.GetType().GetMethod(
+                "GetTemplateChild",
+                BindingFlags.Instance | BindingFlags.NonPublic,
+                null,
+                [typeof(string)],
+                null);
+            var svObj = getTemplateChild?.Invoke(tb, ["ContentElement"]);
+            if (svObj is not ScrollViewer sv) return;
+            sv.PointerPressed += OnPointerPressed;
+            state.ScrollViewer = sv;
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
     }
 
-    private static void Detach(TextBox tb, State state)
+    private static void Detach(State state)
     {
-        if (state.ScrollViewer != null)
-        {
-            state.ScrollViewer.PointerPressed -= OnPointerPressed;
-            state.ScrollViewer = null;
-        }
+        if (state.ScrollViewer is null) return;
+        state.ScrollViewer.PointerPressed -= OnPointerPressed;
+        state.ScrollViewer = null;
     }
 
     private static void OnTextBoxLoaded(object sender, RoutedEventArgs e)
     {
-        if (sender is TextBox tb && _states.TryGetValue(tb, out State? state) && state.OnLoadedHandler != null)
-        {
-            Console.WriteLine("Loaded");
-            tb.Loaded -= state.OnLoadedHandler;
-            state.OnLoadedHandler = null;
-            TryAttach(tb, state);
-        }
+        if (sender is not TextBox tb || !States.TryGetValue(tb, out var state) || state.OnLoadedHandler is null) return;
+        tb.Loaded -= state.OnLoadedHandler;
+        state.OnLoadedHandler = null;
+        TryAttach(tb, state);
     }
 
     private static void OnPointerPressed(object sender, PointerRoutedEventArgs e)
     {
-        Console.WriteLine("Pointer Pressed");
-        TextBox? tb = sender as TextBox;
-        if (tb == null && sender is ScrollViewer)
-        {
-            tb = FindAncestor<TextBox>(sender as DependencyObject);
-        }
-
-        if (tb == null || !e.GetCurrentPoint(tb).Properties.IsLeftButtonPressed) return;
+        var tb = sender as TextBox;
+        if (tb is null && sender is ScrollViewer viewer) tb = FindAncestor<TextBox>(viewer);
+        if (tb is null || !e.GetCurrentPoint(tb).Properties.IsLeftButtonPressed) return;
         var pointerPoint = e.GetCurrentPoint(tb);
         var point = pointerPoint.Position;
         var state = GetOrCreateState(tb);
         var now = DateTime.UtcNow;
-        bool isDoubleClick = (now - state.LastClickTime).TotalMilliseconds < 400 &&
-                             Math.Abs(point.X - state.LastPosition.X) < 10 &&
-                             Math.Abs(point.Y - state.LastPosition.Y) < 10;
+        var isDoubleClick = (now - state.LastClickTime).TotalMilliseconds < 400 &&
+                            Math.Abs(point.X - state.LastPosition.X) < 10 &&
+                            Math.Abs(point.Y - state.LastPosition.Y) < 10;
         state.LastClickTime = now;
         state.LastPosition = point;
         if (isDoubleClick)
@@ -111,7 +119,6 @@ public static class SelectAllBehavior
         while (parent != null)
         {
             if (parent is T t) return t;
-            current = parent;
             parent = VisualTreeHelper.GetParent(parent);
         }
 
@@ -120,16 +127,13 @@ public static class SelectAllBehavior
 
     private static State GetOrCreateState(TextBox tb)
     {
-        if (!_states.TryGetValue(tb, out State? state))
-        {
-            state = new State();
-            _states[tb] = state;
-        }
-
+        if (States.TryGetValue(tb, out var state)) return state;
+        state = new State();
+        States[tb] = state;
         return state;
     }
 
-    private static readonly Dictionary<TextBox, State> _states = new();
+    private static readonly Dictionary<TextBox, State> States = new();
 
     private class State
     {
