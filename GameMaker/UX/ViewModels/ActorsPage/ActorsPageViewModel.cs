@@ -77,7 +77,7 @@ public partial class ActorsPageViewModel(
             return;
         }
 
-        var characterPath = Path.Combine(graphicsService.GetCharacterPath(), characterName!);
+        var characterPath = Path.Combine(graphicsService.GetCharacterPath(), characterName);
         var divisions = (await graphicsService.GetSegmentation(characterPath)).width;
         CharacterIndex = (int) SelectedEntity.CharacterDirection * (int) divisions + SelectedEntity.CharacterIndex;
     }

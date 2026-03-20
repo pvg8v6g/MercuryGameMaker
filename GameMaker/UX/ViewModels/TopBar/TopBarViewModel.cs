@@ -154,15 +154,17 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
                 break;
             case "4":
                 break;
-            case "5":
+            case "5": // equipment
+                navigationService.NavigateTo<Views.EquipmentPage.EquipmentPage>();
                 break;
             case "6":
                 break;
             case "7":
                 break;
-            case "8":
+            case "8": // states
+                navigationService.NavigateTo<Views.StatesPage.StatesPage>();
                 break;
-            case "9":
+            case "9": // animations
                 break;
             case "10.1": // attributes
                 EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;

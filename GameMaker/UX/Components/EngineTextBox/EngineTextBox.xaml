@@ -5,13 +5,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d">
 
-    <TextBox x:Name="InternalTextBox"
-             Text="{x:Bind Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-             Header="{x:Bind Header, Mode=OneWay}"
-             PlaceholderText="{x:Bind PlaceholderText, Mode=OneWay}"
-             MaxLength="{x:Bind MaxLength, Mode=OneWay}"
-             InputScope="{x:Bind InputType, Converter={StaticResource InputTypeToInputScopeConverter}, Mode=OneWay}"
-             AcceptsReturn="{x:Bind AcceptsReturn, Mode=OneWay}"
-             TextWrapping="{x:Bind TextWrapping, Mode=OneWay}"
-             TextChanging="OnTextChanging" />
+  <TextBox Text="{x:Bind Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+           Header="{x:Bind Header, Mode=OneWay}"
+           PlaceholderText="{x:Bind PlaceholderText, Mode=OneWay}"
+           MaxLength="{x:Bind MaxLength, Mode=OneWay}"
+           InputScope="{x:Bind InputType, Converter={StaticResource InputTypeToInputScopeConverter}, Mode=OneWay}"
+           AcceptsReturn="{x:Bind AcceptsReturn, Mode=OneWay}"
+           TextWrapping="{x:Bind TextWrapping, Mode=OneWay}"
+           TextChanging="OnTextChanging" />
 </UserControl>

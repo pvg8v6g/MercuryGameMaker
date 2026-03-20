@@ -7,6 +7,7 @@ using GameMaker.UX.Models.DisciplinesPage;
 using LiveChartsCore.SkiaSharpView;
 using LiveChartsCore.SkiaSharpView.Painting;
 using SkiaSharp;
+using GameLibrary.Models.Growths;
 
 namespace GameMaker.UX.ViewModels.DisciplinesPage;
 
@@ -81,7 +82,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
     {
         var lifeSetting = new AttributeGrowthSetting
         {
-            AvailableGrowths = gameDataService.Growths,
+            AvailableGrowths = gameDataService.Growths ?? new ObservableCollection<Growth>(),
             IconIndex = 478,
             AttributeGuid = gameDataService.LifeAttributeGuid,
             Name = "Life",
@@ -92,7 +93,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
 
         var manaSetting = new AttributeGrowthSetting
         {
-            AvailableGrowths = gameDataService.Growths,
+            AvailableGrowths = gameDataService.Growths ?? new ObservableCollection<Growth>(),
             IconIndex = 523,
             AttributeGuid = gameDataService.ManaAttributeGuid,
             Name = "Mana",
@@ -142,7 +143,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
 
     private void UpdateSettingChart(AttributeGrowthSetting setting)
     {
-        var growth = gameDataService.Growths.FirstOrDefault(x => x.Guid == setting.GrowthGuid);
+        var growth = (gameDataService.Growths ?? Enumerable.Empty<Growth>()).FirstOrDefault(x => x.Guid == setting.GrowthGuid);
         if (growth is null || growth.GrowthValues.Count == 0)
         {
             setting.Series = [];

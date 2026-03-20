@@ -111,61 +111,61 @@ public partial class Fighter : BaseModel
         set => SetField(ref field, value);
     } = new();
 
-    public Guid Weapon
+    public Guid? Weapon
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public Guid Head
+    public Guid? Head
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public Guid Chest
+    public Guid? Chest
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public Guid Gloves
+    public Guid? Gloves
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public Guid Sash
+    public Guid? Sash
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public Guid Legs
+    public Guid? Legs
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public Guid Feet
+    public Guid? Feet
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public Guid Accessory1
+    public Guid? Accessory1
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public Guid Accessory2
+    public Guid? Accessory2
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public Guid Artifact
+    public Guid? Artifact
     {
         get;
         set => SetField(ref field, value);

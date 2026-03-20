@@ -35,6 +35,7 @@
                  FallbackValue='',
                  UpdateSourceTrigger=PropertyChanged}"
                  VerticalAlignment="Bottom" />
+
         <StackPanel VerticalAlignment="Bottom">
           <TextBlock HorizontalAlignment="Center">Icon</TextBlock>
           <iconView:IconView IconIndex="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay, FallbackValue=0}" HorizontalAlignment="Center" />

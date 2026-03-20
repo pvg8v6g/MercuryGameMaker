@@ -108,7 +108,7 @@ public partial class ImageChooser
     {
         var ticket = ++_updateTicket;
 
-        if (string.IsNullOrEmpty(FileName))
+        if (string.IsNullOrEmpty(FileName) || string.IsNullOrEmpty(FolderPath))
         {
             if (ticket != _updateTicket) return;
             CroppedImage.ImageSource = null;
