@@ -1,4 +1,5 @@
 ﻿using GameLibrary.Models.Items;
+using MercuryLibrary.Extensions;
 using MercuryLibrary.WinUI3Components;
 using Attribute = GameLibrary.Models.Attributes.Attribute;
 
@@ -20,7 +21,7 @@ public class AttributeStatViewModel(Attribute attribute, Equipment equipment) : 
                 equipment.AttributeStats[attribute.Guid] = result;
                 OnPropertyChanged();
             }
-            else if (string.IsNullOrEmpty(value))
+            else if (value.IsNullOrEmpty())
             {
                 equipment.AttributeStats.Remove(attribute.Guid);
                 OnPropertyChanged();
@@ -38,7 +39,7 @@ public class AttributeStatViewModel(Attribute attribute, Equipment equipment) : 
                 equipment.ElementResist[attribute.Guid] = result;
                 OnPropertyChanged();
             }
-            else if (string.IsNullOrEmpty(value))
+            else if (value.IsNullOrEmpty())
             {
                 equipment.ElementResist.Remove(attribute.Guid);
                 OnPropertyChanged();

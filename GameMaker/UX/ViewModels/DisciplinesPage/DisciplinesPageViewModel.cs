@@ -1,6 +1,9 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Collections.Generic;
+using System.Linq;
 using GameLibrary.Models.Disciplines;
+using GameLibrary.Models.Growths;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Json;
 using GameMaker.UX.Models.DisciplinesPage;
@@ -19,6 +22,9 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
 
     protected override ObservableCollection<Discipline> EntityCollection => gameDataService.Disciplines;
 
+    private Dictionary<Guid, Growth> _growthLookup = new();
+    private Dictionary<Guid, int[]> _growthValueArrays = new();
+
     public ObservableCollection<AttributeGrowthSetting> AttributeSettings { get; } = new();
 
     #endregion
@@ -28,14 +34,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
     protected override async Task OnSelectedIndexChanged(int index)
     {
         await base.OnSelectedIndexChanged(index);
-        foreach (var setting in AttributeSettings)
-        {
-            setting.PropertyChanged -= OnSettingPropertyChanged;
-        }
-
-        AttributeSettings.Clear();
-        if (SelectedEntity is null) return;
-        await LoadAttributeSettings(SelectedEntity);
+        UpdateAttributeGrowths();
     }
 
     #endregion
@@ -44,51 +43,81 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
 
     protected override async Task LoadedAction()
     {
-        if (SelectedEntity is null) return;
-        await LoadAttributeSettings(SelectedEntity);
+        if (AttributeSettings.Count == 0)
+        {
+            CreateAttributeSettings();
+        }
+        if (SelectedEntity is not null)
+        {
+            UpdateAttributeGrowths();
+        }
     }
 
     #endregion
 
     #region Private Methods
 
-    private async Task LoadAttributeSettings(Discipline discipline)
+    private void CreateAttributeSettings()
     {
+        _growthLookup = GameDataService.Growths.ToDictionary(g => g.Guid);
+
         var lifeSetting = new AttributeGrowthSetting
         {
-            AvailableGrowths = gameDataService.Growths,
+            AvailableGrowths = GameDataService.Growths,
             IconIndex = 478,
-            AttributeGuid = gameDataService.LifeAttributeGuid,
+            AttributeGuid = GameDataService.LifeAttributeGuid,
             Name = "Life",
-            GrowthGuid = discipline.LifeGrowthGuid
+            GrowthGuid = null
         };
         InitializeSetting(lifeSetting);
         AttributeSettings.Add(lifeSetting);
 
         var manaSetting = new AttributeGrowthSetting
         {
-            AvailableGrowths = gameDataService.Growths,
+            AvailableGrowths = GameDataService.Growths,
             IconIndex = 523,
-            AttributeGuid = gameDataService.ManaAttributeGuid,
+            AttributeGuid = GameDataService.ManaAttributeGuid,
             Name = "Mana",
-            GrowthGuid = discipline.ManaGrowthGuid
+            GrowthGuid = null
         };
         InitializeSetting(manaSetting);
         AttributeSettings.Add(manaSetting);
 
-        foreach (var attr in gameDataService.Attributes)
+        foreach (var attr in GameDataService.Attributes)
         {
-            discipline.AttributeGrowths.TryGetValue(attr.Guid, out var growthGuid);
             var setting = new AttributeGrowthSetting
             {
-                AvailableGrowths = gameDataService.Growths,
+                AvailableGrowths = GameDataService.Growths,
                 IconIndex = attr.Icon,
                 AttributeGuid = attr.Guid,
                 Name = attr.Name,
-                GrowthGuid = growthGuid
+                GrowthGuid = null
             };
             InitializeSetting(setting);
             AttributeSettings.Add(setting);
+        }
+    }
+
+    private void UpdateAttributeGrowths()
+    {
+        if (SelectedEntity is null)
+        {
+            foreach (var setting in AttributeSettings)
+            {
+                setting.GrowthGuid = null;
+            }
+            return;
+        }
+
+        foreach (var setting in AttributeSettings)
+        {
+            Guid? growthGuid = setting.AttributeGuid switch
+            {
+                var guid when guid == GameDataService.LifeAttributeGuid => SelectedEntity.LifeGrowthGuid,
+                var guid when guid == GameDataService.ManaAttributeGuid => SelectedEntity.ManaGrowthGuid,
+                _ => SelectedEntity.AttributeGrowths.TryGetValue(setting.AttributeGuid, out var g) ? g : null
+            };
+            setting.GrowthGuid = growthGuid;
         }
     }
 
@@ -98,7 +127,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
         [
             new Axis
             {
-                MinLimit = 0, MaxLimit = gameDataService.LevelCap,
+                MinLimit = 0, MaxLimit = GameDataService.LevelCap,
                 LabelsPaint = null,
                 SeparatorsPaint = new SolidColorPaint(SKColors.Gray.WithAlpha(50), 0.5f)
             }
@@ -118,14 +147,23 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
     private void UpdateSettingChart(AttributeGrowthSetting setting)
     {
         var targetGuid = setting.GrowthGuid ?? Guid.Empty;
-        var growth = gameDataService.Growths.FirstOrDefault(x => x.Guid == targetGuid);
-        if (growth is null || growth.GrowthValues.Count == 0)
+        if (targetGuid == Guid.Empty)
         {
             setting.Series = [];
             return;
         }
 
-        var values = growth.GrowthValues.OrderBy(x => x.Key).Select(x => x.Value).ToArray();
+        if (!_growthLookup.TryGetValue(targetGuid, out var growth) || growth.GrowthValues.Count == 0)
+        {
+            setting.Series = [];
+            return;
+        }
+
+        if (!_growthValueArrays.TryGetValue(targetGuid, out var values))
+        {
+            values = growth.GrowthValues.OrderBy(x => x.Key).Select(x => x.Value).ToArray();
+            _growthValueArrays[targetGuid] = values;
+        }
 
         setting.Series =
         [
@@ -147,11 +185,11 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
 
         if (e.PropertyName is not nameof(AttributeGrowthSetting.GrowthGuid)) return;
         var growthGuid = setting.GrowthGuid ?? Guid.Empty;
-        if (setting.AttributeGuid == gameDataService.LifeAttributeGuid)
+        if (setting.AttributeGuid == GameDataService.LifeAttributeGuid)
         {
             SelectedEntity.LifeGrowthGuid = growthGuid;
         }
-        else if (setting.AttributeGuid == gameDataService.ManaAttributeGuid)
+        else if (setting.AttributeGuid == GameDataService.ManaAttributeGuid)
         {
             SelectedEntity.ManaGrowthGuid = growthGuid;
         }

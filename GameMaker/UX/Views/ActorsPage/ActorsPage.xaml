@@ -13,6 +13,7 @@
       xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
       xmlns:items="using:GameLibrary.Models.Items"
       xmlns:converters="using:GameLibrary.Converters"
+      xmlns:actorsPage1="using:GameMaker.UX.Models.ActorsPage"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance actorsPage:ActorsPageViewModel}"
       behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
@@ -25,6 +26,7 @@
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="300" />
+      <ColumnDefinition Width="*" />
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
@@ -76,6 +78,7 @@
                    Grid.Row="0"
                    Header="Name"
                    Text="{x:Bind ViewModel.SelectedEntity.Name, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
+                   ToolTipService.ToolTip="Hello World!"
                    VerticalAlignment="Bottom" />
 
           <ComboBox Grid.Column="1"
@@ -355,6 +358,48 @@
           </ComboBox.ItemTemplate>
         </ComboBox>
       </Grid>
+    </enginePanel:EnginePanel>
+    <enginePanel:EnginePanel Grid.Column="3"
+                             Grid.Row="0"
+                             Title="Element Resistance"
+                             Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+      <ItemsControl ItemsSource="{x:Bind ViewModel.ElementResistanceStats, Mode=OneWay}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Spacing="15" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="actorsPage1:ActorElementModel">
+            <Grid ColumnSpacing="10">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="32" />
+                <ColumnDefinition Width="100" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+
+              <engineIcon:EngineIcon Grid.Column="0"
+                                     IconIndex="{x:Bind Icon}"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center" />
+
+              <TextBlock Grid.Column="1"
+                         Text="{x:Bind Name}"
+                         VerticalAlignment="Center"
+                         TextWrapping="NoWrap"
+                         TextTrimming="CharacterEllipsis" />
+
+              <StackPanel Grid.Column="2"
+                          Orientation="Horizontal">
+                <engineTextBox:EngineTextBox InputType="Integer"
+                                             Text="{x:Bind ElementValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             VerticalAlignment="Center" />
+                <TextBlock VerticalAlignment="Center">%</TextBlock>
+              </StackPanel>
+            </Grid>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
     </enginePanel:EnginePanel>
   </Grid>
 </Page>

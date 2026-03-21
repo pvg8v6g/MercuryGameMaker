@@ -5,6 +5,8 @@ using GameLibrary.Services.GameData;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Services.Json;
 using GameLibrary.Services.Location;
+using GameMaker.UX.Models.ActorsPage;
+using MercuryLibrary.Extensions;
 
 namespace GameMaker.UX.ViewModels.ActorsPage;
 
@@ -22,6 +24,8 @@ public partial class ActorsPageViewModel(
 
     public string FaceFolderPath => Path.Combine(locationService.GraphicsDirectory!, "Faces");
 
+    public ObservableCollection<ActorElementModel> ElementResistanceStats { get; } = [];
+
     protected override ObservableCollection<Fighter> EntityCollection => gameDataService.Actors;
 
     public int CharacterIndex
@@ -29,7 +33,7 @@ public partial class ActorsPageViewModel(
         get;
         set
         {
-            if (SelectedEntity is null || string.IsNullOrEmpty(SelectedEntity.CharacterName))
+            if (SelectedEntity is null || SelectedEntity.CharacterName.IsNullOrEmpty())
             {
                 field = 1;
                 OnPropertyChanged();
@@ -43,7 +47,7 @@ public partial class ActorsPageViewModel(
 
     private async Task UpdateCharacterProperties(Fighter fighter, int value)
     {
-        if (string.IsNullOrEmpty(fighter.CharacterName))
+        if (fighter.CharacterName.IsNullOrEmpty())
         {
             fighter.CharacterIndex = 1;
             return;
@@ -68,10 +72,11 @@ public partial class ActorsPageViewModel(
 
     protected override async Task OnSelectedIndexChanged(int selectedIndex)
     {
+        RefreshStats();
         OnPropertyChanged(nameof(CharacterIndex));
 
         var characterName = SelectedEntity?.CharacterName;
-        if (SelectedEntity is null || string.IsNullOrEmpty(characterName))
+        if (SelectedEntity is null || characterName.IsNullOrEmpty())
         {
             CharacterIndex = 1;
             return;
@@ -80,6 +85,24 @@ public partial class ActorsPageViewModel(
         var characterPath = Path.Combine(graphicsService.GetCharacterPath(), characterName);
         var divisions = (await graphicsService.GetSegmentation(characterPath)).width;
         CharacterIndex = (int) SelectedEntity.CharacterDirection * (int) divisions + SelectedEntity.CharacterIndex;
+    }
+
+    #endregion
+
+    #region Private Methods
+
+    private void RefreshStats()
+    {
+        ElementResistanceStats.Clear();
+
+        if (SelectedEntity is null) return;
+
+        foreach (var element in GameDataService.Elements)
+        {
+            ElementResistanceStats.Add(new ActorElementModel(element, SelectedEntity));
+        }
+
+        OnPropertyChanged(nameof(ElementResistanceStats));
     }
 
     #endregion

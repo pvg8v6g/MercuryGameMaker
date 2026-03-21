@@ -4,6 +4,7 @@ using Windows.Storage;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Utilities.ComponentModels;
 using GameMaker.AppMain;
+using MercuryLibrary.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -90,7 +91,7 @@ public partial class ImageChooser
 
     private void LoadFiles()
     {
-        if (string.IsNullOrEmpty(FolderPath)) return;
+        if (FolderPath.IsNullOrEmpty()) return;
         try
         {
             var files = Directory.GetFiles(FolderPath, "*.png")
@@ -108,7 +109,7 @@ public partial class ImageChooser
     {
         var ticket = ++_updateTicket;
 
-        if (string.IsNullOrEmpty(FileName) || string.IsNullOrEmpty(FolderPath))
+        if (FileName.IsNullOrEmpty() || FolderPath.IsNullOrEmpty())
         {
             if (ticket != _updateTicket) return;
             CroppedImage.ImageSource = null;
@@ -171,7 +172,7 @@ public partial class ImageChooser
     private async void ImageFlyout_Opened(object? sender, object e)
     {
         if (FileListView.ItemsSource == null) LoadFiles();
-        if (FileListView.SelectedItem == null && !string.IsNullOrEmpty(FileName))
+        if (FileListView.SelectedItem == null && !FileName.IsNullOrEmpty())
         {
             FileListView.SelectedItem = FileName;
         }
@@ -183,7 +184,7 @@ public partial class ImageChooser
 
     private async Task LoadFullImage()
     {
-        if (string.IsNullOrEmpty(FileName))
+        if (FileName.IsNullOrEmpty())
         {
             FullImage.Source = null;
             UpdateSelectedBorder();
@@ -247,7 +248,7 @@ public partial class ImageChooser
 
     private async void ImageContainer_OnPointerMoved(object sender, PointerRoutedEventArgs e)
     {
-        if (string.IsNullOrEmpty(FileName)) return;
+        if (FileName.IsNullOrEmpty()) return;
         var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
         var path = Path.IsPathRooted(FileName) ? FileName : Path.Combine(FolderPath, FileName);
         var (w, h) = await graphicsService.GetSegmentation(path);
@@ -270,7 +271,7 @@ public partial class ImageChooser
 
     private async void FullImage_OnTapped(object sender, TappedRoutedEventArgs e)
     {
-        if (string.IsNullOrEmpty(FileName)) return;
+        if (FileName.IsNullOrEmpty()) return;
         var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
         var path = Path.IsPathRooted(FileName) ? FileName : Path.Combine(FolderPath, FileName);
         var (w, h) = await graphicsService.GetSegmentation(path);

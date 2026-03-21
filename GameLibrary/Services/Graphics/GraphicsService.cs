@@ -3,6 +3,7 @@ using Windows.Graphics.Imaging;
 using Windows.Storage;
 using GameLibrary.Services.Location;
 using GameLibrary.Utilities.ComponentModels;
+using MercuryLibrary.Extensions;
 using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace GameLibrary.Services.Graphics;
@@ -142,7 +143,7 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
 
     public (double x, double y) GetCharacterDivisions(string fileName)
     {
-        if (string.IsNullOrEmpty(fileName)) throw new ArgumentNullException(nameof(fileName));
+        if (fileName.IsNullOrEmpty()) throw new ArgumentNullException(nameof(fileName));
         var name = Path.GetFileName(fileName);
         return name[0] switch
         {

@@ -93,6 +93,7 @@ public partial class Fighter : BaseModel
         set => SetField(ref field, value);
     }
 
+    // No idea what this is right now
     public bool StaticStats
     {
         get;
@@ -195,6 +196,22 @@ public partial class Fighter : BaseModel
         set => SetField(ref field, value);
     } = 1;
 
+    public bool Boss
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public bool Undead
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    #endregion
+
+    #region Enemy Properties
+
     public int Experience
     {
         get;
@@ -211,7 +228,11 @@ public partial class Fighter : BaseModel
     {
         get;
         set => SetField(ref field, value);
-    } = new();
+    } = [];
+
+    #endregion
+
+    #region In Game Properties
 
     [JsonIgnore]
     public int Team
@@ -245,29 +266,17 @@ public partial class Fighter : BaseModel
         set => SetField(ref field, value);
     }
 
-    public bool Boss
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public bool Undead
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
     public ObservableCollection<Guid> Artes
     {
         get;
         set => SetField(ref field, value);
-    } = new();
+    } = [];
 
     public ObservableCollection<Guid> States
     {
         get;
         set => SetField(ref field, value);
-    } = new();
+    } = [];
 
-    #endregion
+    #endregion"
 }

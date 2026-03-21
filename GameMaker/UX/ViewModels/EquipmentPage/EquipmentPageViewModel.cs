@@ -21,7 +21,7 @@ public class EquipmentPageViewModel(IGameDataService gameDataService, IJsonServi
 
     #endregion
 
-    #region Overrides
+    #region Actions
 
     protected override Task OnSelectedIndexChanged(int index)
     {
@@ -60,10 +60,6 @@ public class EquipmentPageViewModel(IGameDataService gameDataService, IJsonServi
         OnPropertyChanged(nameof(ElementResistanceStats));
         OnPropertyChanged(nameof(StateResistanceStats));
     }
-
-    #endregion
-
-    #region Actions
 
     #endregion
 }
