@@ -152,7 +152,9 @@ public partial class Fighter : BaseModel
 
     #region Equipment
 
-    private readonly Dictionary<string, EquippedSlot> _equipment = new()
+    [JsonInclude]
+    [JsonPropertyName("Equipment")]
+    private Dictionary<string, EquippedSlot> _equipment = new()
     {
         ["Weapon"] = new EquippedSlot { Location = EquipmentLocation.Weapon, Id = null },
         ["Head"] = new EquippedSlot { Location = EquipmentLocation.Head, Id = null },
@@ -166,7 +168,8 @@ public partial class Fighter : BaseModel
         ["Artifact"] = new EquippedSlot { Location = EquipmentLocation.Artifact, Id = null }
     };
 
-    public IReadOnlyDictionary<string, EquippedSlot> Equipment => _equipment.AsReadOnly();
+    [JsonIgnore]
+    public IReadOnlyDictionary<string, EquippedSlot> Equipment => _equipment;
 
     #endregion
 
