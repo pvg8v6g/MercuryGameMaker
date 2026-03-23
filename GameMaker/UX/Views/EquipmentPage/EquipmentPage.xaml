@@ -74,7 +74,8 @@
                                      Grid.Row="1"
                                      Header="Cost"
                                      InputType="Integer"
-                                     Text="{x:Bind ViewModel.SelectedEntity.Cost, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+                                     Text="{x:Bind ViewModel.SelectedEntity.Cost, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                     Tooltip="This is the monetary cost of this equipment item." />
 
         <TextBox Grid.Column="0"
                  Grid.Row="2"
@@ -193,7 +194,8 @@
                           Orientation="Horizontal">
                 <engineTextBox:EngineTextBox InputType="Integer"
                                              Text="{x:Bind ElementValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                             VerticalAlignment="Center" />
+                                             VerticalAlignment="Center"
+                                             Tooltip="The percentage of damage this element does while wearing this equipment. Negative values heal." />
                 <TextBlock VerticalAlignment="Center">%</TextBlock>
               </StackPanel>
             </Grid>

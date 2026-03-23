@@ -11,6 +11,7 @@
         <ResourceDictionary Source="ms-appx:///UX/Resources/ImageButtonResource.xaml" />
         <ResourceDictionary Source="ms-appx:///UX/Resources/ToolTipResource.xaml" />
         <ResourceDictionary Source="ms-appx:///UX/Resources/DefaultResource.xaml" />
+        <ResourceDictionary Source="ms-appx:///UX/Resources/ComboBoxResource.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
     </ResourceDictionary>

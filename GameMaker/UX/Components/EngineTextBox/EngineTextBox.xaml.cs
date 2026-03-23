@@ -7,6 +7,8 @@ namespace GameMaker.UX.Components.EngineTextBox;
 
 public sealed partial class EngineTextBox
 {
+    #region Dependency Properties
+
     public static readonly DependencyProperty TextProperty = DependencyProperty.Register(
         nameof(Text), typeof(string), typeof(EngineTextBox), new PropertyMetadata(string.Empty));
 
@@ -70,12 +72,33 @@ public sealed partial class EngineTextBox
         set => SetValue(TextWrappingProperty, value);
     }
 
+    public static readonly DependencyProperty TooltipProperty = DependencyProperty.Register(
+        nameof(Tooltip), typeof(object), typeof(EngineTextBox), new PropertyMetadata(null));
+
+    public object? Tooltip
+    {
+        get => (object?) GetValue(TooltipProperty);
+        set => SetValue(TooltipProperty, value);
+    }
+
+    #endregion
+
+    #region Fields
+
+    private string _oldText = string.Empty;
+
+    #endregion
+
+    #region Constructor
+
     public EngineTextBox()
     {
         InitializeComponent();
     }
 
-    private string _oldText = string.Empty;
+    #endregion
+
+    #region Listeners
 
     private void OnTextChanging(TextBox sender, TextBoxTextChangingEventArgs args)
     {
@@ -102,6 +125,10 @@ public sealed partial class EngineTextBox
         }
     }
 
+    #endregion
+
+    #region Private Methods
+
     private bool IsValid(string textToCheck)
     {
         if (MaxLength > 0 && textToCheck.Length > MaxLength)
@@ -117,4 +144,6 @@ public sealed partial class EngineTextBox
             _ => true
         };
     }
+
+    #endregion
 }

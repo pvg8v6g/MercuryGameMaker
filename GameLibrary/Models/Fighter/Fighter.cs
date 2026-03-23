@@ -112,66 +112,6 @@ public partial class Fighter : BaseModel
         set => SetField(ref field, value);
     } = new();
 
-    public Guid? Weapon
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public Guid? Head
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public Guid? Chest
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public Guid? Gloves
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public Guid? Sash
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public Guid? Legs
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public Guid? Feet
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public Guid? Accessory1
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public Guid? Accessory2
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public Guid? Artifact
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
     public bool LockEquipment
     {
         get;
@@ -207,6 +147,24 @@ public partial class Fighter : BaseModel
         get;
         set => SetField(ref field, value);
     }
+
+    #endregion
+
+    #region Equipment
+
+    public Dictionary<string, (EquipmentLocation Location, Guid? Id)> Equipment { get; } = new()
+    {
+        { "Weapon", (EquipmentLocation.Weapon, null) },
+        { "Head", (EquipmentLocation.Head, null) },
+        { "Chest", (EquipmentLocation.Chest, null) },
+        { "Hands", (EquipmentLocation.Hands, null) },
+        { "Waist", (EquipmentLocation.Waist, null) },
+        { "Legs", (EquipmentLocation.Legs, null) },
+        { "Feet", (EquipmentLocation.Feet, null) },
+        { "Accessory 1", (EquipmentLocation.Accessory, null) },
+        { "Accessory 2", (EquipmentLocation.Accessory, null) },
+        { "Artifact", (EquipmentLocation.Artifact, null) }
+    };
 
     #endregion
 

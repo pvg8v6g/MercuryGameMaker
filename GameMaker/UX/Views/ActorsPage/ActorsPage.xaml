@@ -393,6 +393,7 @@
                           Orientation="Horizontal">
                 <engineTextBox:EngineTextBox InputType="Integer"
                                              Text="{x:Bind ElementValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Tooltip="The percentage of damage this element does to this actor. Negative values heal."
                                              VerticalAlignment="Center" />
                 <TextBlock VerticalAlignment="Center">%</TextBlock>
               </StackPanel>
