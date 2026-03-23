@@ -152,19 +152,21 @@ public partial class Fighter : BaseModel
 
     #region Equipment
 
-    public Dictionary<string, (EquipmentLocation Location, Guid? Id)> Equipment { get; } = new()
+    private readonly Dictionary<string, EquippedSlot> _equipment = new()
     {
-        { "Weapon", (EquipmentLocation.Weapon, null) },
-        { "Head", (EquipmentLocation.Head, null) },
-        { "Chest", (EquipmentLocation.Chest, null) },
-        { "Hands", (EquipmentLocation.Hands, null) },
-        { "Waist", (EquipmentLocation.Waist, null) },
-        { "Legs", (EquipmentLocation.Legs, null) },
-        { "Feet", (EquipmentLocation.Feet, null) },
-        { "Accessory 1", (EquipmentLocation.Accessory, null) },
-        { "Accessory 2", (EquipmentLocation.Accessory, null) },
-        { "Artifact", (EquipmentLocation.Artifact, null) }
+        ["Weapon"] = new EquippedSlot { Location = EquipmentLocation.Weapon, Id = null },
+        ["Head"] = new EquippedSlot { Location = EquipmentLocation.Head, Id = null },
+        ["Chest"] = new EquippedSlot { Location = EquipmentLocation.Chest, Id = null },
+        ["Hands"] = new EquippedSlot { Location = EquipmentLocation.Hands, Id = null },
+        ["Waist"] = new EquippedSlot { Location = EquipmentLocation.Waist, Id = null },
+        ["Legs"] = new EquippedSlot { Location = EquipmentLocation.Legs, Id = null },
+        ["Feet"] = new EquippedSlot { Location = EquipmentLocation.Feet, Id = null },
+        ["Accessory 1"] = new EquippedSlot { Location = EquipmentLocation.Accessory, Id = null },
+        ["Accessory 2"] = new EquippedSlot { Location = EquipmentLocation.Accessory, Id = null },
+        ["Artifact"] = new EquippedSlot { Location = EquipmentLocation.Artifact, Id = null }
     };
+
+    public IReadOnlyDictionary<string, EquippedSlot> Equipment => _equipment.AsReadOnly();
 
     #endregion
 

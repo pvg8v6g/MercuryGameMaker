@@ -1,6 +1,8 @@
 ﻿using System.Collections.ObjectModel;
+using System.Linq;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.Fighter;
+using GameLibrary.Models.Items;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Services.Json;
@@ -25,6 +27,8 @@ public partial class ActorsPageViewModel(
     public string FaceFolderPath => Path.Combine(locationService.GraphicsDirectory!, "Faces");
 
     public ObservableCollection<ActorElementModel> ElementResistanceStats { get; } = [];
+
+    public ObservableCollection<EquipmentSlotModel> FighterEquipmentSlots { get; } = [];
 
     protected override ObservableCollection<Fighter> EntityCollection => gameDataService.Actors;
 
@@ -73,6 +77,7 @@ public partial class ActorsPageViewModel(
     protected override async Task OnSelectedIndexChanged(int selectedIndex)
     {
         RefreshStats();
+        RefreshEquipment();
         OnPropertyChanged(nameof(CharacterIndex));
 
         var characterName = SelectedEntity?.CharacterName;
@@ -103,6 +108,19 @@ public partial class ActorsPageViewModel(
         }
 
         OnPropertyChanged(nameof(ElementResistanceStats));
+    }
+
+    private void RefreshEquipment()
+    {
+        FighterEquipmentSlots.Clear();
+
+        if (SelectedEntity is null) return;
+
+        foreach (var kvp in SelectedEntity.Equipment)
+        {
+            var filtered = GameDataService.Equipment.Where(e => e.EquipmentLocation == kvp.Value.Location);
+            FighterEquipmentSlots.Add(new EquipmentSlotModel(kvp.Key, kvp.Value, filtered));
+        }
     }
 
     #endregion
