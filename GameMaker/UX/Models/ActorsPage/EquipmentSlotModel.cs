@@ -1,14 +1,52 @@
 ﻿using GameLibrary.Models.Fighter;
 using GameLibrary.Models.Items;
-using System.Collections.Generic;
+using MercuryLibrary.WinUI3Components;
 
 namespace GameMaker.UX.Models.ActorsPage;
 
-public class EquipmentSlotModel(string slotName, EquippedSlot slot, IEnumerable<Equipment> filteredEquipment)
+public class EquipmentSlotModel : PropertyChangedUpdater
 {
-    public string SlotName { get; } = slotName;
+    public EquipmentSlotModel(string slotName, EquippedSlot slot, Equipment[] filteredEquipment)
+    {
+        SlotName = slotName;
+        Slot = slot;
+        Options = filteredEquipment
+            .Select(e => new EquipmentOption(e)).Prepend(new EquipmentOption(null))
+            .ToArray();
 
-    public EquippedSlot Slot { get; } = slot;
+        Slot.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(Slot.Id))
+            {
+                OnPropertyChanged(nameof(SelectedIndex));
+            }
+        };
+    }
 
-    public IEnumerable<Equipment> FilteredEquipment { get; } = filteredEquipment;
+    public string SlotName { get; }
+
+    public string ToolTipText => $"Starting {SlotName} equipment for this actor.";
+
+    public EquippedSlot Slot { get; }
+
+    public EquipmentOption[] Options { get; }
+
+    public int SelectedIndex
+    {
+        get => Slot.Id == null ? -1 : Array.FindIndex(Options, o => o.Guid == Slot.Id);
+        set
+        {
+            if (value >= 0 && value < Options.Length)
+            {
+                var guid = Options[value].Guid;
+                Slot.Id = guid == Guid.Empty ? null : guid;
+            }
+            else
+            {
+                Slot.Id = null;
+            }
+
+            OnPropertyChanged();
+        }
+    }
 }

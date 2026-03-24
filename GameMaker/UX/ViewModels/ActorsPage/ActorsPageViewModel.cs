@@ -1,8 +1,6 @@
 ﻿using System.Collections.ObjectModel;
-using System.Linq;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.Fighter;
-using GameLibrary.Models.Items;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Services.Json;
@@ -70,10 +68,6 @@ public partial class ActorsPageViewModel(
 
     #region Actions
 
-    protected override async Task LoadedAction()
-    {
-    }
-
     protected override async Task OnSelectedIndexChanged(int selectedIndex)
     {
         RefreshStats();
@@ -118,7 +112,9 @@ public partial class ActorsPageViewModel(
 
         foreach (var kvp in SelectedEntity.Equipment)
         {
-            var filtered = GameDataService.Equipment.Where(e => e.EquipmentLocation == kvp.Value.Location);
+            var filtered = GameDataService.Equipment
+                .Where(e => e.EquipmentLocation == kvp.Value.Location)
+                .ToArray();
             FighterEquipmentSlots.Add(new EquipmentSlotModel(kvp.Key, kvp.Value, filtered));
         }
     }

@@ -16,6 +16,8 @@
   <converters:RectPropertyConverter x:Key="RectNormalizedConverter" PropertyToExtract="NormalizedRect" />
   <converters:NegateConverter x:Key="NegateConverter" />
   <converters:InputTypeToInputScopeConverter x:Key="InputTypeToInputScopeConverter" />
+  <converters:GuidToNoneConverter x:Key="GuidToNoneConverter" />
+  <converters:NullToInvalidIndexConverter x:Key="NullToInvalidIndexConverter" />
 
   <Color x:Key="WhiteColor">#FBFBFB</Color>
   <Color x:Key="BlackColor">#050505</Color>

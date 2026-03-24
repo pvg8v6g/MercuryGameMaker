@@ -1,5 +1,4 @@
 ﻿using GameLibrary.Enumerations;
-using GameLibrary.Models;
 using MercuryLibrary.WinUI3Components;
 
 namespace GameLibrary.Models.Fighter;
