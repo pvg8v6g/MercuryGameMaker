@@ -23,6 +23,7 @@
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
     <engineListView:EngineListView ItemsSource="{x:Bind ViewModel.GameDataService.Actors}"
                                    SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}"
