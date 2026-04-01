@@ -1,5 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
+using GameLibrary.Services.GameData;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.UI.Xaml;
 using WinRT.Interop;
 
 namespace GameMaker.UX.Views.MainWindow;
@@ -40,6 +43,7 @@ public partial class MainWindow
         var bigIconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Graphics/ico/48x48.ico");
         var hBigIcon = LoadImage(IntPtr.Zero, bigIconPath, ImageIcon, 32, 32, LrLoadfromfile);
         SendMessage(hWnd, WmSeticon, IconBig, hBigIcon);
+        SizeChanged += MainWindow_SizeChanged;
     }
 
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -47,4 +51,16 @@ public partial class MainWindow
 
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     private static extern IntPtr LoadImage(IntPtr hinst, string lpszName, uint uType, int cxDesired, int cyDesired, uint fuLoad);
+
+    #region Listeners
+
+    private void MainWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
+    {
+        var gameDataService = AppMain.App.Services!.GetRequiredService<IGameDataService>();
+        gameDataService.ScreenWidth = args.Size.Width;
+        gameDataService.ScreenHeight = args.Size.Height;
+        Console.WriteLine(gameDataService.ScreenWidth);
+    }
+
+    #endregion
 }

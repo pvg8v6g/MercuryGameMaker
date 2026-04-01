@@ -12,9 +12,21 @@
       xmlns:disciplines="using:GameLibrary.Models.Disciplines"
       xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
       xmlns:actorsPage1="using:GameMaker.UX.Models.ActorsPage"
+      xmlns:areas="using:GameLibrary.Models.Areas"
+      xmlns:conv="using:GameLibrary.Converters"
+      xmlns:gridArea="using:GameMaker.UX.Components.GridArea"
+      xmlns:spriteImage="using:GameMaker.UX.Components.SpriteImage"
+      xmlns:markup="using:GameLibrary.MarkupExtensions"
+      xmlns:enums="using:GameLibrary.Enumerations"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance actorsPage:ActorsPageViewModel}">
-  <Grid ColumnSpacing="10" Padding="5">
+  <Page.Resources>
+    <ResourceDictionary>
+      <conv:HitboxScaleConverter x:Key="HitboxScaleConverter" />
+      <conv:ScaleConverter x:Key="ScaleConverter" />
+    </ResourceDictionary>
+  </Page.Resources>
+  <Grid x:Name="RootPageGrid" ColumnSpacing="10" Padding="5">
     <Grid.RowDefinitions>
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
@@ -39,7 +51,7 @@
       <StackPanel Orientation="Vertical"
                   Spacing="20">
         <StackPanel Spacing="20" Orientation="Horizontal">
-          <StackPanel Spacing="5">
+          <StackPanel Spacing="5" VerticalAlignment="Bottom">
             <TextBlock Text="Face Image" />
             <imageChooser:ImageChooser FolderPath="{x:Bind ViewModel.FaceFolderPath, Mode=OneWay}"
                                        FileName="{x:Bind ViewModel.SelectedEntity.FaceName, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
@@ -48,13 +60,70 @@
                                        ChooserHeight="148" />
           </StackPanel>
 
-          <StackPanel Spacing="5">
+          <StackPanel Spacing="5" VerticalAlignment="Bottom">
             <TextBlock Text="Character Image" />
-            <imageChooser:ImageChooser FolderPath="{x:Bind ViewModel.CharacterFolderPath, Mode=OneWay}"
+            <imageChooser:ImageChooser x:Name="CharacterImageChooser"
+                                       FolderPath="{x:Bind ViewModel.CharacterFolderPath, Mode=OneWay}"
                                        FileName="{x:Bind ViewModel.SelectedEntity.CharacterName, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
                                        Index="{x:Bind ViewModel.CharacterIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                        ChooserWidth="148"
                                        ChooserHeight="148" />
+          </StackPanel>
+
+          <StackPanel Spacing="5" VerticalAlignment="Bottom">
+            <TextBlock Text="Character Hitboxes" />
+            <ComboBox ItemsSource="{markup:EnumValues EnumType=enums:Direction}"
+                      SelectedItem="{x:Bind ViewModel.SelectedDirection, Mode=TwoWay}"
+                      MinWidth="148" />
+            <Button x:Name="RootButton"
+                    Padding="0"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    CornerRadius="0"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    Tapped="OnTapped">
+              <FlyoutBase.AttachedFlyout>
+                <Flyout Placement="Full">
+                  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
+                                MaxWidth="{x:Bind ViewModel.GameDataService.ScreenWidth, Converter={StaticResource ScaleConverter}, ConverterParameter=80, Mode=OneWay}"
+                                MaxHeight="{x:Bind ViewModel.GameDataService.ScreenHeight, Converter={StaticResource ScaleConverter}, ConverterParameter=80, Mode=OneWay}">
+                    <StackPanel Spacing="12">
+                      <TextBlock Text="Character Hitboxes"
+                                 FontSize="18"
+                                 FontWeight="SemiBold"
+                                 VerticalAlignment="Center" />
+                      <gridArea:AreaCreatorView Hitboxes="{x:Bind ViewModel.EditingHitboxes, Mode=OneWay}"
+                                                CharacterImage="{x:Bind CharacterImageChooser.CroppedImage, Mode=OneWay}" />
+                    </StackPanel>
+                  </ScrollViewer>
+                </Flyout>
+              </FlyoutBase.AttachedFlyout>
+              <Grid Width="148" Height="148">
+                <spriteImage:SpriteImage CharacterImage="{x:Bind CharacterImageChooser.CroppedImage, Mode=OneWay}" />
+                <Canvas IsHitTestVisible="False">
+                  <ItemsControl ItemsSource="{x:Bind ViewModel.PreviewHitboxes, Mode=OneWay}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <Canvas />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="areas:Hitbox">
+                        <Rectangle Fill="Red" Opacity="0.5" Stroke="White" StrokeThickness="1"
+                                   Width="{x:Bind Width, Converter={StaticResource HitboxScaleConverter}}"
+                                   Height="{x:Bind Height, Converter={StaticResource HitboxScaleConverter}}">
+                          <Rectangle.RenderTransform>
+                            <TranslateTransform
+                              X="{x:Bind X, Converter={StaticResource HitboxScaleConverter}}"
+                              Y="{x:Bind Y, Converter={StaticResource HitboxScaleConverter}}" />
+                          </Rectangle.RenderTransform>
+                        </Rectangle>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </Canvas>
+              </Grid>
+            </Button>
           </StackPanel>
         </StackPanel>
         <Grid ColumnSpacing="40"

@@ -27,7 +27,7 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
         var x = (index % columns) * w;
         var y = ((int) (index / columns)) * w;
         var viewport = new Rect(x, y, w, h);
-        return new CroppedImage { ImageSource = source, Rect = viewport };
+        return new CroppedImage { ImagePath = path, ImageSource = source, Rect = viewport };
     }
 
     public async Task<CroppedImage> GetEngineIcon(int index)
@@ -37,7 +37,7 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
         var dimensions = await GetImageDimensions(path);
         var w = dimensions.width / 48.0d;
         var viewport = new Rect(((int) (index % w)) * 48.0, ((int) (index / w)) * 48.0, 48.0, 48.0);
-        return new CroppedImage { ImageSource = source, Rect = viewport };
+        return new CroppedImage { ImagePath = path, ImageSource = source, Rect = viewport };
     }
 
     #endregion
@@ -86,7 +86,7 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
         var columns = (int) divisions.x;
         var x = (index % columns) * w;
         var y = (index / columns) * h;
-        return new CroppedImage { ImageSource = source, Rect = new Rect(x, y, w, h) };
+        return new CroppedImage { ImagePath = path, ImageSource = source, Rect = new Rect(x, y, w, h) };
     }
 
     #endregion
@@ -109,7 +109,7 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
 
     #region Images
 
-    private async Task<(double width, double height)> GetImageDimensions(string imagePath)
+    public async Task<(double width, double height)> GetImageDimensions(string imagePath)
     {
         var file = await StorageFile.GetFileFromPathAsync(imagePath);
         using var stream = await file.OpenReadAsync();

@@ -17,6 +17,7 @@ public interface IGraphicsService
     Task<CroppedImage> GetEngineIcon(int index);
     string GetCharacterPath();
     Task<CroppedImage> GetCharacter(string fileName, int index);
+    Task<(double width, double height)> GetImageDimensions(string imagePath);
     Task<BitmapImage> GetImage(string imagePath);
     Task<(double width, double height)> GetSegmentation(string fileName);
     (double x, double y) GetCharacterDivisions(string fileName);

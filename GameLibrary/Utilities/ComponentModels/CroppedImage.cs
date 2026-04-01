@@ -6,6 +6,12 @@ namespace GameLibrary.Utilities.ComponentModels;
 
 public partial class CroppedImage : PropertyChangedUpdater
 {
+    public string? ImagePath
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     public ImageSource? ImageSource
     {
         get;

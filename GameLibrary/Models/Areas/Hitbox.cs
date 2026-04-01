@@ -6,6 +6,23 @@ public partial class Hitbox : Area
 {
     #region Properties
 
+    private int _anchorX;
+    public int AnchorX
+    {
+        get => _anchorX;
+        set => SetField(ref _anchorX, value, nameof(RelativeToAnchorX));
+    }
+
+    private int _anchorY;
+    public int AnchorY
+    {
+        get => _anchorY;
+        set => SetField(ref _anchorY, value, nameof(RelativeToAnchorY));
+    }
+
+    public int RelativeToAnchorX => X + AnchorX;
+    public int RelativeToAnchorY => Y + AnchorY;
+
     public GameColor Color
     {
         get;

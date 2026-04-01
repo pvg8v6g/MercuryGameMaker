@@ -1,0 +1,20 @@
+﻿<UserControl x:Class="GameMaker.UX.Components.SpriteImage.SpriteImage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             DataContext="{x:Bind CharacterImage}">
+  <Canvas Width="{Binding Rect, Converter={StaticResource RectWidthConverter}}"
+          Height="{Binding Rect, Converter={StaticResource RectHeightConverter}}"
+          Visibility="{Binding Rect, Converter={StaticResource NullToCollapsedConverter}}"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center">
+    <Canvas.Clip>
+      <RectangleGeometry Rect="{Binding Rect, Converter={StaticResource RectNormalizedConverter}}" />
+    </Canvas.Clip>
+    <Image Source="{Binding ImageSource}"
+           Canvas.Left="{Binding Rect, Converter={StaticResource RectNegativeXConverter}}"
+           Canvas.Top="{Binding Rect, Converter={StaticResource RectNegativeYConverter}}" />
+  </Canvas>
+</UserControl>

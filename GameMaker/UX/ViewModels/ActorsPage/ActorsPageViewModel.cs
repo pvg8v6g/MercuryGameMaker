@@ -5,6 +5,7 @@ using GameLibrary.Services.GameData;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Services.Json;
 using GameLibrary.Services.Location;
+using GameLibrary.Models.Areas;
 using GameMaker.UX.Models.ActorsPage;
 using MercuryLibrary.Extensions;
 
@@ -30,6 +31,38 @@ public partial class ActorsPageViewModel(
 
     protected override ObservableCollection<Fighter> EntityCollection => gameDataService.Actors;
 
+
+    private Direction _selectedDirection = Direction.Down;
+    public Direction SelectedDirection
+    {
+        get => _selectedDirection;
+        set
+        {
+            if (SetField(ref _selectedDirection, value))
+            {
+                LoadEditingHitboxes();
+                OnPropertyChanged(nameof(PreviewHitboxes));
+            }
+        }
+    }
+
+    private ObservableCollection<Hitbox> _editingHitboxes = new();
+    public ObservableCollection<Hitbox> EditingHitboxes
+    {
+        get => _editingHitboxes;
+        set => SetField(ref _editingHitboxes, value);
+    }
+
+    public ObservableCollection<Hitbox> PreviewHitboxes
+    {
+        get
+        {
+            if (SelectedEntity == null)
+                return new ObservableCollection<Hitbox>();
+            return SelectedEntity.Hitboxes?.GetValueOrDefault(SelectedDirection) ?? new ObservableCollection<Hitbox>();
+        }
+    }
+
     public int CharacterIndex
     {
         get;
@@ -44,6 +77,7 @@ public partial class ActorsPageViewModel(
 
             _ = UpdateCharacterProperties(SelectedEntity, value);
             SetField(ref field, value);
+            OnPropertyChanged(nameof(PreviewHitboxes));
         }
     }
 
@@ -72,6 +106,10 @@ public partial class ActorsPageViewModel(
     {
         RefreshStats();
         RefreshEquipment();
+        EnsureHitboxes();
+        SelectedDirection = SelectedEntity!.CharacterDirection;
+        LoadEditingHitboxes();
+        OnPropertyChanged(nameof(PreviewHitboxes));
         OnPropertyChanged(nameof(CharacterIndex));
 
         var characterName = SelectedEntity?.CharacterName;
@@ -89,6 +127,30 @@ public partial class ActorsPageViewModel(
     #endregion
 
     #region Private Methods
+
+        private void EnsureHitboxes()
+        {
+            if (SelectedEntity?.Hitboxes is null)
+            {
+                SelectedEntity.Hitboxes = new Dictionary<Direction, ObservableCollection<Hitbox>>();
+            }
+        }
+
+        private void LoadEditingHitboxes()
+        {
+            EnsureHitboxes();
+
+            if (SelectedEntity!.Hitboxes.TryGetValue(SelectedDirection, out var collection))
+            {
+                EditingHitboxes = collection;
+            }
+            else
+            {
+                collection = new ObservableCollection<Hitbox>();
+                SelectedEntity.Hitboxes[SelectedDirection] = collection;
+                EditingHitboxes = collection;
+            }
+        }
 
     private void RefreshStats()
     {
