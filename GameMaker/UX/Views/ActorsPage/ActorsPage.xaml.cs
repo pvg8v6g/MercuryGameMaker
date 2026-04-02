@@ -1,8 +1,6 @@
-﻿using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls.Primitives;
-using Microsoft.UI.Xaml.Input;
-using Microsoft.Extensions.DependencyInjection;
+﻿using GameMaker.AppMain;
 using GameMaker.UX.ViewModels.ActorsPage;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GameMaker.UX.Views.ActorsPage;
 
@@ -13,12 +11,7 @@ public partial class ActorsPage
     public ActorsPage()
     {
         InitializeComponent();
-        ViewModel = AppMain.App.Services!.GetRequiredService<ActorsPageViewModel>();
+        ViewModel = App.Services!.GetRequiredService<ActorsPageViewModel>();
         DataContext = ViewModel;
-    }
-
-    private void OnTapped(object sender, TappedRoutedEventArgs e)
-    {
-        FlyoutBase.ShowAttachedFlyout(RootButton);
     }
 }

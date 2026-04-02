@@ -17,6 +17,18 @@ public partial class GameDataService : PropertyChangedUpdater, IGameDataService
 {
     #region Properties
 
+    public double WindowWidth
+    {
+        get;
+        set => SetField(ref field, value);
+    } = 0.0d;
+
+    public double WindowHeight
+    {
+        get;
+        set => SetField(ref field, value);
+    } = 0.0d;
+
     public double ScreenWidth
     {
         get;

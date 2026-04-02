@@ -14,6 +14,10 @@ namespace GameLibrary.Services.GameData;
 
 public interface IGameDataService
 {
+    double WindowWidth { get; set; }
+
+    double WindowHeight { get; set; }
+
     double ScreenWidth { get; set; }
 
     double ScreenHeight { get; set; }

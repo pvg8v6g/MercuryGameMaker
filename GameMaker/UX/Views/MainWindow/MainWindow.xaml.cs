@@ -44,6 +44,7 @@ public partial class MainWindow
         var hBigIcon = LoadImage(IntPtr.Zero, bigIconPath, ImageIcon, 32, 32, LrLoadfromfile);
         SendMessage(hWnd, WmSeticon, IconBig, hBigIcon);
         SizeChanged += MainWindow_SizeChanged;
+        Activated += MainWindow_Activated;
     }
 
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
@@ -54,12 +55,22 @@ public partial class MainWindow
 
     #region Listeners
 
+    private void MainWindow_Activated(object sender, WindowActivatedEventArgs args)
+    {
+        Activated -= MainWindow_Activated;
+        UpdateSize(Bounds.Width, Bounds.Height);
+    }
+
     private void MainWindow_SizeChanged(object sender, WindowSizeChangedEventArgs args)
     {
+        UpdateSize(args.Size.Width, args.Size.Height);
+    }
+
+    private void UpdateSize(double width, double height)
+    {
         var gameDataService = AppMain.App.Services!.GetRequiredService<IGameDataService>();
-        gameDataService.ScreenWidth = args.Size.Width;
-        gameDataService.ScreenHeight = args.Size.Height;
-        Console.WriteLine(gameDataService.ScreenWidth);
+        gameDataService.WindowWidth = width;
+        gameDataService.WindowHeight = height;
     }
 
     #endregion

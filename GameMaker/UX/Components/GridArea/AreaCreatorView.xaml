@@ -5,39 +5,79 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
              xmlns:spriteImage="using:GameMaker.UX.Components.SpriteImage"
-             mc:Ignorable="d">
+             xmlns:gridArea="using:GameMaker.UX.Components.GridArea"
+             xmlns:behaviors="using:GameLibrary.Behaviors"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance gridArea:AreaCreatorViewModel}"
+             behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
   <Grid ColumnSpacing="20">
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="Auto" />
       <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
 
-    <StackPanel Spacing="20">
+    <StackPanel Spacing="20" VerticalAlignment="Center">
       <engineTextBox:EngineTextBox Header="Grid Boxes"
-                                   Text="{x:Bind GridSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                   Text="{x:Bind ViewModel.GridSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                    InputType="Integer" />
 
       <engineTextBox:EngineTextBox Header="Box Size"
-                                   Text="{x:Bind BoxSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                   Text="{x:Bind ViewModel.BoxSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                    InputType="Integer" />
 
       <CheckBox Content="Show Grid"
-                IsChecked="{x:Bind ShowGrid, Mode=TwoWay}" />
+                IsChecked="{x:Bind ViewModel.ShowGrid, Mode=TwoWay}" />
 
       <Button Content="Clear All"
               HorizontalAlignment="Stretch"
-              Click="OnClearAllClick" />
+              Command="{x:Bind ViewModel.ClearAllCommand}" />
     </StackPanel>
 
     <Grid x:Name="RootGrid"
           Grid.Column="1"
-          Background="{StaticResource DarkPinkBrush}"
-          Width="{x:Bind InternalGridSize, Mode=OneWay}"
-          Height="{x:Bind InternalGridSize, Mode=OneWay}"
-          PointerPressed="OnPointerPressed"
-          PointerMoved="OnPointerMoved"
-          PointerReleased="OnPointerReleased">
-      <spriteImage:SpriteImage CharacterImage="{x:Bind CharacterImage}" />
+          Background="{StaticResource DarkGreyBrush}"
+          Width="{x:Bind ViewModel.InternalGridSize, Mode=OneWay}"
+          Height="{x:Bind ViewModel.InternalGridSize, Mode=OneWay}"
+          behaviors:PointerCommandBehavior.CapturePointerOnPressed="True"
+          behaviors:PointerCommandBehavior.InvokeReleasedOnPointerCaptureLost="True"
+          behaviors:PointerCommandBehavior.PointerPressedCommand="{x:Bind ViewModel.PointerPressedCommand}"
+          behaviors:PointerCommandBehavior.PointerMovedCommand="{x:Bind ViewModel.PointerMovedCommand}"
+          behaviors:PointerCommandBehavior.PointerReleasedCommand="{x:Bind ViewModel.PointerReleasedCommand}">
+      <spriteImage:SpriteImage CharacterImage="{x:Bind ViewModel.CharacterImage}" />
+
+      <!-- Grid Overlay -->
+      <ItemsControl ItemsSource="{x:Bind ViewModel.GridLines, Mode=OneWay}"
+                    IsHitTestVisible="False"
+                    Visibility="{x:Bind ViewModel.ShowGrid, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <Canvas Width="{Binding ElementName=RootGrid, Path=Width}"
+                    Height="{Binding ElementName=RootGrid, Path=Height}" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="gridArea:GridLine">
+            <Line X1="{x:Bind X1}"
+                  Y1="{x:Bind Y1}"
+                  X2="{x:Bind X2}"
+                  Y2="{x:Bind Y2}"
+                  Stroke="{StaticResource MediumGreyBrush}"
+                  StrokeThickness="0.5" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <Canvas IsHitTestVisible="False">
+        <Rectangle Fill="LightBlue"
+                   Opacity="0.3"
+                   Stroke="White"
+                   StrokeDashArray="2,2"
+                   Visibility="{x:Bind ViewModel.ShowPreview, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                   Canvas.Left="{x:Bind ViewModel.PreviewX}"
+                   Canvas.Top="{x:Bind ViewModel.PreviewY}"
+                   Width="{x:Bind ViewModel.PreviewWidth}"
+                   Height="{x:Bind ViewModel.PreviewHeight}" />
+      </Canvas>
     </Grid>
   </Grid>
 </UserControl>

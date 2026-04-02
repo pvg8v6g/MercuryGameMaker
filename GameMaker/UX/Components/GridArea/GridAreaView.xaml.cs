@@ -205,7 +205,7 @@ public sealed partial class GridAreaView : System.ComponentModel.INotifyProperty
         if (BoxSize <= 0 || GridSize <= 0) return;
 
         var strokeColor = (Microsoft.UI.Xaml.Media.SolidColorBrush) Application.Current.Resources["MediumGreyBrush"];
-        var anchorStrokeColor = (Microsoft.UI.Xaml.Media.SolidColorBrush) Application.Current.Resources["SecondaryColorBrush"];
+        var anchorStrokeColor = (Microsoft.UI.Xaml.Media.SolidColorBrush) Application.Current.Resources["SecondaryBrush"];
         var width = ActualWidth;
         var height = ActualHeight;
 

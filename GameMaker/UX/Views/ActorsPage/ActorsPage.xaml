@@ -14,19 +14,18 @@
       xmlns:actorsPage1="using:GameMaker.UX.Models.ActorsPage"
       xmlns:areas="using:GameLibrary.Models.Areas"
       xmlns:conv="using:GameLibrary.Converters"
-      xmlns:gridArea="using:GameMaker.UX.Components.GridArea"
       xmlns:spriteImage="using:GameMaker.UX.Components.SpriteImage"
       xmlns:markup="using:GameLibrary.MarkupExtensions"
       xmlns:enums="using:GameLibrary.Enumerations"
+      xmlns:gridArea="using:GameMaker.UX.Components.GridArea"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance actorsPage:ActorsPageViewModel}">
   <Page.Resources>
     <ResourceDictionary>
       <conv:HitboxScaleConverter x:Key="HitboxScaleConverter" />
-      <conv:ScaleConverter x:Key="ScaleConverter" />
     </ResourceDictionary>
   </Page.Resources>
-  <Grid x:Name="RootPageGrid" ColumnSpacing="10" Padding="5">
+  <Grid ColumnSpacing="10" Padding="5">
     <Grid.RowDefinitions>
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
@@ -75,29 +74,28 @@
             <ComboBox ItemsSource="{markup:EnumValues EnumType=enums:Direction}"
                       SelectedItem="{x:Bind ViewModel.SelectedDirection, Mode=TwoWay}"
                       MinWidth="148" />
-            <Button x:Name="RootButton"
-                    Padding="0"
+            <Button Padding="0"
                     Background="Transparent"
                     BorderThickness="0"
                     CornerRadius="0"
-                    behaviors:PointerCursorBehavior.CursorType="Hand"
-                    Tapped="OnTapped">
-              <FlyoutBase.AttachedFlyout>
+                    behaviors:PointerCursorBehavior.CursorType="Hand">
+              <Button.Flyout>
                 <Flyout Placement="Full">
-                  <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto"
-                                MaxWidth="{x:Bind ViewModel.GameDataService.ScreenWidth, Converter={StaticResource ScaleConverter}, ConverterParameter=80, Mode=OneWay}"
-                                MaxHeight="{x:Bind ViewModel.GameDataService.ScreenHeight, Converter={StaticResource ScaleConverter}, ConverterParameter=80, Mode=OneWay}">
-                    <StackPanel Spacing="12">
-                      <TextBlock Text="Character Hitboxes"
-                                 FontSize="18"
-                                 FontWeight="SemiBold"
-                                 VerticalAlignment="Center" />
-                      <gridArea:AreaCreatorView Hitboxes="{x:Bind ViewModel.EditingHitboxes, Mode=OneWay}"
-                                                CharacterImage="{x:Bind CharacterImageChooser.CroppedImage, Mode=OneWay}" />
-                    </StackPanel>
-                  </ScrollViewer>
+                  <Flyout.FlyoutPresenterStyle>
+                    <Style TargetType="FlyoutPresenter">
+                      <Setter Property="Padding" Value="10" />
+                      <Setter Property="MinWidth" Value="0" />
+                      <Setter Property="MinHeight" Value="0" />
+                      <Setter Property="MaxWidth" Value="1000" />
+                      <Setter Property="MaxHeight" Value="10000" />
+                      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                      <Setter Property="VerticalContentAlignment" Value="Stretch" />
+                    </Style>
+                  </Flyout.FlyoutPresenterStyle>
+                  <gridArea:AreaCreatorView Hitboxes="{x:Bind ViewModel.EditingHitboxes, Mode=TwoWay}"
+                                            CharacterImage="{x:Bind CharacterImageChooser.CroppedImage, Mode=OneWay}" />
                 </Flyout>
-              </FlyoutBase.AttachedFlyout>
+              </Button.Flyout>
               <Grid Width="148" Height="148">
                 <spriteImage:SpriteImage CharacterImage="{x:Bind CharacterImageChooser.CroppedImage, Mode=OneWay}" />
                 <Canvas IsHitTestVisible="False">
