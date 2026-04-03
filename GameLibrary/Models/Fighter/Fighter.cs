@@ -51,7 +51,7 @@ public partial class Fighter : BaseModel
         set => SetField(ref field, value);
     }
 
-    public Dictionary<Direction, ObservableCollection<Hitbox>> Hitboxes
+    public Dictionary<Direction, ObservableCollection<Area>> Hitboxes
     {
         get;
         set => SetField(ref field, value);

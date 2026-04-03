@@ -1,4 +1,6 @@
-﻿namespace GameLibrary.Utilities.Calculations;
+﻿using GameLibrary.Enumerations;
+
+namespace GameLibrary.Utilities.Calculations;
 
 public static class Calculations
 {
@@ -27,6 +29,17 @@ public static class Calculations
     public static double RandomBetween(double lower, double upper)
     {
         return lower + (Random.NextDouble() * (upper - lower));
+    }
+
+    public static int RoundToMultiple(double value, int multiple, Rounding rounding)
+    {
+        return rounding switch
+        {
+            Rounding.Down => (int) (Math.Floor(value / multiple) * multiple),
+            Rounding.Up => (int) (Math.Ceiling(value / multiple) * multiple),
+            Rounding.Default => (int) (Math.Round(value / multiple) * multiple),
+            _ => throw new ArgumentOutOfRangeException(nameof(rounding), rounding, null)
+        };
     }
 
     #endregion

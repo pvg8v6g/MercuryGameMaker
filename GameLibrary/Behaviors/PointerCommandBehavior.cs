@@ -10,7 +10,8 @@ public class PointerCommandBehavior
         "CapturePointerOnPressed", typeof(bool), typeof(PointerCommandBehavior), new PropertyMetadata(false));
 
     public static readonly DependencyProperty InvokeReleasedOnPointerCaptureLostProperty = DependencyProperty.RegisterAttached(
-        "InvokeReleasedOnPointerCaptureLost", typeof(bool), typeof(PointerCommandBehavior), new PropertyMetadata(false, OnInvokeReleasedOnPointerCaptureLostChanged));
+        "InvokeReleasedOnPointerCaptureLost", typeof(bool), typeof(PointerCommandBehavior),
+        new PropertyMetadata(false, OnInvokeReleasedOnPointerCaptureLostChanged));
 
     public static readonly DependencyProperty PointerPressedCommandProperty = DependencyProperty.RegisterAttached(
         "PointerPressedCommand", typeof(ICommand), typeof(PointerCommandBehavior), new PropertyMetadata(null, OnPointerPressedCommandChanged));
@@ -28,7 +29,7 @@ public class PointerCommandBehavior
 
     public static bool GetCapturePointerOnPressed(DependencyObject element)
     {
-        return (bool)element.GetValue(CapturePointerOnPressedProperty);
+        return (bool) element.GetValue(CapturePointerOnPressedProperty);
     }
 
     public static void SetInvokeReleasedOnPointerCaptureLost(DependencyObject element, bool value)
@@ -38,7 +39,7 @@ public class PointerCommandBehavior
 
     public static bool GetInvokeReleasedOnPointerCaptureLost(DependencyObject element)
     {
-        return (bool)element.GetValue(InvokeReleasedOnPointerCaptureLostProperty);
+        return (bool) element.GetValue(InvokeReleasedOnPointerCaptureLostProperty);
     }
 
     public static void SetPointerPressedCommand(DependencyObject element, ICommand? value)
@@ -48,7 +49,7 @@ public class PointerCommandBehavior
 
     public static ICommand? GetPointerPressedCommand(DependencyObject element)
     {
-        return (ICommand?)element.GetValue(PointerPressedCommandProperty);
+        return (ICommand?) element.GetValue(PointerPressedCommandProperty);
     }
 
     public static void SetPointerMovedCommand(DependencyObject element, ICommand? value)
@@ -58,7 +59,7 @@ public class PointerCommandBehavior
 
     public static ICommand? GetPointerMovedCommand(DependencyObject element)
     {
-        return (ICommand?)element.GetValue(PointerMovedCommandProperty);
+        return (ICommand?) element.GetValue(PointerMovedCommandProperty);
     }
 
     public static void SetPointerReleasedCommand(DependencyObject element, ICommand? value)
@@ -68,7 +69,7 @@ public class PointerCommandBehavior
 
     public static ICommand? GetPointerReleasedCommand(DependencyObject element)
     {
-        return (ICommand?)element.GetValue(PointerReleasedCommandProperty);
+        return (ICommand?) element.GetValue(PointerReleasedCommandProperty);
     }
 
     private static void OnInvokeReleasedOnPointerCaptureLostChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)

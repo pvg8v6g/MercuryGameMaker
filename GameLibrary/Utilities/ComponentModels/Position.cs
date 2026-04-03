@@ -1,9 +1,9 @@
-﻿namespace GameLibrary.Models.Areas;
+﻿using MercuryLibrary.WinUI3Components;
 
-public partial class Area : BaseModel
+namespace GameLibrary.Utilities.ComponentModels;
+
+public class Position : PropertyChangedUpdater
 {
-    #region Properties
-
     public int X
     {
         get;
@@ -11,18 +11,6 @@ public partial class Area : BaseModel
     }
 
     public int Y
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public int OffsetX
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public int OffsetY
     {
         get;
         set => SetField(ref field, value);
@@ -39,6 +27,4 @@ public partial class Area : BaseModel
         get;
         set => SetField(ref field, value);
     }
-
-    #endregion
 }

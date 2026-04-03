@@ -33,6 +33,7 @@ public partial class ActorsPageViewModel(
 
 
     private Direction _selectedDirection = Direction.Down;
+
     public Direction SelectedDirection
     {
         get => _selectedDirection;
@@ -46,20 +47,18 @@ public partial class ActorsPageViewModel(
         }
     }
 
-    private ObservableCollection<Hitbox> _editingHitboxes = new();
-    public ObservableCollection<Hitbox> EditingHitboxes
+    public ObservableCollection<Area> EditingHitboxes
     {
-        get => _editingHitboxes;
-        set => SetField(ref _editingHitboxes, value);
-    }
+        get;
+        set => SetField(ref field, value);
+    } = [];
 
-    public ObservableCollection<Hitbox> PreviewHitboxes
+    public ObservableCollection<Area> PreviewHitboxes
     {
         get
         {
-            if (SelectedEntity == null)
-                return new ObservableCollection<Hitbox>();
-            return SelectedEntity.Hitboxes?.GetValueOrDefault(SelectedDirection) ?? new ObservableCollection<Hitbox>();
+            if (SelectedEntity == null) return [];
+            return SelectedEntity.Hitboxes.GetValueOrDefault(SelectedDirection) ?? [];
         }
     }
 
@@ -128,29 +127,29 @@ public partial class ActorsPageViewModel(
 
     #region Private Methods
 
-        private void EnsureHitboxes()
+    private void EnsureHitboxes()
+    {
+        if (SelectedEntity?.Hitboxes is null)
         {
-            if (SelectedEntity?.Hitboxes is null)
-            {
-                SelectedEntity.Hitboxes = new Dictionary<Direction, ObservableCollection<Hitbox>>();
-            }
+            SelectedEntity?.Hitboxes = new Dictionary<Direction, ObservableCollection<Area>>();
         }
+    }
 
-        private void LoadEditingHitboxes()
+    private void LoadEditingHitboxes()
+    {
+        EnsureHitboxes();
+
+        if (SelectedEntity!.Hitboxes.TryGetValue(SelectedDirection, out var collection))
         {
-            EnsureHitboxes();
-
-            if (SelectedEntity!.Hitboxes.TryGetValue(SelectedDirection, out var collection))
-            {
-                EditingHitboxes = collection;
-            }
-            else
-            {
-                collection = new ObservableCollection<Hitbox>();
-                SelectedEntity.Hitboxes[SelectedDirection] = collection;
-                EditingHitboxes = collection;
-            }
+            EditingHitboxes = collection;
         }
+        else
+        {
+            collection = new ObservableCollection<Area>();
+            SelectedEntity.Hitboxes[SelectedDirection] = collection;
+            EditingHitboxes = collection;
+        }
+    }
 
     private void RefreshStats()
     {

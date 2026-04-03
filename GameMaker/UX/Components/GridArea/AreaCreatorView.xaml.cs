@@ -12,11 +12,11 @@ public partial class AreaCreatorView
     #region Registered Dependencies
 
     public static readonly DependencyProperty HitboxesProperty = DependencyProperty.Register(
-        nameof(Hitboxes), typeof(ObservableCollection<Hitbox>), typeof(AreaCreatorView), new PropertyMetadata(null, OnHitboxesChanged));
+        nameof(Hitboxes), typeof(ObservableCollection<Area>), typeof(AreaCreatorView), new PropertyMetadata(null, OnHitboxesChanged));
 
-    public ObservableCollection<Hitbox>? Hitboxes
+    public ObservableCollection<Area>? Hitboxes
     {
-        get => (ObservableCollection<Hitbox>?) GetValue(HitboxesProperty);
+        get => (ObservableCollection<Area>?) GetValue(HitboxesProperty);
         set => SetValue(HitboxesProperty, value);
     }
 
@@ -49,7 +49,7 @@ public partial class AreaCreatorView
     private static void OnHitboxesChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not AreaCreatorView control) return;
-        var hitboxes = e.NewValue as ObservableCollection<Hitbox>;
+        var hitboxes = e.NewValue as ObservableCollection<Area>;
         control.ViewModel.OnHitboxesChanged(hitboxes ?? []);
     }
 
