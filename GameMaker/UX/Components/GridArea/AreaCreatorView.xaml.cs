@@ -145,18 +145,13 @@ public partial class AreaCreatorView
         State.StartPosition = null;
         var x = State.AnchorPosition is null ? State.PreviewPosition.X : State.PreviewPosition.X - State.AnchorPosition.X;
         var y = State.AnchorPosition is null ? State.PreviewPosition.Y : State.PreviewPosition.Y - State.AnchorPosition.Y;
-        var baseX = State.AnchorPosition?.X ?? 0;
-        var baseY = State.AnchorPosition?.Y ?? 0;
         var area = new Area
         {
-            X = baseX,
-            Y = baseY,
             OffsetX = x,
             OffsetY = y,
             Width = State.PreviewPosition.Width,
             Height = State.PreviewPosition.Height
         };
-        Console.WriteLine(area);
         Hitboxes?.Add(area);
     }
 

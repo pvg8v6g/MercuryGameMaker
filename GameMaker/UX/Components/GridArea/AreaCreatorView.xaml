@@ -54,7 +54,9 @@
       <!-- Hitboxes -->
       <gridArea:CanvasItemsControl ItemsSource="{x:Bind Hitboxes, Mode=OneWay}"
                                    LeftPropertyName="X"
-                                   TopPropertyName="Y">
+                                   TopPropertyName="Y"
+                                   LeftOffset="{x:Bind State.AnchorPosition.X, Mode=OneWay}"
+                                   TopOffset="{x:Bind State.AnchorPosition.Y, Mode=OneWay}">
         <gridArea:CanvasItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
             <Canvas />
