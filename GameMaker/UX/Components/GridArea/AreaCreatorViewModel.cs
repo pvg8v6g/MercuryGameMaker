@@ -7,6 +7,7 @@ using GameLibrary.Models.Areas;
 using GameLibrary.Utilities.Calculations;
 using GameLibrary.Utilities.ComponentModels;
 using GameMaker.UX.ViewModels;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 
 namespace GameMaker.UX.Components.GridArea;
@@ -161,12 +162,13 @@ public class AreaCreatorViewModel : BaseViewModel
 
     private void PointerReleasedAction(PointerEventInfo e)
     {
-        if (!e.Properties.IsLeftButtonPressed || PreviewPosition is null) return;
+        if (e.UpdateKind != PointerUpdateKind.LeftButtonReleased || PreviewPosition is null) return;
+        Console.WriteLine("released");
         StartPosition = null;
         OnPropertyChanged(nameof(ShowPreview));
         var x = AnchorPosition is null ? PreviewPosition.X : PreviewPosition.X - AnchorPosition.X;
         var y = AnchorPosition is null ? PreviewPosition.Y : PreviewPosition.Y - AnchorPosition.Y;
-        var area = new Area { X = x, Y = y, Width = PreviewPosition.Width, Height = PreviewPosition.Height };
+        var area = new Area { OffsetX = x, OffsetY = y, Width = PreviewPosition.Width, Height = PreviewPosition.Height };
         Hitboxes.Add(area);
     }
 

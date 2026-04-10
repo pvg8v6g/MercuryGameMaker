@@ -10,4 +10,6 @@ public sealed record PointerEventInfo(UIElement Sender, PointerRoutedEventArgs A
     public Point Position => Args.GetCurrentPoint(Sender).Position;
 
     public PointerPointProperties Properties => Args.GetCurrentPoint(Sender).Properties;
+
+    public PointerUpdateKind UpdateKind => Args.GetCurrentPoint(Sender).Properties.PointerUpdateKind;
 }

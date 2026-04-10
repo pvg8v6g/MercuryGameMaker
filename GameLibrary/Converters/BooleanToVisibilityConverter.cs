@@ -11,7 +11,6 @@ public sealed class BooleanToVisibilityConverter : IValueConverter
     {
         var flag = value as bool? ?? false;
         if (Invert) flag = !flag;
-        Console.WriteLine(flag ? Visibility.Visible : Visibility.Collapsed);
         return flag ? Visibility.Visible : Visibility.Collapsed;
     }
 
