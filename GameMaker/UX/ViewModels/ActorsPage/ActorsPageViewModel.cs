@@ -36,40 +36,20 @@ public partial class ActorsPageViewModel(
         get;
         set
         {
-            if (!SetField(ref field, value)) return;
-            OnPropertyChanged(nameof(SelectedDirectionHitboxes));
+            SetField(ref field, value);
+            RefreshHitboxes();
         }
     } = Direction.Down;
 
     public ObservableCollection<Area> SelectedDirectionHitboxes
     {
-        get
-        {
-            if (SelectedEntity is null)
-            {
-                return field ??= [];
-            }
-
-            if (SelectedEntity.Hitboxes.TryGetValue(SelectedDirection, out var hitboxes)) return hitboxes;
-            hitboxes = [];
-            SelectedEntity.Hitboxes[SelectedDirection] = hitboxes;
-
-            return hitboxes;
-        }
+        get;
         set
         {
-            // Console.WriteLine("here");
-            if (SelectedEntity is null)
-            {
-                SetField(ref field, value);
-                return;
-            }
-
-            // Console.WriteLine(string.Join(", ", value.Select(a => a.ToString())));
-            SelectedEntity.Hitboxes[SelectedDirection] = value;
-            OnPropertyChanged();
+            SelectedEntity!.Hitboxes[SelectedDirection] = value;
+            SetField(ref field, value);
         }
-    }
+    } = [];
 
     public int CharacterIndex
     {
@@ -113,8 +93,8 @@ public partial class ActorsPageViewModel(
     {
         RefreshStats();
         RefreshEquipment();
+        RefreshHitboxes();
         OnPropertyChanged(nameof(CharacterIndex));
-        OnPropertyChanged(nameof(SelectedDirectionHitboxes));
 
         var characterName = SelectedEntity?.CharacterName;
         if (SelectedEntity is null || characterName.IsNullOrEmpty())
@@ -123,6 +103,8 @@ public partial class ActorsPageViewModel(
             return;
         }
 
+        SelectedDirectionHitboxes = SelectedEntity.Hitboxes[SelectedDirection];
+        OnPropertyChanged(nameof(SelectedDirectionHitboxes));
         var characterPath = Path.Combine(graphicsService.GetCharacterPath(), characterName);
         var divisions = (await graphicsService.GetSegmentation(characterPath)).width;
         CharacterIndex = (int) SelectedEntity.CharacterDirection * (int) divisions + SelectedEntity.CharacterIndex;
@@ -159,6 +141,19 @@ public partial class ActorsPageViewModel(
                 .ToArray();
             FighterEquipmentSlots.Add(new EquipmentSlotModel(kvp.Key, kvp.Value, filtered));
         }
+    }
+
+    private void RefreshHitboxes()
+    {
+        SelectedDirectionHitboxes.Clear();
+        if (SelectedEntity is null) return;
+        if (!SelectedEntity.Hitboxes.TryGetValue(SelectedDirection, out var value)) return;
+        foreach (var area in value)
+        {
+            SelectedDirectionHitboxes.Add(area);
+        }
+
+        OnPropertyChanged(nameof(SelectedDirectionHitboxes));
     }
 
     #endregion

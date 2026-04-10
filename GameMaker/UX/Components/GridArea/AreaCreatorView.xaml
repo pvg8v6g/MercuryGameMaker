@@ -40,8 +40,7 @@
           Height="{x:Bind State.InternalGridSize, Mode=OneWay}"
           PointerPressed="OnRootGridPointerPressed"
           PointerMoved="OnRootGridPointerMoved"
-          PointerReleased="OnRootGridPointerReleased"
-          PointerCaptureLost="OnRootGridPointerCaptureLost">
+          PointerReleased="OnRootGridPointerReleased">
 
       <!-- Sprite -->
       <Canvas Width="{Binding ElementName=RootGrid, Path=Width}"

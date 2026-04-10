@@ -149,11 +149,6 @@ public partial class AreaCreatorView
         Hitboxes?.Add(area);
     }
 
-    private void OnRootGridPointerCaptureLost(object sender, PointerRoutedEventArgs e)
-    {
-        OnRootGridPointerReleased(sender, e);
-    }
-
     #endregion
 
     #region Listeners
