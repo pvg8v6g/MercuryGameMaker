@@ -5,7 +5,6 @@ using GameLibrary.Services.Location;
 using GameLibrary.Tasks;
 using GameMaker.Services.Navigation;
 using GameMaker.Tasks;
-using GameMaker.UX.Components.GridArea;
 using GameMaker.UX.ViewModels.ActorsPage;
 using GameMaker.UX.ViewModels.AttributesPage;
 using GameMaker.UX.ViewModels.DisciplinesPage;
@@ -48,7 +47,6 @@ public partial class App
 
         services.AddSingleton<TopBarViewModel>();
         services.AddSingleton<HomeViewViewModel>();
-        services.AddSingleton<AreaCreatorViewModel>();
         services.AddSingleton<ActorsPageViewModel>();
         services.AddSingleton<AttributesPageViewModel>();
         services.AddSingleton<ElementsPageViewModel>();

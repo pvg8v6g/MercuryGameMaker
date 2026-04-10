@@ -1,11 +1,11 @@
 ﻿using System.Collections.ObjectModel;
 using GameLibrary.Enumerations;
+using GameLibrary.Models.Areas;
 using GameLibrary.Models.Fighter;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Services.Json;
 using GameLibrary.Services.Location;
-using GameLibrary.Models.Areas;
 using GameMaker.UX.Models.ActorsPage;
 using MercuryLibrary.Extensions;
 
@@ -31,34 +31,43 @@ public partial class ActorsPageViewModel(
 
     protected override ObservableCollection<Fighter> EntityCollection => gameDataService.Actors;
 
-
-    private Direction _selectedDirection = Direction.Down;
-
     public Direction SelectedDirection
     {
-        get => _selectedDirection;
+        get;
         set
         {
-            if (SetField(ref _selectedDirection, value))
-            {
-                LoadEditingHitboxes();
-                OnPropertyChanged(nameof(PreviewHitboxes));
-            }
+            if (!SetField(ref field, value)) return;
+            OnPropertyChanged(nameof(SelectedDirectionHitboxes));
         }
-    }
+    } = Direction.Down;
 
-    public ObservableCollection<Area> EditingHitboxes
-    {
-        get;
-        set => SetField(ref field, value);
-    } = [];
-
-    public ObservableCollection<Area> PreviewHitboxes
+    public ObservableCollection<Area> SelectedDirectionHitboxes
     {
         get
         {
-            if (SelectedEntity == null) return [];
-            return SelectedEntity.Hitboxes.GetValueOrDefault(SelectedDirection) ?? [];
+            if (SelectedEntity is null)
+            {
+                return field ??= [];
+            }
+
+            if (SelectedEntity.Hitboxes.TryGetValue(SelectedDirection, out var hitboxes)) return hitboxes;
+            hitboxes = [];
+            SelectedEntity.Hitboxes[SelectedDirection] = hitboxes;
+
+            return hitboxes;
+        }
+        set
+        {
+            // Console.WriteLine("here");
+            if (SelectedEntity is null)
+            {
+                SetField(ref field, value);
+                return;
+            }
+
+            // Console.WriteLine(string.Join(", ", value.Select(a => a.ToString())));
+            SelectedEntity.Hitboxes[SelectedDirection] = value;
+            OnPropertyChanged();
         }
     }
 
@@ -76,7 +85,6 @@ public partial class ActorsPageViewModel(
 
             _ = UpdateCharacterProperties(SelectedEntity, value);
             SetField(ref field, value);
-            OnPropertyChanged(nameof(PreviewHitboxes));
         }
     }
 
@@ -105,11 +113,8 @@ public partial class ActorsPageViewModel(
     {
         RefreshStats();
         RefreshEquipment();
-        EnsureHitboxes();
-        SelectedDirection = SelectedEntity!.CharacterDirection;
-        LoadEditingHitboxes();
-        OnPropertyChanged(nameof(PreviewHitboxes));
         OnPropertyChanged(nameof(CharacterIndex));
+        OnPropertyChanged(nameof(SelectedDirectionHitboxes));
 
         var characterName = SelectedEntity?.CharacterName;
         if (SelectedEntity is null || characterName.IsNullOrEmpty())
@@ -126,30 +131,6 @@ public partial class ActorsPageViewModel(
     #endregion
 
     #region Private Methods
-
-    private void EnsureHitboxes()
-    {
-        if (SelectedEntity?.Hitboxes is null)
-        {
-            SelectedEntity?.Hitboxes = new Dictionary<Direction, ObservableCollection<Area>>();
-        }
-    }
-
-    private void LoadEditingHitboxes()
-    {
-        EnsureHitboxes();
-
-        if (SelectedEntity!.Hitboxes.TryGetValue(SelectedDirection, out var collection))
-        {
-            EditingHitboxes = collection;
-        }
-        else
-        {
-            collection = new ObservableCollection<Area>();
-            SelectedEntity.Hitboxes[SelectedDirection] = collection;
-            EditingHitboxes = collection;
-        }
-    }
 
     private void RefreshStats()
     {

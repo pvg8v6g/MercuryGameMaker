@@ -92,34 +92,34 @@
                       <Setter Property="VerticalContentAlignment" Value="Stretch" />
                     </Style>
                   </Flyout.FlyoutPresenterStyle>
-                  <gridArea:AreaCreatorView Hitboxes="{x:Bind ViewModel.EditingHitboxes, Mode=TwoWay}"
+                  <gridArea:AreaCreatorView Hitboxes="{x:Bind ViewModel.SelectedDirectionHitboxes, Mode=TwoWay}"
                                             CharacterImage="{x:Bind CharacterImageChooser.CroppedImage, Mode=OneWay}" />
                 </Flyout>
               </Button.Flyout>
               <Grid Width="148" Height="148">
                 <spriteImage:SpriteImage CharacterImage="{x:Bind CharacterImageChooser.CroppedImage, Mode=OneWay}" />
-                <Canvas IsHitTestVisible="False">
-                  <ItemsControl ItemsSource="{x:Bind ViewModel.PreviewHitboxes, Mode=OneWay}">
-                    <ItemsControl.ItemsPanel>
-                      <ItemsPanelTemplate>
-                        <Canvas />
-                      </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate x:DataType="areas:Hitbox">
-                        <Rectangle Fill="Red" Opacity="0.5" Stroke="White" StrokeThickness="1"
-                                   Width="{x:Bind Width, Converter={StaticResource HitboxScaleConverter}}"
-                                   Height="{x:Bind Height, Converter={StaticResource HitboxScaleConverter}}">
-                          <Rectangle.RenderTransform>
-                            <TranslateTransform
-                              X="{x:Bind X, Converter={StaticResource HitboxScaleConverter}}"
-                              Y="{x:Bind Y, Converter={StaticResource HitboxScaleConverter}}" />
-                          </Rectangle.RenderTransform>
-                        </Rectangle>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </Canvas>
+                <!-- <Canvas IsHitTestVisible="False"> -->
+                <!--   <ItemsControl ItemsSource="{x:Bind ViewModel.PreviewHitboxes, Mode=OneWay}"> -->
+                <!--     <ItemsControl.ItemsPanel> -->
+                <!--       <ItemsPanelTemplate> -->
+                <!--         <Canvas /> -->
+                <!--       </ItemsPanelTemplate> -->
+                <!--     </ItemsControl.ItemsPanel> -->
+                <!--     <ItemsControl.ItemTemplate> -->
+                <!--       <DataTemplate x:DataType="areas:Hitbox"> -->
+                <!--         <Rectangle Fill="Red" Opacity="0.5" Stroke="White" StrokeThickness="1" -->
+                <!--                    Width="{x:Bind Width, Converter={StaticResource HitboxScaleConverter}}" -->
+                <!--                    Height="{x:Bind Height, Converter={StaticResource HitboxScaleConverter}}"> -->
+                <!--           <Rectangle.RenderTransform> -->
+                <!--             <TranslateTransform -->
+                <!--               X="{x:Bind X, Converter={StaticResource HitboxScaleConverter}}" -->
+                <!--               Y="{x:Bind Y, Converter={StaticResource HitboxScaleConverter}}" /> -->
+                <!--           </Rectangle.RenderTransform> -->
+                <!--         </Rectangle> -->
+                <!--       </DataTemplate> -->
+                <!--     </ItemsControl.ItemTemplate> -->
+                <!--   </ItemsControl> -->
+                <!-- </Canvas> -->
               </Grid>
             </Button>
           </StackPanel>

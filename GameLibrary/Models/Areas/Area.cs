@@ -41,4 +41,9 @@ public partial class Area : BaseModel
     }
 
     #endregion
+
+    public override string ToString()
+    {
+        return $"{X}, {Y}, {Width}, {Height}";
+    }
 }
