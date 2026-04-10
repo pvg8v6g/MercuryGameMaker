@@ -52,21 +52,15 @@
       </Canvas>
 
       <!-- Hitboxes -->
-      <ItemsControl ItemsSource="{x:Bind Hitboxes, Mode=OneWay}">
-        <ItemsControl.ItemContainerStyle>
-          <Style TargetType="ContentPresenter">
-            <Setter Property="Canvas.Left" Value="{x:Bind OffsetX}" />
-            <Setter Property="Canvas.Top" Value="{x:Bind OffsetY}" />
-          </Style>
-        </ItemsControl.ItemContainerStyle>
-        <ItemsControl.ItemsPanel>
+      <gridArea:CanvasItemsControl ItemsSource="{x:Bind Hitboxes, Mode=OneWay}"
+                                   LeftPropertyName="X"
+                                   TopPropertyName="Y">
+        <gridArea:CanvasItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
-            <Canvas Width="{Binding ElementName=RootGrid, Path=Width}"
-                    Height="{Binding ElementName=RootGrid, Path=Height}"
-                    Background="Green" />
+            <Canvas />
           </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
+        </gridArea:CanvasItemsControl.ItemsPanel>
+        <gridArea:CanvasItemsControl.ItemTemplate>
           <DataTemplate x:DataType="areas:Area">
             <Rectangle Fill="Red"
                        Opacity="0.5"
@@ -76,8 +70,8 @@
                        Height="{x:Bind Height, Mode=OneWay}"
                        PointerPressed="OnHitboxPointerPressed" />
           </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
+        </gridArea:CanvasItemsControl.ItemTemplate>
+      </gridArea:CanvasItemsControl>
 
       <!-- Grid Overlay -->
       <ItemsControl ItemsSource="{x:Bind State.GridLines, Mode=OneWay}"
