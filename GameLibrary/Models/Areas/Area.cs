@@ -6,13 +6,13 @@ public partial class Area : BaseModel
 
     public int X
     {
-        get;
+        get => field + OffsetX;
         set => SetField(ref field, value);
     }
 
     public int Y
     {
-        get;
+        get => field + OffsetY;
         set => SetField(ref field, value);
     }
 

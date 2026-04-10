@@ -46,10 +46,12 @@ public partial class ActorsPageViewModel(
         get;
         set
         {
-            SelectedEntity!.Hitboxes[SelectedDirection] = value;
             SetField(ref field, value);
+            RefreshHitboxes();
         }
     } = [];
+
+    public ObservableCollection<Area> PreviewsHitboxes { get; } = [];
 
     public int CharacterIndex
     {
@@ -93,7 +95,6 @@ public partial class ActorsPageViewModel(
     {
         RefreshStats();
         RefreshEquipment();
-        RefreshHitboxes();
         OnPropertyChanged(nameof(CharacterIndex));
 
         var characterName = SelectedEntity?.CharacterName;
@@ -104,7 +105,6 @@ public partial class ActorsPageViewModel(
         }
 
         SelectedDirectionHitboxes = SelectedEntity.Hitboxes[SelectedDirection];
-        OnPropertyChanged(nameof(SelectedDirectionHitboxes));
         var characterPath = Path.Combine(graphicsService.GetCharacterPath(), characterName);
         var divisions = (await graphicsService.GetSegmentation(characterPath)).width;
         CharacterIndex = (int) SelectedEntity.CharacterDirection * (int) divisions + SelectedEntity.CharacterIndex;
@@ -145,15 +145,15 @@ public partial class ActorsPageViewModel(
 
     private void RefreshHitboxes()
     {
-        SelectedDirectionHitboxes.Clear();
+        PreviewsHitboxes.Clear();
         if (SelectedEntity is null) return;
         if (!SelectedEntity.Hitboxes.TryGetValue(SelectedDirection, out var value)) return;
         foreach (var area in value)
         {
-            SelectedDirectionHitboxes.Add(area);
+            PreviewsHitboxes.Add(area);
         }
 
-        OnPropertyChanged(nameof(SelectedDirectionHitboxes));
+        OnPropertyChanged(nameof(PreviewsHitboxes));
     }
 
     #endregion
