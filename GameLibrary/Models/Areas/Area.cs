@@ -19,13 +19,21 @@ public partial class Area : BaseModel
     public int OffsetX
     {
         get;
-        set => SetField(ref field, value);
+        set
+        {
+            SetField(ref field, value);
+            OnPropertyChanged(nameof(X));
+        }
     }
 
     public int OffsetY
     {
         get;
-        set => SetField(ref field, value);
+        set
+        {
+            SetField(ref field, value);
+            OnPropertyChanged(nameof(Y));
+        }
     }
 
     public int Width

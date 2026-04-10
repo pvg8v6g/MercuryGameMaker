@@ -68,8 +68,8 @@
                        StrokeThickness="1"
                        Width="{x:Bind Width, Mode=OneWay}"
                        Height="{x:Bind Height, Mode=OneWay}"
-                       Canvas.Left="{x:Bind X, Mode=OneWay}"
-                       Canvas.Top="{x:Bind Y, Mode=OneWay}"
+                       Canvas.Left="{x:Bind OffsetX, Mode=OneWay}"
+                       Canvas.Top="{x:Bind OffsetY, Mode=OneWay}"
                        PointerPressed="OnHitboxPointerPressed" />
           </DataTemplate>
         </ItemsControl.ItemTemplate>
