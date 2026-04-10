@@ -53,6 +53,12 @@
 
       <!-- Hitboxes -->
       <ItemsControl ItemsSource="{x:Bind Hitboxes, Mode=OneWay}">
+        <ItemsControl.ItemContainerStyle>
+          <Style TargetType="ContentPresenter">
+            <Setter Property="Canvas.Left" Value="{x:Bind OffsetX}" />
+            <Setter Property="Canvas.Top" Value="{x:Bind OffsetY}" />
+          </Style>
+        </ItemsControl.ItemContainerStyle>
         <ItemsControl.ItemsPanel>
           <ItemsPanelTemplate>
             <Canvas Width="{Binding ElementName=RootGrid, Path=Width}"
@@ -68,8 +74,6 @@
                        StrokeThickness="1"
                        Width="{x:Bind Width, Mode=OneWay}"
                        Height="{x:Bind Height, Mode=OneWay}"
-                       Canvas.Left="{x:Bind OffsetX, Mode=OneWay}"
-                       Canvas.Top="{x:Bind OffsetY, Mode=OneWay}"
                        PointerPressed="OnHitboxPointerPressed" />
           </DataTemplate>
         </ItemsControl.ItemTemplate>
