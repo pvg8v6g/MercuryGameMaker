@@ -25,6 +25,12 @@ public partial class ActorsPageViewModel(
 
     public string FaceFolderPath => Path.Combine(locationService.GraphicsDirectory!, "Faces");
 
+    public int HitboxViewGrid
+    {
+        get;
+        set => SetField(ref field, value);
+    } = 148;
+
     public ObservableCollection<ActorElementModel> ElementResistanceStats { get; } = [];
 
     public ObservableCollection<EquipmentSlotModel> FighterEquipmentSlots { get; } = [];
@@ -37,7 +43,7 @@ public partial class ActorsPageViewModel(
         set
         {
             SetField(ref field, value);
-            RefreshHitboxes();
+            _ = RefreshHitboxes();
         }
     } = Direction.Down;
 
@@ -47,11 +53,29 @@ public partial class ActorsPageViewModel(
         set
         {
             SetField(ref field, value);
-            RefreshHitboxes();
+            _ = RefreshHitboxes();
         }
     } = [];
 
     public ObservableCollection<Area> PreviewsHitboxes { get; } = [];
+
+    public double HitboxPreviewScale
+    {
+        get;
+        private set => SetField(ref field, value);
+    } = 1.0;
+
+    public double HitboxPreviewOffsetX
+    {
+        get;
+        private set => SetField(ref field, value);
+    }
+
+    public double HitboxPreviewOffsetY
+    {
+        get;
+        private set => SetField(ref field, value);
+    }
 
     public int CharacterIndex
     {
@@ -95,16 +119,18 @@ public partial class ActorsPageViewModel(
     {
         RefreshStats();
         RefreshEquipment();
-        OnPropertyChanged(nameof(CharacterIndex));
 
         var characterName = SelectedEntity?.CharacterName;
         if (SelectedEntity is null || characterName.IsNullOrEmpty())
         {
+            SelectedDirectionHitboxes = [];
+            SelectedDirection = Direction.Down;
             CharacterIndex = 1;
             return;
         }
 
-        SelectedDirectionHitboxes = SelectedEntity.Hitboxes[SelectedDirection];
+        SelectedEntity.Hitboxes.TryGetValue(SelectedDirection, out var hitboxValues);
+        SelectedDirectionHitboxes = hitboxValues ?? [];
         var characterPath = Path.Combine(graphicsService.GetCharacterPath(), characterName);
         var divisions = (await graphicsService.GetSegmentation(characterPath)).width;
         CharacterIndex = (int) SelectedEntity.CharacterDirection * (int) divisions + SelectedEntity.CharacterIndex;
@@ -119,13 +145,10 @@ public partial class ActorsPageViewModel(
         ElementResistanceStats.Clear();
 
         if (SelectedEntity is null) return;
-
         foreach (var element in GameDataService.Elements)
         {
             ElementResistanceStats.Add(new ActorElementModel(element, SelectedEntity));
         }
-
-        OnPropertyChanged(nameof(ElementResistanceStats));
     }
 
     private void RefreshEquipment()
@@ -143,17 +166,56 @@ public partial class ActorsPageViewModel(
         }
     }
 
-    private void RefreshHitboxes()
+    private async Task RefreshHitboxes()
     {
         PreviewsHitboxes.Clear();
-        if (SelectedEntity is null) return;
+        await CalculateSpriteDefaultOffset();
+
+        if (SelectedEntity is null || SelectedEntity.CharacterName.IsNullOrEmpty()) return;
         if (!SelectedEntity.Hitboxes.TryGetValue(SelectedDirection, out var value)) return;
         foreach (var area in value)
         {
             PreviewsHitboxes.Add(area);
         }
 
-        OnPropertyChanged(nameof(PreviewsHitboxes));
+
+        // if (PreviewsHitboxes.Count > 0)
+        // {
+        //     var maxX = PreviewsHitboxes.Max(a => a.X + a.Width);
+        //     var maxY = PreviewsHitboxes.Max(a => a.Y + a.Height);
+        //     var maxWH = Math.Max(maxX, maxY);
+        //     HitboxPreviewScale = maxWH > 0 ? Math.Min(1.0, 148.0 / maxWH) : 1.0;
+        // }
+        // else
+        // {
+        //     HitboxPreviewScale = 1.0;
+        // }
+        //
+        // HitboxPreviewOffset = 74.0 * (1.0 - HitboxPreviewScale);
+    }
+
+    // reset offset to center
+    private async Task CalculateSpriteDefaultOffset()
+    {
+        if (SelectedEntity is null || SelectedEntity.CharacterName.IsNullOrEmpty())
+        {
+            HitboxPreviewOffsetX = 0.0;
+            HitboxPreviewOffsetY = 0.0;
+            return;
+        }
+
+        var spriteBox = (await graphicsService.GetCharacter(SelectedEntity.CharacterName, SelectedEntity.CharacterIndex)).Rect;
+        if (spriteBox is null)
+        {
+            HitboxPreviewOffsetX = 0.0;
+            HitboxPreviewOffsetY = 0.0;
+            return;
+        }
+
+        var spriteWidth = spriteBox.Value.Width;
+        var spriteHeight = spriteBox.Value.Height;
+        HitboxPreviewOffsetX = (HitboxViewGrid - spriteWidth) / 2.0;
+        HitboxPreviewOffsetY = (HitboxViewGrid - spriteHeight) / 2.0;
     }
 
     #endregion

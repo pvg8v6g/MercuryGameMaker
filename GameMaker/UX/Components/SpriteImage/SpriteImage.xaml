@@ -7,7 +7,8 @@
              DataContext="{x:Bind CharacterImage}">
   <Canvas Width="{Binding Rect, Converter={StaticResource RectWidthConverter}}"
           Height="{Binding Rect, Converter={StaticResource RectHeightConverter}}"
-          Visibility="{Binding Rect, Converter={StaticResource NullToCollapsedConverter}}">
+          Visibility="{Binding Rect, Converter={StaticResource NullToCollapsedConverter}}"
+          Background="{x:Bind SpriteBackground, Mode=OneWay}">
     <Canvas.Clip>
       <RectangleGeometry Rect="{Binding Rect, Converter={StaticResource RectNormalizedConverter}}" />
     </Canvas.Clip>

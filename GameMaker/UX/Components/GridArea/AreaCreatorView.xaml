@@ -64,9 +64,9 @@
         </gridArea:CanvasItemsControl.ItemsPanel>
         <gridArea:CanvasItemsControl.ItemTemplate>
           <DataTemplate x:DataType="areas:Area">
-            <Rectangle Fill="Red"
+            <Rectangle Fill="{StaticResource RedBrush}"
                        Opacity="0.5"
-                       Stroke="White"
+                       Stroke="{StaticResource LightYellowBrush}"
                        StrokeThickness="1"
                        Width="{x:Bind Width, Mode=OneWay}"
                        Height="{x:Bind Height, Mode=OneWay}"
@@ -98,9 +98,9 @@
       </ItemsControl>
 
       <Canvas IsHitTestVisible="False">
-        <Rectangle Fill="LightBlue"
+        <Rectangle Fill="{StaticResource LightGreyBrush}"
                    Opacity="0.3"
-                   Stroke="White"
+                   Stroke="{StaticResource LightYellowBrush}"
                    StrokeDashArray="2,2"
                    Visibility="{x:Bind State.ShowPreview, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
                    Canvas.Left="{x:Bind State.PreviewPosition.X, FallbackValue='0', Mode=OneWay}"

@@ -13,18 +13,12 @@
       xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
       xmlns:actorsPage1="using:GameMaker.UX.Models.ActorsPage"
       xmlns:areas="using:GameLibrary.Models.Areas"
-      xmlns:conv="using:GameLibrary.Converters"
       xmlns:spriteImage="using:GameMaker.UX.Components.SpriteImage"
       xmlns:markup="using:GameLibrary.MarkupExtensions"
       xmlns:enums="using:GameLibrary.Enumerations"
       xmlns:gridArea="using:GameMaker.UX.Components.GridArea"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance actorsPage:ActorsPageViewModel}">
-  <Page.Resources>
-    <ResourceDictionary>
-      <conv:HitboxScaleConverter x:Key="HitboxScaleConverter" />
-    </ResourceDictionary>
-  </Page.Resources>
   <Grid ColumnSpacing="10" Padding="5">
     <Grid.RowDefinitions>
       <RowDefinition Height="*" />
@@ -96,28 +90,37 @@
                                             CharacterImage="{x:Bind CharacterImageChooser.CroppedImage, Mode=OneWay}" />
                 </Flyout>
               </Button.Flyout>
-              <Grid Width="148" Height="148">
-                <spriteImage:SpriteImage CharacterImage="{x:Bind CharacterImageChooser.CroppedImage, Mode=OneWay}" />
-                <ItemsControl ItemsSource="{x:Bind ViewModel.PreviewsHitboxes, Mode=OneWay}">
-                  <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                      <Canvas />
-                    </ItemsPanelTemplate>
-                  </ItemsControl.ItemsPanel>
-                  <ItemsControl.ItemTemplate>
-                    <DataTemplate x:DataType="areas:Area">
-                      <Rectangle Fill="Red" Opacity="0.5" Stroke="White" StrokeThickness="1"
-                                 Width="{x:Bind Width, Converter={StaticResource HitboxScaleConverter}}"
-                                 Height="{x:Bind Height, Converter={StaticResource HitboxScaleConverter}}">
-                        <Rectangle.RenderTransform>
-                          <TranslateTransform
-                            X="{x:Bind X, Converter={StaticResource HitboxScaleConverter}}"
-                            Y="{x:Bind Y, Converter={StaticResource HitboxScaleConverter}}" />
-                        </Rectangle.RenderTransform>
-                      </Rectangle>
-                    </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
+              <Grid Width="{x:Bind ViewModel.HitboxViewGrid}" Height="{x:Bind ViewModel.HitboxViewGrid}">
+                <Canvas>
+                  <Canvas.RenderTransform>
+                    <TransformGroup>
+                      <ScaleTransform ScaleX="{x:Bind ViewModel.HitboxPreviewScale, Mode=OneWay}"
+                                      ScaleY="{x:Bind ViewModel.HitboxPreviewScale, Mode=OneWay}" />
+                      <TranslateTransform X="{x:Bind ViewModel.HitboxPreviewOffsetX, Mode=OneWay}"
+                                          Y="{x:Bind ViewModel.HitboxPreviewOffsetY, Mode=OneWay}" />
+                    </TransformGroup>
+                  </Canvas.RenderTransform>
+                  <spriteImage:SpriteImage CharacterImage="{x:Bind CharacterImageChooser.CroppedImage, Mode=OneWay}" SpriteBackground="Green" />
+                  <ItemsControl ItemsSource="{x:Bind ViewModel.PreviewsHitboxes, Mode=OneWay}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <Canvas />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="areas:Area">
+                        <Rectangle Fill="Red" Opacity="0.5" Stroke="White" StrokeThickness="1"
+                                   Width="{x:Bind Width, Mode=OneWay}"
+                                   Height="{x:Bind Height, Mode=OneWay}">
+                          <Rectangle.RenderTransform>
+                            <TranslateTransform X="{x:Bind X, Mode=OneWay}"
+                                                Y="{x:Bind Y, Mode=OneWay}" />
+                          </Rectangle.RenderTransform>
+                        </Rectangle>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </Canvas>
               </Grid>
             </Button>
           </StackPanel>
