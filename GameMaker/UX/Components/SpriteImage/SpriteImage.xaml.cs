@@ -9,7 +9,15 @@ public partial class SpriteImage
     #region Registered Dependencies
 
     public static readonly DependencyProperty CharacterImageProperty = DependencyProperty.Register(nameof(CharacterImage), typeof(CroppedImage),
-        typeof(SpriteImage), new PropertyMetadata(null));
+        typeof(SpriteImage), new PropertyMetadata(null, OnCharacterImageChanged));
+
+    private static void OnCharacterImageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is SpriteImage spriteImage)
+        {
+            spriteImage.Bindings.Update();
+        }
+    }
 
     public CroppedImage? CharacterImage
     {

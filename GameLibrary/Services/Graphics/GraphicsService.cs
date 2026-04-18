@@ -1,6 +1,7 @@
 ﻿using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
+using GameLibrary.Enumerations;
 using GameLibrary.Services.Location;
 using GameLibrary.Utilities.ComponentModels;
 using MercuryLibrary.Extensions;
@@ -74,8 +75,20 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
     //     else return new Pair<>(12.0, 8.0);
     // }
 
+    public Direction GetCharacterDirectionFromIndex(string fileName, int index)
+    {
+        var divisions = GetCharacterDivisions(fileName);
+        return Enum.GetValues<Direction>().FirstOrDefault(x => (int) (index / divisions.x) == (int) x);
+    }
 
-    public async Task<CroppedImage> GetCharacter(string fileName, int index)
+    public int GetCharacterIndexFromDirection(string fileName, int index, Direction direction)
+    {
+        var divisions = GetCharacterDivisions(fileName);
+        var t0 = (int) direction * (int) divisions.x + index;
+        return (int) direction * (int) divisions.x + index;
+    }
+
+    public async Task<CroppedImage> GetCharacter(string fileName, int index, Direction direction)
     {
         var path = Path.Combine(GetCharacterPath(), fileName);
         var source = await GetImage(path);
@@ -83,11 +96,27 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
         var divisions = GetCharacterDivisions(fileName);
         var w = dimensions.width / divisions.x;
         var h = dimensions.height / divisions.y;
-        var columns = (int) divisions.x;
-        var x = (index % columns) * w;
-        var y = (index / columns) * h;
+        var bitIndex = (int) direction * divisions.x + index;
+        var x = ((int) (bitIndex % divisions.x)) * w;
+        var y = ((int) (bitIndex / divisions.x)) * h;
         return new CroppedImage { ImagePath = path, ImageSource = source, Rect = new Rect(x, y, w, h) };
+        // var columns = (int) divisions.x;
+        // var x = (index % columns) * w;
+        // var y = (index / columns) * h;
+        // return new CroppedImage { ImagePath = path, ImageSource = source, Rect = new Rect(x, y, w, h) };
     }
+
+    // public static Rectangle2D getCharacterViewport(Image image, String fileName, Direction direction, int index) {
+    //     var w = image.getWidth();
+    //     var h = image.getHeight();
+    //     var divisions = getCharacterDivisions(fileName);
+    //     w /= divisions.a;
+    //     h /= divisions.b;
+    //     var bitIndex = direction.getDirection() * divisions.a + index;
+    //     var x = ((int) (bitIndex % divisions.a)) * w;
+    //     var y = ((int) (bitIndex / divisions.a)) * h;
+    //     return new Rectangle2D(x, y, w, h);
+    // }
 
     #endregion
 

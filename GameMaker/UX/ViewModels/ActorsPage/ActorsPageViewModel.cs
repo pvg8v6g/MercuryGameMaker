@@ -1,4 +1,7 @@
 ﻿using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using Windows.Foundation;
+using GameLibrary.Commands;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.Areas;
 using GameLibrary.Models.Fighter;
@@ -6,6 +9,8 @@ using GameLibrary.Services.GameData;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Services.Json;
 using GameLibrary.Services.Location;
+using GameLibrary.Utilities.ComponentModels;
+using GameLibrary.Models.Media;
 using GameMaker.UX.Models.ActorsPage;
 using MercuryLibrary.Extensions;
 
@@ -25,11 +30,7 @@ public partial class ActorsPageViewModel(
 
     public string FaceFolderPath => Path.Combine(locationService.GraphicsDirectory!, "Faces");
 
-    public int HitboxViewGrid
-    {
-        get;
-        set => SetField(ref field, value);
-    } = 148;
+    public int HitboxViewGrid => 144;
 
     public ObservableCollection<ActorElementModel> ElementResistanceStats { get; } = [];
 
@@ -37,23 +38,34 @@ public partial class ActorsPageViewModel(
 
     protected override ObservableCollection<Fighter> EntityCollection => gameDataService.Actors;
 
+    public CroppedImage? AnchorImage
+    {
+        get;
+        private set => SetField(ref field, value);
+    }
+
+    /*
+     * selected direction of the hitbox viewer - independent of the character direction
+     */
     public Direction SelectedDirection
     {
         get;
         set
         {
             SetField(ref field, value);
-            _ = RefreshHitboxes();
+            _ = RefreshAnchor();
         }
-    } = Direction.Down;
+    } = Direction.None;
 
     public ObservableCollection<Area> SelectedDirectionHitboxes
     {
         get;
         set
         {
+            field.CollectionChanged -= OnHitboxesCollectionChanged;
             SetField(ref field, value);
-            _ = RefreshHitboxes();
+            field.CollectionChanged += OnHitboxesCollectionChanged;
+            RefreshHitboxes();
         }
     } = [];
 
@@ -77,51 +89,58 @@ public partial class ActorsPageViewModel(
         private set => SetField(ref field, value);
     }
 
+    public string? CharacterName
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    /*
+     * true index - disregarding direction
+     */
     public int CharacterIndex
     {
         get;
-        set
-        {
-            if (SelectedEntity is null || SelectedEntity.CharacterName.IsNullOrEmpty())
-            {
-                field = 1;
-                OnPropertyChanged();
-                return;
-            }
-
-            _ = UpdateCharacterProperties(SelectedEntity, value);
-            SetField(ref field, value);
-        }
+        set => SetField(ref field, value);
     }
 
-    private async Task UpdateCharacterProperties(Fighter fighter, int value)
-    {
-        if (fighter.CharacterName.IsNullOrEmpty())
-        {
-            fighter.CharacterIndex = 1;
-            return;
-        }
+    #endregion
 
-        var characterPath = Path.Combine(graphicsService.GetCharacterPath(), fighter.CharacterName!);
-        var segmentation = await graphicsService.GetSegmentation(characterPath);
-        var divisions = segmentation.width;
-        var direction = Enum.GetValues<Direction>().FirstOrDefault(x => ((int) (value / divisions)) == (int) x);
-        var index = (int) (value % divisions);
-        fighter.CharacterIndex = index;
-        fighter.CharacterDirection = direction;
-    }
+    #region Commands
+
+    public RelayCommand<SpriteSelectedArgs> SelectSpriteCommand => new(SelectSpriteAction);
+
+    #endregion
+
+    #region Fields
+
+    private Rect? _spriteBox;
+
+    private double SpriteWidth => _spriteBox?.Width * HitboxPreviewScale ?? 0.0;
+
+    private double SpriteHeight => _spriteBox?.Height * HitboxPreviewScale ?? 0.0;
 
     #endregion
 
     #region Actions
 
+    private void SelectSpriteAction(SpriteSelectedArgs args)
+    {
+        if (SelectedEntity is null) return;
+        SelectedEntity.CharacterName = args.FileName;
+        SelectedEntity.CharacterIndex = args.Index;
+        SelectedEntity.CharacterDirection = args.Direction;
+        _ = RefreshAnchor();
+    }
+
     protected override async Task OnSelectedIndexChanged(int selectedIndex)
     {
         RefreshStats();
         RefreshEquipment();
+        await RefreshAnchor();
 
-        var characterName = SelectedEntity?.CharacterName;
-        if (SelectedEntity is null || characterName.IsNullOrEmpty())
+        CharacterName = SelectedEntity?.CharacterName;
+        if (SelectedEntity is null || CharacterName.IsNullOrEmpty())
         {
             SelectedDirectionHitboxes = [];
             SelectedDirection = Direction.Down;
@@ -129,16 +148,78 @@ public partial class ActorsPageViewModel(
             return;
         }
 
-        SelectedEntity.Hitboxes.TryGetValue(SelectedDirection, out var hitboxValues);
-        SelectedDirectionHitboxes = hitboxValues ?? [];
-        var characterPath = Path.Combine(graphicsService.GetCharacterPath(), characterName);
-        var divisions = (await graphicsService.GetSegmentation(characterPath)).width;
-        CharacterIndex = (int) SelectedEntity.CharacterDirection * (int) divisions + SelectedEntity.CharacterIndex;
+        _spriteBox = (await graphicsService.GetCharacter(SelectedEntity.CharacterName!, SelectedEntity.CharacterIndex, SelectedDirection)).Rect;
+        LinkHitboxes(SelectedDirection);
+        CharacterIndex = graphicsService.GetCharacterIndexFromDirection(
+            SelectedEntity.CharacterName!,
+            SelectedEntity.CharacterIndex,
+            SelectedEntity.CharacterDirection);
+    }
+
+    // private async Task UpdateCharacterName(string? name)
+    // {
+    //     SelectedEntity?.CharacterName = name;
+    //     AnchorImage = name is null || SelectedEntity is null ? null : await graphicsService.GetCharacter(name, CharacterIndex);
+    // }
+    //
+    // private async Task UpdateCharacterIndex(int index, Direction? forceDirection = null)
+    // {
+    //     if (SelectedEntity is null)
+    //     {
+    //         AnchorImage = null;
+    //         return;
+    //     }
+    //
+    //     var characterPath = Path.Combine(graphicsService.GetCharacterPath(), SelectedEntity.CharacterName!);
+    //     var segmentation = await graphicsService.GetSegmentation(characterPath);
+    //     var divisions = segmentation.width;
+    //     var direction = forceDirection ?? Enum.GetValues<Direction>().FirstOrDefault(x => (int) (index / divisions) == (int) x);
+    //     var innerIndex = (int) (index % divisions);
+    //     SelectedEntity.CharacterIndex = innerIndex;
+    //     SelectedEntity.CharacterDirection = direction;
+    //     AnchorImage = CharacterName is null ? null : await graphicsService.GetCharacter(CharacterName, index);
+    // }
+
+    // private async Task UpdateCharacterProperties(Fighter fighter, string? name, int value)
+    // {
+    //     fighter.CharacterName = name;
+    //     if (name.IsNullOrEmpty())
+    //     {
+    //         fighter.CharacterName = null;
+    //         fighter.CharacterIndex = 1;
+    //         fighter.CharacterDirection = Direction.Down;
+    //         return;
+    //     }
+    //
+    //     var characterPath = Path.Combine(graphicsService.GetCharacterPath(), fighter.CharacterName!);
+    //     var segmentation = await graphicsService.GetSegmentation(characterPath);
+    //     var divisions = segmentation.width;
+    //     var direction = Enum.GetValues<Direction>().FirstOrDefault(x => (int) (value / divisions) == (int) x);
+    //     var index = (int) (value % divisions);
+    //     fighter.CharacterIndex = index;
+    //     fighter.CharacterDirection = direction;
+    //     AnchorImage = await graphicsService.GetCharacter(name, value);
+    // }
+
+    private void OnHitboxesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        RefreshHitboxes();
     }
 
     #endregion
 
     #region Private Methods
+
+    private async Task RefreshAnchor()
+    {
+        if (SelectedEntity is null || SelectedEntity.CharacterName.IsNullOrEmpty())
+        {
+            AnchorImage = null;
+            return;
+        }
+
+        AnchorImage = await graphicsService.GetCharacter(SelectedEntity!.CharacterName!, SelectedEntity.CharacterIndex, SelectedDirection);
+    }
 
     private void RefreshStats()
     {
@@ -166,56 +247,85 @@ public partial class ActorsPageViewModel(
         }
     }
 
-    private async Task RefreshHitboxes()
+    private void LinkHitboxes(Direction direction)
+    {
+        if (SelectedEntity is null)
+        {
+            SelectedDirectionHitboxes = [];
+        }
+        else
+        {
+            SelectedEntity.Hitboxes.TryAdd(direction, []);
+            SelectedDirectionHitboxes = SelectedEntity.Hitboxes[direction];
+        }
+    }
+
+    private void RefreshHitboxes()
     {
         PreviewsHitboxes.Clear();
-        await CalculateSpriteDefaultOffset();
+        CalculateSpriteDefaultOffset();
 
         if (SelectedEntity is null || SelectedEntity.CharacterName.IsNullOrEmpty()) return;
-        if (!SelectedEntity.Hitboxes.TryGetValue(SelectedDirection, out var value)) return;
-        foreach (var area in value)
+        Area[] hitboxes = [];
+        if (SelectedDirection is not Direction.None) hitboxes = [..SelectedEntity.Hitboxes.GetValueOrDefault(SelectedDirection, [])];
+        hitboxes = [..hitboxes, ..SelectedEntity.Hitboxes.GetValueOrDefault(Direction.None, [])];
+        if (hitboxes.Length == 0)
+        {
+            HitboxPreviewScale = 1.0;
+            CalculateSpriteDefaultOffset();
+            return;
+        }
+
+        foreach (var area in hitboxes)
         {
             PreviewsHitboxes.Add(area);
         }
 
+        if (_spriteBox is null)
+        {
+            HitboxPreviewOffsetX = 0.0;
+            HitboxPreviewOffsetY = 0.0;
+            HitboxPreviewScale = 1.0;
+            return;
+        }
 
-        // if (PreviewsHitboxes.Count > 0)
-        // {
-        //     var maxX = PreviewsHitboxes.Max(a => a.X + a.Width);
-        //     var maxY = PreviewsHitboxes.Max(a => a.Y + a.Height);
-        //     var maxWH = Math.Max(maxX, maxY);
-        //     HitboxPreviewScale = maxWH > 0 ? Math.Min(1.0, 148.0 / maxWH) : 1.0;
-        // }
-        // else
-        // {
-        //     HitboxPreviewScale = 1.0;
-        // }
-        //
-        // HitboxPreviewOffset = 74.0 * (1.0 - HitboxPreviewScale);
+        var characterSprite = new Area { OffsetX = 0, OffsetY = 0, Width = (int) SpriteWidth, Height = (int) SpriteHeight };
+        Area[] previews = [..PreviewsHitboxes, characterSprite];
+        var left = previews.Select(x => x.OffsetX).Min();
+        var right = previews.Select(x => x.OffsetX + x.Width).Max();
+        var top = previews.Select(x => x.OffsetY).Min();
+        var bottom = previews.Select(x => x.OffsetY + x.Height).Max();
+
+        var fullWidth = right - left;
+        var fullHeight = bottom - top;
+        var max = Math.Max(fullWidth, fullHeight);
+        var scale = HitboxViewGrid / (double) max;
+        if (scale > 1.0)
+        {
+            HitboxPreviewOffsetX = (HitboxViewGrid - fullWidth) / 2.0 - left;
+            HitboxPreviewOffsetY = (HitboxViewGrid - fullHeight) / 2.0 - top;
+            HitboxPreviewScale = 1.0;
+        }
+        else
+        {
+            HitboxPreviewOffsetX = (HitboxViewGrid - fullWidth * scale) / 2.0 - left * scale;
+            HitboxPreviewOffsetY = (HitboxViewGrid - fullHeight * scale) / 2.0 - top * scale;
+            HitboxPreviewScale = scale;
+        }
     }
 
     // reset offset to center
-    private async Task CalculateSpriteDefaultOffset()
+    private void CalculateSpriteDefaultOffset()
     {
-        if (SelectedEntity is null || SelectedEntity.CharacterName.IsNullOrEmpty())
+        if (SelectedEntity is null || SelectedEntity.CharacterName.IsNullOrEmpty() || _spriteBox is null)
         {
             HitboxPreviewOffsetX = 0.0;
             HitboxPreviewOffsetY = 0.0;
             return;
         }
 
-        var spriteBox = (await graphicsService.GetCharacter(SelectedEntity.CharacterName, SelectedEntity.CharacterIndex)).Rect;
-        if (spriteBox is null)
-        {
-            HitboxPreviewOffsetX = 0.0;
-            HitboxPreviewOffsetY = 0.0;
-            return;
-        }
-
-        var spriteWidth = spriteBox.Value.Width;
-        var spriteHeight = spriteBox.Value.Height;
-        HitboxPreviewOffsetX = (HitboxViewGrid - spriteWidth) / 2.0;
-        HitboxPreviewOffsetY = (HitboxViewGrid - spriteHeight) / 2.0;
+        HitboxPreviewOffsetX = (HitboxViewGrid - SpriteWidth) / 2.0;
+        HitboxPreviewOffsetY = (HitboxViewGrid - SpriteHeight) / 2.0;
     }
 
     #endregion

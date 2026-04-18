@@ -162,8 +162,8 @@ public partial class AreaCreatorView
     private static void OnCharacterImageChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not AreaCreatorView control) return;
-        control.CharacterImage = e.NewValue as CroppedImage;
         control.LoadAnchor();
+        control.Bindings.Update();
     }
 
     #endregion

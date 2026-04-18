@@ -1,6 +1,9 @@
 ﻿using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
+using System.Windows.Input;
+using GameLibrary.Enumerations;
+using GameLibrary.Models.Media;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Utilities.ComponentModels;
 using GameMaker.AppMain;
@@ -26,6 +29,9 @@ public partial class ImageChooser
 
     public static readonly DependencyProperty IndexProperty = DependencyProperty.Register(
         nameof(Index), typeof(int), typeof(ImageChooser), new PropertyMetadata(0, OnIndexChanged));
+
+    public static readonly DependencyProperty OnImageChangedCommandProperty = DependencyProperty.Register(
+        nameof(OnImageChangedCommand), typeof(ICommand), typeof(ImageChooser), new PropertyMetadata(null));
 
     public static readonly DependencyProperty ChooserWidthProperty = DependencyProperty.Register(
         nameof(ChooserWidth), typeof(double), typeof(ImageChooser), new PropertyMetadata(48.0));
@@ -64,6 +70,12 @@ public partial class ImageChooser
     {
         get => (int) GetValue(IndexProperty);
         set => SetValue(IndexProperty, value);
+    }
+
+    public ICommand? OnImageChangedCommand
+    {
+        get => (ICommand?) GetValue(OnImageChangedCommandProperty);
+        set => SetValue(OnImageChangedCommandProperty, value);
     }
 
     public double ChooserWidth
@@ -284,6 +296,14 @@ public partial class ImageChooser
         var columns = (int) (bitmapImage.PixelWidth / w);
 
         Index = yIndex * columns + xIndex;
+
+        if (OnImageChangedCommand != null)
+        {
+            var divisions = graphicsService.GetCharacterDivisions(FileName);
+            var direction = (Direction) (yIndex % (int) divisions.y);
+            var args = new SpriteSelectedArgs(FileName, xIndex, direction);
+            if (OnImageChangedCommand.CanExecute(args)) OnImageChangedCommand.Execute(args);
+        }
 
         ImageFlyout.Hide();
     }

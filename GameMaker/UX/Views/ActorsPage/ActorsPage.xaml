@@ -55,10 +55,10 @@
 
           <StackPanel Spacing="5" VerticalAlignment="Bottom">
             <TextBlock Text="Character Image" />
-            <imageChooser:ImageChooser x:Name="CharacterImageChooser"
-                                       FolderPath="{x:Bind ViewModel.CharacterFolderPath, Mode=OneWay}"
-                                       FileName="{x:Bind ViewModel.SelectedEntity.CharacterName, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
+            <imageChooser:ImageChooser FolderPath="{x:Bind ViewModel.CharacterFolderPath, Mode=OneWay}"
+                                       FileName="{x:Bind ViewModel.CharacterName, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
                                        Index="{x:Bind ViewModel.CharacterIndex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                       OnImageChangedCommand="{x:Bind ViewModel.SelectSpriteCommand}"
                                        ChooserWidth="148"
                                        ChooserHeight="148" />
           </StackPanel>
@@ -87,7 +87,7 @@
                     </Style>
                   </Flyout.FlyoutPresenterStyle>
                   <gridArea:AreaCreatorView Hitboxes="{x:Bind ViewModel.SelectedDirectionHitboxes, Mode=TwoWay}"
-                                            CharacterImage="{x:Bind CharacterImageChooser.CroppedImage, Mode=OneWay}" />
+                                            CharacterImage="{x:Bind ViewModel.AnchorImage, Mode=OneWay}" />
                 </Flyout>
               </Button.Flyout>
               <Grid Width="{x:Bind ViewModel.HitboxViewGrid}" Height="{x:Bind ViewModel.HitboxViewGrid}">
@@ -100,7 +100,9 @@
                                           Y="{x:Bind ViewModel.HitboxPreviewOffsetY, Mode=OneWay}" />
                     </TransformGroup>
                   </Canvas.RenderTransform>
-                  <spriteImage:SpriteImage CharacterImage="{x:Bind CharacterImageChooser.CroppedImage, Mode=OneWay}" SpriteBackground="Green" />
+
+                  <spriteImage:SpriteImage CharacterImage="{x:Bind ViewModel.AnchorImage, Mode=OneWay}" />
+
                   <ItemsControl ItemsSource="{x:Bind ViewModel.PreviewsHitboxes, Mode=OneWay}">
                     <ItemsControl.ItemsPanel>
                       <ItemsPanelTemplate>
