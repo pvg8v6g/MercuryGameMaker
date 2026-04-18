@@ -10,7 +10,6 @@ using GameLibrary.Services.Graphics;
 using GameLibrary.Services.Json;
 using GameLibrary.Services.Location;
 using GameLibrary.Utilities.ComponentModels;
-using GameLibrary.Models.Media;
 using GameMaker.UX.Models.ActorsPage;
 using MercuryLibrary.Extensions;
 
@@ -137,13 +136,13 @@ public partial class ActorsPageViewModel(
     {
         RefreshStats();
         RefreshEquipment();
+        SelectedDirection = Direction.None;
         await RefreshAnchor();
 
         CharacterName = SelectedEntity?.CharacterName;
         if (SelectedEntity is null || CharacterName.IsNullOrEmpty())
         {
             SelectedDirectionHitboxes = [];
-            SelectedDirection = Direction.Down;
             CharacterIndex = 1;
             return;
         }
@@ -155,51 +154,6 @@ public partial class ActorsPageViewModel(
             SelectedEntity.CharacterIndex,
             SelectedEntity.CharacterDirection);
     }
-
-    // private async Task UpdateCharacterName(string? name)
-    // {
-    //     SelectedEntity?.CharacterName = name;
-    //     AnchorImage = name is null || SelectedEntity is null ? null : await graphicsService.GetCharacter(name, CharacterIndex);
-    // }
-    //
-    // private async Task UpdateCharacterIndex(int index, Direction? forceDirection = null)
-    // {
-    //     if (SelectedEntity is null)
-    //     {
-    //         AnchorImage = null;
-    //         return;
-    //     }
-    //
-    //     var characterPath = Path.Combine(graphicsService.GetCharacterPath(), SelectedEntity.CharacterName!);
-    //     var segmentation = await graphicsService.GetSegmentation(characterPath);
-    //     var divisions = segmentation.width;
-    //     var direction = forceDirection ?? Enum.GetValues<Direction>().FirstOrDefault(x => (int) (index / divisions) == (int) x);
-    //     var innerIndex = (int) (index % divisions);
-    //     SelectedEntity.CharacterIndex = innerIndex;
-    //     SelectedEntity.CharacterDirection = direction;
-    //     AnchorImage = CharacterName is null ? null : await graphicsService.GetCharacter(CharacterName, index);
-    // }
-
-    // private async Task UpdateCharacterProperties(Fighter fighter, string? name, int value)
-    // {
-    //     fighter.CharacterName = name;
-    //     if (name.IsNullOrEmpty())
-    //     {
-    //         fighter.CharacterName = null;
-    //         fighter.CharacterIndex = 1;
-    //         fighter.CharacterDirection = Direction.Down;
-    //         return;
-    //     }
-    //
-    //     var characterPath = Path.Combine(graphicsService.GetCharacterPath(), fighter.CharacterName!);
-    //     var segmentation = await graphicsService.GetSegmentation(characterPath);
-    //     var divisions = segmentation.width;
-    //     var direction = Enum.GetValues<Direction>().FirstOrDefault(x => (int) (value / divisions) == (int) x);
-    //     var index = (int) (value % divisions);
-    //     fighter.CharacterIndex = index;
-    //     fighter.CharacterDirection = direction;
-    //     AnchorImage = await graphicsService.GetCharacter(name, value);
-    // }
 
     private void OnHitboxesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
@@ -218,7 +172,8 @@ public partial class ActorsPageViewModel(
             return;
         }
 
-        AnchorImage = await graphicsService.GetCharacter(SelectedEntity!.CharacterName!, SelectedEntity.CharacterIndex, SelectedDirection);
+        var direction = SelectedDirection is Direction.None ? Direction.Down : SelectedDirection;
+        AnchorImage = await graphicsService.GetCharacter(SelectedEntity!.CharacterName!, SelectedEntity.CharacterIndex, direction);
     }
 
     private void RefreshStats()
