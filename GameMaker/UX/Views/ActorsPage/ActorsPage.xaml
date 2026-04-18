@@ -210,7 +210,7 @@
 
           <CheckBox Grid.Column="0"
                     Grid.Row="5"
-                    IsChecked="{x:Bind ViewModel.SelectedEntity.LockEquipment, Mode=TwoWay, FallbackValue='False', UpdateSourceTrigger=PropertyChanged}"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.Undead, Mode=TwoWay, FallbackValue='False', UpdateSourceTrigger=PropertyChanged}"
                     behaviors:PointerCursorBehavior.CursorType="Hand"
                     ToolTipService.ToolTip="Is this actor an &quot;undead&quot; type?"
                     VerticalAlignment="Bottom">

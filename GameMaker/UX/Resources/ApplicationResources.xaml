@@ -37,6 +37,8 @@
 
   <Color x:Key="DarkPinkColor">#630322</Color>
   <Color x:Key="MediumPinkColor">#e70756</Color>
+  <Color x:Key="MediumPinkHoverColor">#d60761</Color>
+  <Color x:Key="MediumPinkPressedColor">#c10760</Color>
   <Color x:Key="LightPinkColor">#f18eaf</Color>
 
   <SolidColorBrush x:Key="WhiteBrush"
@@ -63,6 +65,10 @@
                    Color="{StaticResource DarkPinkColor}" />
   <SolidColorBrush x:Key="MediumPinkBrush"
                    Color="{StaticResource MediumPinkColor}" />
+  <SolidColorBrush x:Key="MediumPinkHoverBrush"
+                   Color="{StaticResource MediumPinkHoverColor}" />
+  <SolidColorBrush x:Key="MediumPinkPressedBrush"
+                   Color="{StaticResource MediumPinkPressedColor}" />
   <SolidColorBrush x:Key="LightPinkBrush"
                    Color="{StaticResource LightPinkColor}" />
   <SolidColorBrush x:Key="PrimaryBrush"

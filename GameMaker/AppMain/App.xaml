@@ -10,8 +10,9 @@
         <ResourceDictionary Source="ms-appx:///UX/Resources/ImageRadioButtonResource.xaml" />
         <ResourceDictionary Source="ms-appx:///UX/Resources/ImageButtonResource.xaml" />
         <ResourceDictionary Source="ms-appx:///UX/Resources/ToolTipResource.xaml" />
-        <ResourceDictionary Source="ms-appx:///UX/Resources/DefaultResource.xaml" />
+        <ResourceDictionary Source="ms-appx:///UX/Resources/TextFontResource.xaml" />
         <ResourceDictionary Source="ms-appx:///UX/Resources/ComboBoxResource.xaml" />
+        <ResourceDictionary Source="ms-appx:///UX/Resources/CheckboxResource.xaml" />
       </ResourceDictionary.MergedDictionaries>
 
     </ResourceDictionary>
