@@ -15,28 +15,35 @@
       <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
 
-    <StackPanel Spacing="20" VerticalAlignment="Center">
-      <engineTextBox:EngineTextBox Header="Grid Boxes"
-                                   Text="{x:Bind State.GridSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                   InputType="Integer" />
+    <StackPanel Spacing="40">
+      <TextBlock Text="Drawing Options"
+                 FontFamily="{StaticResource TitleFont}"
+                 FontSize="{StaticResource TitleFontSize}"
+                 FontWeight="Bold" />
+      <StackPanel Spacing="20" VerticalAlignment="Center">
+        <engineTextBox:EngineTextBox Header="Grid Boxes"
+                                     Text="{x:Bind State.GridSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     InputType="Integer" />
 
-      <engineTextBox:EngineTextBox Header="Box Size"
-                                   Text="{x:Bind State.BoxSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                   InputType="Integer" />
+        <engineTextBox:EngineTextBox Header="Box Size"
+                                     Text="{x:Bind State.BoxSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     InputType="Integer" />
 
-      <CheckBox Content="Show Grid"
-                IsChecked="{x:Bind State.ShowGrid, Mode=TwoWay}" />
+        <CheckBox Content="Show Grid"
+                  IsChecked="{x:Bind State.ShowGrid, Mode=TwoWay}" />
 
-      <Button Content="Clear All"
-              HorizontalAlignment="Stretch"
-              Click="OnClearAllClicked" />
+        <Button Content="Clear All"
+                HorizontalAlignment="Stretch"
+                Click="OnClearAllClicked" />
+      </StackPanel>
     </StackPanel>
 
     <Grid x:Name="RootGrid"
           Grid.Column="1"
-          Background="{StaticResource DarkGreyBrush}"
+          Background="{StaticResource MediumGreyBrush}"
           Width="{x:Bind State.InternalGridSize, Mode=OneWay}"
           Height="{x:Bind State.InternalGridSize, Mode=OneWay}"
+          VerticalAlignment="Top"
           PointerPressed="OnRootGridPointerPressed"
           PointerMoved="OnRootGridPointerMoved"
           PointerReleased="OnRootGridPointerReleased">

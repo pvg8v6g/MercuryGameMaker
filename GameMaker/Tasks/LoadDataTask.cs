@@ -29,6 +29,7 @@ public class LoadDataTask(ILocationService locationService, IJsonService jsonSer
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Items", "Equipment")).Length; // equipment
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Fighters", "Enemies")).Length; // enemies
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "States")).Length; // states
+        MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Animations")).Length; // animations
     }
 
     private void LoadData()
@@ -42,6 +43,7 @@ public class LoadDataTask(ILocationService locationService, IJsonService jsonSer
         DecryptData(Path.Combine("Items", "Equipment"), gameDataService.Equipment);
         DecryptData(Path.Combine("Fighters", "Enemies"), gameDataService.Enemies);
         DecryptData(Path.Combine("States"), gameDataService.States);
+        DecryptData(Path.Combine("Animations"), gameDataService.Animations);
     }
 
     private void DecryptData<T>(string path, ObservableCollection<T> collection) where T : BaseModel

@@ -19,6 +19,8 @@ public interface IGraphicsService
     Direction GetCharacterDirectionFromIndex(string fileName, int index);
     int GetCharacterIndexFromDirection(string fileName, int index, Direction direction);
     Task<CroppedImage> GetCharacter(string fileName, int index, Direction direction);
+    string GetAnimationImagesPath();
+    FileSelection[] GetAnimationImages();
     Task<(double width, double height)> GetImageDimensions(string imagePath);
     Task<BitmapImage> GetImage(string imagePath);
     Task<(double width, double height)> GetSegmentation(string fileName);

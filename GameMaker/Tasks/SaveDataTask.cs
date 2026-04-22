@@ -28,6 +28,7 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
         MaxWork += gameDataService.Equipment.Count;
         MaxWork += gameDataService.Enemies.Count;
         MaxWork += gameDataService.States.Count;
+        MaxWork += gameDataService.Animations.Count;
     }
 
     private void SaveData()
@@ -41,6 +42,7 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
         DataWork(Path.Combine(locationService.GameDirectory!, "Items", "Equipment"), gameDataService.Equipment); // equipment
         DataWork(Path.Combine(locationService.GameDirectory!, "Fighters", "Enemies"), gameDataService.Enemies); // enemies
         DataWork(Path.Combine(locationService.GameDirectory!, "States"), gameDataService.States); // states
+        DataWork(Path.Combine(locationService.GameDirectory!, "Animations"), gameDataService.Animations); // animations
     }
 
     private void DataWork<T>(string directory, ObservableCollection<T> collection) where T : BaseModel

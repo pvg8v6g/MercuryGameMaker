@@ -50,31 +50,6 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
         return Path.Combine(locationService.GameDirectory!, "Graphics", "Characters");
     }
 
-    // public static Image getCharacterImage(String fileName, boolean scaling) {
-    //     var scale = scaling ? GameData.scaleFactor : 1.0;
-    //     return getCachedBitmap(Cache.Regular, "Characters/" + fileName, scale, scale);
-    // }
-    //
-    // public static Rectangle2D getCharacterViewport(Image image, String fileName, Direction direction, int index) {
-    //     var w = image.getWidth();
-    //     var h = image.getHeight();
-    //     var divisions = getCharacterDivisions(fileName);
-    //     w /= divisions.a;
-    //     h /= divisions.b;
-    //     var bitIndex = direction.getDirection() * divisions.a + index;
-    //     var x = ((int) (bitIndex % divisions.a)) * w;
-    //     var y = ((int) (bitIndex / divisions.a)) * h;
-    //     return new Rectangle2D(x, y, w, h);
-    // }
-    //
-    // public static Pair<Double, Double> getCharacterDivisions(String fileName) {
-    //     if (fileName.contains("$")) return new Pair<>(3.0, 4.0);
-    //     else if (fileName.contains("@")) return new Pair<>(4.0, 2.0);
-    //     else if (fileName.contains("#")) return new Pair<>(16.0, 32.0);
-    //     else if (fileName.contains("&")) return new Pair<>(4.0, 2.0);
-    //     else return new Pair<>(12.0, 8.0);
-    // }
-
     public Direction GetCharacterDirectionFromIndex(string fileName, int index)
     {
         var divisions = GetCharacterDivisions(fileName);
@@ -100,23 +75,7 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
         var x = ((int) (bitIndex % divisions.x)) * w;
         var y = ((int) (bitIndex / divisions.x)) * h;
         return new CroppedImage { ImagePath = path, ImageSource = source, Rect = new Rect(x, y, w, h) };
-        // var columns = (int) divisions.x;
-        // var x = (index % columns) * w;
-        // var y = (index / columns) * h;
-        // return new CroppedImage { ImagePath = path, ImageSource = source, Rect = new Rect(x, y, w, h) };
     }
-
-    // public static Rectangle2D getCharacterViewport(Image image, String fileName, Direction direction, int index) {
-    //     var w = image.getWidth();
-    //     var h = image.getHeight();
-    //     var divisions = getCharacterDivisions(fileName);
-    //     w /= divisions.a;
-    //     h /= divisions.b;
-    //     var bitIndex = direction.getDirection() * divisions.a + index;
-    //     var x = ((int) (bitIndex % divisions.a)) * w;
-    //     var y = ((int) (bitIndex / divisions.a)) * h;
-    //     return new Rectangle2D(x, y, w, h);
-    // }
 
     #endregion
 
@@ -129,6 +88,18 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
     #endregion
 
     #region Animation
+
+    public string GetAnimationImagesPath()
+    {
+        return Path.Combine(locationService.GameDirectory!, "Graphics", "Animations");
+    }
+
+    public FileSelection[] GetAnimationImages()
+    {
+        var path = GetAnimationImagesPath();
+        var files = Directory.GetFiles(path, "*.png");
+        return files.Select(x => new FileSelection(Path.GetFileName(x), x)).ToArray();
+    }
 
     #endregion
 

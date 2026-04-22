@@ -165,6 +165,7 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
                 navigationService.NavigateTo<Views.StatesPage.StatesPage>();
                 break;
             case "9": // animations
+                navigationService.NavigateTo<Views.AnimationsPage.AnimationsPage>();
                 break;
             case "10.1": // attributes
                 EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;

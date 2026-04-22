@@ -1,5 +1,4 @@
 ﻿<UserControl x:Class="GameMaker.UX.Components.EngineListView.EngineListView"
-             x:Name="EngineListViewControl"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -34,13 +33,15 @@
             <SymbolIcon Symbol="Copy" />
           </MenuFlyoutItem.Icon>
         </MenuFlyoutItem>
-        <MenuFlyoutItem Text="Paste" Command="{x:Bind PasteCommand, Mode=OneWay}" IsEnabled="{x:Bind CopiedModel, Mode=OneWay, Converter={StaticResource NullToFalseConverter}}">
+        <MenuFlyoutItem Text="Paste" Command="{x:Bind PasteCommand, Mode=OneWay}"
+                        IsEnabled="{x:Bind CopiedModel, Mode=OneWay, Converter={StaticResource NullToFalseConverter}}">
           <MenuFlyoutItem.Icon>
             <SymbolIcon Symbol="Paste" />
           </MenuFlyoutItem.Icon>
         </MenuFlyoutItem>
         <MenuFlyoutSeparator />
-        <MenuFlyoutItem Text="Delete" Command="{x:Bind DeleteCommand, Mode=OneWay}" behaviors:ListViewBehaviors.RequireSelectionForMenuFlyoutItem="True">
+        <MenuFlyoutItem Text="Delete" Command="{x:Bind DeleteCommand, Mode=OneWay}"
+                        behaviors:ListViewBehaviors.RequireSelectionForMenuFlyoutItem="True">
           <MenuFlyoutItem.Icon>
             <SymbolIcon Symbol="Delete" />
           </MenuFlyoutItem.Icon>

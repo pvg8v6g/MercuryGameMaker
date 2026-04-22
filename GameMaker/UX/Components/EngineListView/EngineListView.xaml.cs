@@ -1,6 +1,5 @@
 using System.Windows.Input;
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
 
 namespace GameMaker.UX.Components.EngineListView;
 
@@ -45,7 +44,7 @@ public sealed partial class EngineListView
 
     private void UpdateItemTemplate()
     {
-        ListView.ItemTemplate = ItemTemplate ?? (DataTemplate)ListView.Resources["DefaultItemTemplate"];
+        ListView.ItemTemplate = ItemTemplate ?? (DataTemplate) ListView.Resources["DefaultItemTemplate"];
     }
 
     public static readonly DependencyProperty NewCommandProperty = DependencyProperty.Register(
