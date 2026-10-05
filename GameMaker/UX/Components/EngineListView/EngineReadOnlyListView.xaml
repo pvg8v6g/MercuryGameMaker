@@ -10,12 +10,12 @@
             SelectedIndex="{x:Bind SelectedIndex, Mode=TwoWay}"
             SelectionMode="Single"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
+            Height="{x:Bind ListViewHeight, Mode=OneWay}"
             Background="{StaticResource MediumGreyBrush}">
-    <ListView.Resources>
-      <DataTemplate x:Key="DefaultItemTemplate" x:DataType="componentModels:FileSelection">
+    <ListView.ItemTemplate>
+      <DataTemplate x:DataType="componentModels:FileSelection">
         <TextBlock Text="{x:Bind FileName, Mode=OneWay}" />
       </DataTemplate>
-    </ListView.Resources>
+    </ListView.ItemTemplate>
   </ListView>
 </UserControl>

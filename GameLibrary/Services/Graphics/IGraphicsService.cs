@@ -6,12 +6,6 @@ namespace GameLibrary.Services.Graphics;
 
 public interface IGraphicsService
 {
-    // string GetIconPath();
-    // Task<ImageSource> GetGameIcon();
-    // Task<Rect> GetIconViewport(int index);
-    // string GetEngineIconPath();
-    // Task<ImageSource> GetEngineIcon();
-    // Task<Rect> GetEngineIconViewport(int index);
     string GetIconsPath();
     Task<CroppedImage> GetIcon(int index);
     Task<CroppedImage> GetEngineIcon(int index);
@@ -21,8 +15,10 @@ public interface IGraphicsService
     Task<CroppedImage> GetCharacter(string fileName, int index, Direction direction);
     string GetAnimationImagesPath();
     FileSelection[] GetAnimationImages();
+    Task<CroppedImage> GetAnimationImage(string fileName, int frame);
+    Task<int> GetAnimationFrames(string fileName);
     Task<(double width, double height)> GetImageDimensions(string imagePath);
-    Task<BitmapImage> GetImage(string imagePath);
+    Task<BitmapImage> GetImage(string imagePath, Cache cache = Cache.Regular);
     Task<(double width, double height)> GetSegmentation(string fileName);
     (double x, double y) GetCharacterDivisions(string fileName);
 }

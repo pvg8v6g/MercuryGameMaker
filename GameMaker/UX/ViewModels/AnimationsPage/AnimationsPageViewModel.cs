@@ -4,6 +4,8 @@ using GameLibrary.Services.GameData;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Services.Json;
 using GameLibrary.Utilities.ComponentModels;
+using GameLibrary.Commands;
+using Windows.Foundation;
 
 namespace GameMaker.UX.ViewModels.AnimationsPage;
 
@@ -28,6 +30,49 @@ public class AnimationsPageViewModel(IGameDataService gameDataService, IGraphics
         set => SetField(ref field, value);
     }
 
+    public int SelectedFrame
+    {
+        get;
+        set => SetField(ref field, value);
+    } = 1;
+
+    public int AnchorX
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public int AnchorY
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public int AnchorSize
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public double CanvasWidth
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public double CanvasHeight
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public RelayCommand<Size> CanvasSizeChangedCommand => new(size =>
+    {
+        CanvasWidth = size.Width;
+        CanvasHeight = size.Height;
+        UpdateAnchor();
+    });
+
     #endregion
 
     #region Actions
@@ -35,6 +80,7 @@ public class AnimationsPageViewModel(IGameDataService gameDataService, IGraphics
     protected override Task LoadedAction()
     {
         RefreshAnimationImageFiles();
+        AnchorSize = gameDataService.GridSize;
         return Task.CompletedTask;
     }
 
@@ -52,18 +98,11 @@ public class AnimationsPageViewModel(IGameDataService gameDataService, IGraphics
         AnimationImageFiles = graphicsService.GetAnimationImages();
     }
 
-    // private void populateAnimationFileList() {
-    //     if (getSelectedEntity() == null || animationFiles.any()) return;
-    //     var files = FileUtility.getFilesInFolder("Graphics/Animations/").select(x -> {
-    //         var model = new FileSelectionModel();
-    //         model.name = x.getName();
-    //         model.path = x.getAbsolutePath();
-    //         return model;
-    //     })
-    //     .orderBy(x -> x.name)
-    //         .toList();
-    //     animationFiles.setAll(files);
-    // }
+    private void UpdateAnchor()
+    {
+        AnchorX = (int) ((CanvasWidth - AnchorSize) / 2.0);
+        AnchorY = (int) ((CanvasHeight - AnchorSize) / 2.0);
+    }
 
     #endregion
 }

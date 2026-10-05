@@ -179,16 +179,16 @@
 
           <!-- TODO - Add AutoAnimation when able. -->
 
-          <TextBox Grid.Column="0"
-                   Grid.Row="2"
-                   Grid.ColumnSpan="2"
-                   Header="Description"
-                   Text="{x:Bind ViewModel.SelectedEntity.Description, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
-                   AcceptsReturn="True"
-                   TextWrapping="Wrap"
-                   MinHeight="100"
-                   ToolTipService.ToolTip="Tell me a little bit about this actor."
-                   VerticalAlignment="Top" />
+          <engineTextBox:EngineTextBox Grid.Column="0"
+                                       Grid.Row="2"
+                                       Grid.ColumnSpan="2"
+                                       Header="Description"
+                                       Text="{x:Bind ViewModel.SelectedEntity.Description, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
+                                       AcceptsReturn="True"
+                                       TextWrapping="Wrap"
+                                       MinHeight="100"
+                                       ToolTipService.ToolTip="Tell me a little bit about this actor."
+                                       VerticalAlignment="Top" />
 
           <CheckBox Grid.Column="0"
                     Grid.Row="3"
@@ -226,6 +226,9 @@
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="250" />
         </Grid.ColumnDefinitions>
+        <ScrollViewer>
+
+        </ScrollViewer>
         <ItemsControl Grid.Column="0" VerticalAlignment="Top" ItemsSource="{x:Bind ViewModel.FighterEquipmentSlots, Mode=OneWay}">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>

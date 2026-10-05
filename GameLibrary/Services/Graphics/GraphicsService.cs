@@ -59,7 +59,6 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
     public int GetCharacterIndexFromDirection(string fileName, int index, Direction direction)
     {
         var divisions = GetCharacterDivisions(fileName);
-        var t0 = (int) direction * (int) divisions.x + index;
         return (int) direction * (int) divisions.x + index;
     }
 
@@ -101,6 +100,27 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
         return files.Select(x => new FileSelection(Path.GetFileName(x), x)).ToArray();
     }
 
+    public async Task<CroppedImage> GetAnimationImage(string fileName, int frame)
+    {
+        var path = Path.Combine(GetAnimationImagesPath(), fileName);
+        var source = await GetImage(path, Cache.Animation);
+        var dimensions = await GetImageDimensions(path);
+        var w = dimensions.width / 5.0;
+        var h = dimensions.height / 5.0;
+        var x = (frame % 5.0) * w;
+        var y = (frame / 5.0) * h;
+        return new CroppedImage { ImagePath = path, ImageSource = source, Rect = new Rect(x, y, w, h) };
+    }
+
+    public async Task<int> GetAnimationFrames(string fileName)
+    {
+        var path = Path.Combine(GetAnimationImagesPath(), fileName);
+        var dimensions = await GetImageDimensions(path);
+        var vs = dimensions.width / 5.0;
+        var h = (int) (dimensions.height / vs);
+        return 5 * h;
+    }
+
     #endregion
 
     #region Map
@@ -118,18 +138,25 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
         return (decoder.PixelWidth, decoder.PixelHeight);
     }
 
-    public async Task<BitmapImage> GetImage(string imagePath)
+    public async Task<BitmapImage> GetImage(string imagePath, Cache cache = Cache.Regular)
     {
         var path = Path.IsPathRooted(imagePath) ? imagePath : Path.Combine(locationService.GraphicsDirectory!, imagePath);
 
-        if (ImagesCache.Count > 200) ImagesCache.Clear(); // Clear cache if it gets too big
-        if (ImagesCache.TryGetValue(path, out var cachedImage))
+        var imageCache = cache switch
+        {
+            Cache.Regular => ImagesCache,
+            Cache.Animation => AnimationsCache,
+            _ => throw new ArgumentOutOfRangeException(nameof(cache), cache, null)
+        };
+
+        if (imageCache.Count > 200) imageCache.Clear(); // Clear cache if it gets too big
+        if (imageCache.TryGetValue(path, out var cachedImage))
         {
             return cachedImage;
         }
 
         var bitmapImage = new BitmapImage(new Uri(path, UriKind.Absolute));
-        ImagesCache[path] = bitmapImage;
+        imageCache[path] = bitmapImage;
         return await Task.FromResult(bitmapImage);
     }
 

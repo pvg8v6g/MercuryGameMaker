@@ -1,5 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using GameLibrary.Models;
 
 namespace GameLibrary.Utilities.ComponentModels;
 
@@ -30,8 +29,10 @@ public static class CollectionExtensions
             {
                 if (comparison > 0) break;
             }
+
             index++;
         }
+
         collection.Insert(index, item);
         return index;
     }
@@ -59,6 +60,7 @@ public class ObservableCollectionSorter<T>(ObservableCollection<T> collection)
         {
             return OrderBy(keySelector);
         }
+
         _orderedEnumerable = _orderedEnumerable.ThenBy(keySelector);
         return this;
     }
@@ -69,6 +71,7 @@ public class ObservableCollectionSorter<T>(ObservableCollection<T> collection)
         {
             return OrderByDescending(keySelector);
         }
+
         _orderedEnumerable = _orderedEnumerable.ThenByDescending(keySelector);
         return this;
     }

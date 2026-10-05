@@ -16,8 +16,8 @@
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="300" />
-      <ColumnDefinition Width="*" />
       <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
     <engineListView:EngineListView ItemsSource="{x:Bind ViewModel.GameDataService.Animations}"
                                    SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}"
@@ -34,21 +34,58 @@
                Text="{x:Bind ViewModel.SelectedEntity.Name, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
                VerticalAlignment="Bottom" />
     </enginePanel:EnginePanel>
-    <enginePanel:EnginePanel Grid.Column="2"
+    <enginePanel:EnginePanel x:Name="AnimationFramesPanel"
+                             Grid.Column="2"
                              Title="Animation Frames"
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-      <Grid>
+      <Grid ColumnSpacing="10"
+            RowSpacing="10"
+            MaxHeight="{x:Bind AnimationFramesPanel.ScrollerViewportHeight, Mode=OneWay}">
         <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
           <RowDefinition Height="*" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="300" />
+          <ColumnDefinition Width="350" />
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
-
-        <engineListView:EngineReadOnlyListView ItemsSource="{x:Bind ViewModel.AnimationImageFiles}"
+        <NumberBox Grid.Column="0"
+                   Grid.Row="0"
+                   Header="Frame"
+                   Value="{x:Bind ViewModel.SelectedFrame, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                   Minimum="1"
+                   SmallChange="1"
+                   LargeChange="10"
+                   SpinButtonPlacementMode="Compact" />
+        <engineListView:EngineReadOnlyListView Grid.Column="0"
+                                               Grid.Row="1"
+                                               ItemsSource="{x:Bind ViewModel.AnimationImageFiles, Mode=OneWay}"
                                                SelectedIndex="{x:Bind ViewModel.SelectedAnimationImageFilesIndex, Mode=TwoWay}" />
+        <StackPanel Grid.Column="1"
+                    Grid.Row="0"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Spacing="15">
+          <Button>
+            Frame Effects
+          </Button>
+          <Button>
+            Frame Spanning
+          </Button>
+        </StackPanel>
+        <Canvas Grid.Column="1"
+                Grid.Row="1"
+                Grid.ColumnSpan="2"
+                Background="{StaticResource MediumGreyBrush}"
+                behaviors:SizeChangedBehavior.SizeChangedCommand="{x:Bind ViewModel.CanvasSizeChangedCommand}">
+          <Rectangle Width="{x:Bind ViewModel.AnchorSize, Mode=OneWay}"
+                     Height="{x:Bind ViewModel.AnchorSize, Mode=OneWay}"
+                     Canvas.Top="{x:Bind ViewModel.AnchorY, FallbackValue='0', Mode=OneWay}"
+                     Canvas.Left="{x:Bind ViewModel.AnchorX, FallbackValue='0', Mode=OneWay}"
+                     Fill="{StaticResource RedBrush}" />
+        </Canvas>
       </Grid>
     </enginePanel:EnginePanel>
   </Grid>

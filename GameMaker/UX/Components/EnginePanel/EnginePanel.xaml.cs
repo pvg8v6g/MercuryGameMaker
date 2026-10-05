@@ -1,4 +1,5 @@
 ﻿using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Markup;
 
 namespace GameMaker.UX.Components.EnginePanel;
@@ -24,8 +25,25 @@ public partial class EnginePanel
         set => SetValue(InnerContentProperty, value);
     }
 
+    public static readonly DependencyProperty ScrollerViewportHeightProperty = DependencyProperty.Register(
+        nameof(ScrollerViewportHeight), typeof(double), typeof(EnginePanel), new PropertyMetadata(0.0));
+
+    public double ScrollerViewportHeight
+    {
+        get => (double) GetValue(ScrollerViewportHeightProperty);
+        set => SetValue(ScrollerViewportHeightProperty, value);
+    }
+
     public EnginePanel()
     {
         InitializeComponent();
+
+        var binding = new Binding
+        {
+            Source = ScrollRoot,
+            Path = new PropertyPath("ViewportHeight"),
+            Mode = BindingMode.OneWay
+        };
+        SetBinding(ScrollerViewportHeightProperty, binding);
     }
 }

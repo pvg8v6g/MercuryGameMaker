@@ -24,6 +24,15 @@ public sealed partial class EngineReadOnlyListView
         set => SetValue(SelectedIndexProperty, value);
     }
 
+    public static readonly DependencyProperty ListViewHeightProperty = DependencyProperty.Register(
+        nameof(ListViewHeight), typeof(double), typeof(EngineReadOnlyListView), new PropertyMetadata(double.NaN));
+
+    public double ListViewHeight
+    {
+        get => (double) GetValue(ListViewHeightProperty);
+        set => SetValue(ListViewHeightProperty, value);
+    }
+
     #endregion
 
     public EngineReadOnlyListView()
