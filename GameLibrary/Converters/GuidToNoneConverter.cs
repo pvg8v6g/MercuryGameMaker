@@ -6,7 +6,7 @@ public partial class GuidToNoneConverter : IValueConverter
 {
     private static readonly Guid PlaceholderGuid = Guid.NewGuid();
 
-    public object Convert(object value, Type targetType, object parameter, string language)
+    public object Convert(object? value, Type targetType, object parameter, string language)
     {
         if (value is null)
         {
@@ -16,7 +16,7 @@ public partial class GuidToNoneConverter : IValueConverter
         return value;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    public object? ConvertBack(object value, Type targetType, object parameter, string language)
     {
         if (value is Guid guid && guid == Guid.Empty)
         {

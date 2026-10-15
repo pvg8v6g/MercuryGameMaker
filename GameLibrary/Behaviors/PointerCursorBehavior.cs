@@ -9,8 +9,10 @@ public class PointerCursorBehavior
     public static readonly DependencyProperty CursorTypeProperty = DependencyProperty.RegisterAttached(
         "CursorType", typeof(InputSystemCursorShape?), typeof(PointerCursorBehavior), new PropertyMetadata(null, OnCursorTypeChanged));
 
+    // ReSharper disable once MemberCanBePrivate.Global
     public static readonly DependencyProperty PointerOverCursorTypeProperty = DependencyProperty.RegisterAttached(
-        "PointerOverCursorType", typeof(InputSystemCursorShape?), typeof(PointerCursorBehavior), new PropertyMetadata(null, OnPointerOverCursorTypeChanged));
+        "PointerOverCursorType", typeof(InputSystemCursorShape?), typeof(PointerCursorBehavior),
+        new PropertyMetadata(null, OnPointerOverCursorTypeChanged));
 
     public static void SetCursorType(DependencyObject element, InputSystemCursorShape? value)
     {
@@ -19,7 +21,7 @@ public class PointerCursorBehavior
 
     public static InputSystemCursorShape? GetCursorType(DependencyObject element)
     {
-        return (InputSystemCursorShape?)element.GetValue(CursorTypeProperty);
+        return (InputSystemCursorShape?) element.GetValue(CursorTypeProperty);
     }
 
     public static void SetPointerOverCursorType(DependencyObject element, InputSystemCursorShape? value)
@@ -27,9 +29,9 @@ public class PointerCursorBehavior
         element.SetValue(PointerOverCursorTypeProperty, value);
     }
 
-    public static InputSystemCursorShape? GetPointerOverCursorType(DependencyObject element)
+    private static InputSystemCursorShape? GetPointerOverCursorType(DependencyObject element)
     {
-        return (InputSystemCursorShape?)element.GetValue(PointerOverCursorTypeProperty);
+        return (InputSystemCursorShape?) element.GetValue(PointerOverCursorTypeProperty);
     }
 
     private static void OnCursorTypeChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
@@ -66,7 +68,7 @@ public class PointerCursorBehavior
     {
         if (sender is UIElement element)
         {
-            UpdateCursor(element, false);
+            UpdateCursor(element);
         }
     }
 
@@ -78,7 +80,7 @@ public class PointerCursorBehavior
             shape = GetCursorType(element);
         }
 
-        if (shape is InputSystemCursorShape s)
+        if (shape is { } s)
         {
             SetProtectedCursor(element, InputSystemCursor.Create(s));
         }
@@ -88,7 +90,7 @@ public class PointerCursorBehavior
         }
     }
 
-    private static void SetProtectedCursor(UIElement element, InputCursor cursor)
+    private static void SetProtectedCursor(UIElement element, InputCursor? cursor)
     {
         try
         {

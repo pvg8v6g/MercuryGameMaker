@@ -4,18 +4,13 @@ namespace GameLibrary.Converters;
 
 public partial class NullToInvalidIndexConverter : IValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, string language)
+    public object Convert(object? value, Type targetType, object parameter, string language)
     {
-        return value == null ? -1 : value;
+        return value ?? -1;
     }
 
-    public object ConvertBack(object value, Type targetType, object parameter, string language)
+    public object? ConvertBack(object value, Type targetType, object parameter, string language)
     {
-        if (value is int index && index == -1)
-        {
-            return null;
-        }
-
-        return value;
+        return value is -1 ? null : value;
     }
 }
