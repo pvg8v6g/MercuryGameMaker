@@ -6,7 +6,11 @@ public partial class Animation : BaseModel
 {
     #region Properties
 
-    public ObservableCollection<AnimationEffect> Effects { get; } = [];
+    public ObservableCollection<AnimationEffect> Effects
+    {
+        get;
+        set => SetField(ref field, value);
+    } = [];
 
     #endregion
 }

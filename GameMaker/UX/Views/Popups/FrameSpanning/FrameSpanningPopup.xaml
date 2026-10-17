@@ -1,0 +1,87 @@
+﻿<ContentDialog x:Class="GameMaker.UX.Views.Popups.FrameSpanning.FrameSpanningPopup"
+               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+               mc:Ignorable="d"
+               Title="Frame Spanning"
+               Background="{StaticResource PrimaryBrush}"
+               PrimaryButtonText="Apply"
+               SecondaryButtonText="Delete All Cells"
+               CloseButtonText="Cancel"
+               DefaultButton="Primary">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Spacing="16"
+                Width="360">
+      <Grid ColumnSpacing="20">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <NumberBox Grid.Column="0"
+                   Header="Start Frame"
+                   Minimum="1"
+                   SmallChange="1"
+                   Value="{x:Bind ViewModel.StartFrame, Mode=TwoWay}"
+                   SpinButtonPlacementMode="Inline" />
+        <NumberBox Grid.Column="1"
+                   Header="End Frame"
+                   Minimum="1"
+                   SmallChange="1"
+                   Value="{x:Bind ViewModel.EndFrame, Mode=TwoWay}"
+                   SpinButtonPlacementMode="Inline" />
+      </Grid>
+
+      <Grid ColumnSpacing="20">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <NumberBox Grid.Column="0"
+                   Header="Start Cell"
+                   Minimum="1"
+                   SmallChange="1"
+                   Value="{x:Bind ViewModel.StartCell, Mode=TwoWay}"
+                   SpinButtonPlacementMode="Inline" />
+        <NumberBox Grid.Column="1"
+                   Header="End Cell"
+                   Minimum="1"
+                   SmallChange="1"
+                   Value="{x:Bind ViewModel.EndCell, Mode=TwoWay}"
+                   SpinButtonPlacementMode="Inline" />
+      </Grid>
+
+      <ToggleSwitch Header="Tween"
+                    OnContent="Interpolate between start and end frames"
+                    OffContent="Copy start frame value to all frames in range"
+                    IsOn="{x:Bind ViewModel.Tween, Mode=TwoWay}" />
+
+      <CheckBox Content="All"
+                IsChecked="{x:Bind ViewModel.All, Mode=TwoWay}" />
+
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0"
+                    Spacing="6">
+          <CheckBox Content="X" IsChecked="{x:Bind ViewModel.X, Mode=TwoWay}" />
+          <CheckBox Content="Y" IsChecked="{x:Bind ViewModel.Y, Mode=TwoWay}" />
+          <CheckBox Content="Scale X" IsChecked="{x:Bind ViewModel.ScaleX, Mode=TwoWay}" />
+          <CheckBox Content="Scale Y" IsChecked="{x:Bind ViewModel.ScaleY, Mode=TwoWay}" />
+          <CheckBox Content="Rotate" IsChecked="{x:Bind ViewModel.Rotate, Mode=TwoWay}" />
+          <CheckBox Content="Opacity" IsChecked="{x:Bind ViewModel.Opacity, Mode=TwoWay}" />
+        </StackPanel>
+        <StackPanel Grid.Column="1"
+                    Spacing="6">
+          <CheckBox Content="Hue" IsChecked="{x:Bind ViewModel.Hue, Mode=TwoWay}" />
+          <CheckBox Content="Contrast" IsChecked="{x:Bind ViewModel.Contrast, Mode=TwoWay}" />
+          <CheckBox Content="Brightness" IsChecked="{x:Bind ViewModel.Brightness, Mode=TwoWay}" />
+          <CheckBox Content="Saturation" IsChecked="{x:Bind ViewModel.Saturation, Mode=TwoWay}" />
+          <CheckBox Content="Blend Mode" IsChecked="{x:Bind ViewModel.BlendMode, Mode=TwoWay}" />
+        </StackPanel>
+      </Grid>
+    </StackPanel>
+  </ScrollViewer>
+</ContentDialog>

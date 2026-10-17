@@ -112,6 +112,16 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
         return new CroppedImage { ImagePath = path, ImageSource = source, Rect = new Rect(x, y, w, h) };
     }
 
+    public async Task<Rect> GetAnimationViewport(string fileName, int index)
+    {
+        var path = Path.Combine(GetAnimationImagesPath(), fileName);
+        var dimensions = await GetImageDimensions(path);
+        var size = dimensions.width / 5.0;
+        var x = (index % 5) * size;
+        var y = (index / 5) * size;
+        return new Rect(x, y, size, size);
+    }
+
     public async Task<int> GetAnimationFrames(string fileName)
     {
         var path = Path.Combine(GetAnimationImagesPath(), fileName);

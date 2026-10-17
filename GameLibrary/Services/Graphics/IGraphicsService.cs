@@ -1,4 +1,5 @@
-﻿using GameLibrary.Enumerations;
+﻿using Windows.Foundation;
+using GameLibrary.Enumerations;
 using GameLibrary.Utilities.ComponentModels;
 using Microsoft.UI.Xaml.Media.Imaging;
 
@@ -16,6 +17,7 @@ public interface IGraphicsService
     string GetAnimationImagesPath();
     FileSelection[] GetAnimationImages();
     Task<CroppedImage> GetAnimationImage(string fileName, int frame);
+    Task<Rect> GetAnimationViewport(string fileName, int index);
     Task<int> GetAnimationFrames(string fileName);
     Task<(double width, double height)> GetImageDimensions(string imagePath);
     Task<BitmapImage> GetImage(string imagePath, Cache cache = Cache.Regular);

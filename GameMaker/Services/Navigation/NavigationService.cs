@@ -1,5 +1,9 @@
 ﻿using GameLibrary.Tasks;
+using GameMaker.UX.ViewModels.Popups.AnimationEffects;
+using GameMaker.UX.ViewModels.Popups.FrameSpanning;
 using GameMaker.UX.Views.MainWindow;
+using GameMaker.UX.Views.Popups.AnimationEffects;
+using GameMaker.UX.Views.Popups.FrameSpanning;
 using GameMaker.UX.Views.Popups.Progress;
 using MercuryLibrary.WinUI3Components;
 using Microsoft.UI.Xaml.Controls;
@@ -46,6 +50,24 @@ public partial class NavigationService(Func<Type, EngineTask> engineTaskFactory)
             XamlRoot = MainWindow.Window.Content.XamlRoot
         };
         await progressPopup.ShowAsync();
+    }
+
+    public async Task ShowAnimationEffectsPopup(AnimationEffectsPopupViewModel viewModel)
+    {
+        var popup = new AnimationEffectsPopup(viewModel)
+        {
+            XamlRoot = MainWindow.Window.Content.XamlRoot
+        };
+        await popup.ShowAsync();
+    }
+
+    public async Task<ContentDialogResult> ShowFrameSpanningPopup(FrameSpanningPopupViewModel viewModel)
+    {
+        var popup = new FrameSpanningPopup(viewModel)
+        {
+            XamlRoot = MainWindow.Window.Content.XamlRoot
+        };
+        return await popup.ShowAsync();
     }
 
     #endregion

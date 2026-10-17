@@ -7,9 +7,25 @@
       xmlns:engineListView="using:GameMaker.UX.Components.EngineListView"
       xmlns:enginePanel="using:GameMaker.UX.Components.EnginePanel"
       xmlns:behaviors="using:GameLibrary.Behaviors"
+      xmlns:mercury="using:MercuryLibrary.CanvasComponents"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance animationsPage:AnimationsPageViewModel}"
       behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
+  <Page.KeyboardAccelerators>
+    <KeyboardAccelerator Key="Space"
+                         behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.PlayCommand}" />
+    <KeyboardAccelerator Key="Delete"
+                         behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.DeleteCellCommand}" />
+    <KeyboardAccelerator Key="Escape"
+                         behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.DeselectCellCommand}" />
+    <KeyboardAccelerator Key="Left"
+                         behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.PreviousFrameCommand}" />
+    <KeyboardAccelerator Key="Right"
+                         behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.NextFrameCommand}" />
+    <KeyboardAccelerator Key="D"
+                         Modifiers="Control"
+                         behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.DuplicateCellCommand}" />
+  </Page.KeyboardAccelerators>
   <Grid ColumnSpacing="10" Padding="5">
     <Grid.RowDefinitions>
       <RowDefinition Height="*" />
@@ -57,7 +73,7 @@
                    Minimum="1"
                    SmallChange="1"
                    LargeChange="10"
-                   SpinButtonPlacementMode="Compact" />
+                   SpinButtonPlacementMode="Inline" />
         <engineListView:EngineReadOnlyListView Grid.Column="0"
                                                Grid.Row="1"
                                                ItemsSource="{x:Bind ViewModel.AnimationImageFiles, Mode=OneWay}"
@@ -68,24 +84,71 @@
                     HorizontalAlignment="Left"
                     VerticalAlignment="Bottom"
                     Spacing="15">
-          <Button>
+          <Button Command="{x:Bind ViewModel.FrameEffectsCommand}"
+                  IsEnabled="{x:Bind ViewModel.IsCellSelected, Mode=OneWay}">
             Frame Effects
           </Button>
-          <Button>
+          <Button Command="{x:Bind ViewModel.FrameSpanningCommand}">
             Frame Spanning
           </Button>
+          <Button Command="{x:Bind ViewModel.PlayCommand}"
+                  Content="{x:Bind ViewModel.PlayButtonText, Mode=OneWay}" />
         </StackPanel>
-        <Canvas Grid.Column="1"
+        <mercury:GameCanvasView Grid.Column="1"
+                                Grid.Row="1"
+                                Grid.ColumnSpan="2"
+                                UpdateRate="16.66666667"
+                                ClearColor="{StaticResource MediumGreyColor}"
+                                AnchorColor="{StaticResource RedColor}"
+                                AnchorRect="{x:Bind ViewModel.AnchorRect, Mode=OneWay}"
+                                SelectionColor="{StaticResource RedColor}"
+                                SelectionThickness="4"
+                                SelectionRect="{x:Bind ViewModel.SelectionRect, Mode=OneWay}"
+                                Sprites="{x:Bind ViewModel.Sprites, Mode=OneWay}"
+                                behaviors:SizeChangedBehavior.SizeChangedCommand="{x:Bind ViewModel.CanvasSizeChangedCommand}"
+                                behaviors:PointerCommandBehavior.CapturePointerOnPressed="True"
+                                behaviors:PointerCommandBehavior.PointerPressedCommand="{x:Bind ViewModel.CanvasPointerPressedCommand}"
+                                behaviors:PointerCommandBehavior.PointerMovedCommand="{x:Bind ViewModel.CanvasPointerMovedCommand}"
+                                behaviors:PointerCommandBehavior.PointerReleasedCommand="{x:Bind ViewModel.CanvasPointerReleasedCommand}" />
+        <ItemsControl Grid.Column="1"
+                      Grid.Row="1"
+                      Grid.ColumnSpan="2"
+                      IsHitTestVisible="False"
+                      ItemsSource="{x:Bind ViewModel.CellOutlines, Mode=OneWay}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <Canvas />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate>
+              <Rectangle Width="{Binding Width}"
+                         Height="{Binding Height}"
+                         Stroke="{StaticResource LightBlueBrush}"
+                         StrokeThickness="2">
+                <Rectangle.RenderTransform>
+                  <TranslateTransform X="{Binding X}"
+                                      Y="{Binding Y}" />
+                </Rectangle.RenderTransform>
+              </Rectangle>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+        <Border Grid.Column="1"
                 Grid.Row="1"
                 Grid.ColumnSpan="2"
-                Background="{StaticResource MediumGreyBrush}"
-                behaviors:SizeChangedBehavior.SizeChangedCommand="{x:Bind ViewModel.CanvasSizeChangedCommand}">
-          <Rectangle Width="{x:Bind ViewModel.AnchorSize, Mode=OneWay}"
-                     Height="{x:Bind ViewModel.AnchorSize, Mode=OneWay}"
-                     Canvas.Top="{x:Bind ViewModel.AnchorY, FallbackValue='0', Mode=OneWay}"
-                     Canvas.Left="{x:Bind ViewModel.AnchorX, FallbackValue='0', Mode=OneWay}"
-                     Fill="{StaticResource RedBrush}" />
-        </Canvas>
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                Margin="8"
+                Padding="6,3"
+                CornerRadius="4"
+                IsHitTestVisible="False"
+                Background="#AA000000"
+                Visibility="{x:Bind ViewModel.IsDragging, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+          <TextBlock Text="{x:Bind ViewModel.DragPositionText, Mode=OneWay}"
+                     Foreground="White"
+                     FontSize="12" />
+        </Border>
       </Grid>
     </enginePanel:EnginePanel>
   </Grid>

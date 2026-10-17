@@ -2,6 +2,7 @@
 using GameLibrary.Services.Graphics;
 using GameLibrary.Services.Json;
 using GameLibrary.Services.Location;
+using GameLibrary.Services.Media;
 using GameLibrary.Tasks;
 using GameMaker.Services.Navigation;
 using GameMaker.Tasks;
@@ -91,6 +92,8 @@ public partial class App
         services.AddSingleton<IGraphicsService, GraphicsService>();
         services.AddSingleton<IGameDataService, GameDataService>();
         services.AddSingleton<IJsonService, JsonService>();
+        services.AddSingleton<IMediaService, MediaService>();
+        services.AddSingleton<IAudioService, AudioService>();
 
         #endregion
 
