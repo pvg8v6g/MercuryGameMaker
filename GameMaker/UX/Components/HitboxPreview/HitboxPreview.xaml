@@ -1,0 +1,99 @@
+﻿<UserControl x:Class="GameMaker.UX.Components.HitboxPreview.HitboxPreview"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:behaviors="using:GameLibrary.Behaviors"
+             xmlns:gridArea="using:GameMaker.UX.Components.GridArea"
+             xmlns:areas="using:GameLibrary.Models.Areas"
+             xmlns:spriteImage="using:GameMaker.UX.Components.SpriteImage"
+             mc:Ignorable="d">
+  <Button Padding="0"
+          Background="Transparent"
+          BorderThickness="0"
+          CornerRadius="0"
+          behaviors:PointerCursorBehavior.CursorType="Hand">
+    <Button.Flyout>
+      <Flyout Placement="Full">
+        <Flyout.FlyoutPresenterStyle>
+          <Style TargetType="FlyoutPresenter">
+            <Setter Property="Padding" Value="10" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="MinHeight" Value="0" />
+            <Setter Property="MaxWidth" Value="1000" />
+            <Setter Property="MaxHeight" Value="10000" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
+          </Style>
+        </Flyout.FlyoutPresenterStyle>
+        <gridArea:AreaCreatorView Hitboxes="{x:Bind Hitboxes, Mode=OneWay}"
+                                  CharacterImage="{x:Bind CharacterImage, Mode=OneWay}"
+                                  ShowAnchor="{x:Bind ShowAnchor, Mode=OneWay}" />
+      </Flyout>
+    </Button.Flyout>
+    <Grid Width="{x:Bind GridViewSize}"
+          Height="{x:Bind GridViewSize}"
+          Background="{StaticResource MediumGreyBrush}">
+      <ItemsControl ItemsSource="{x:Bind PreviewGridLines, Mode=OneWay}"
+                    Visibility="{x:Bind ShowGrid, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <Canvas />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="gridArea:GridLine">
+            <Line X1="{x:Bind X1}"
+                  Y1="{x:Bind Y1}"
+                  X2="{x:Bind X2}"
+                  Y2="{x:Bind Y2}"
+                  Stroke="{StaticResource DarkGreyBrush}"
+                  StrokeThickness="0.5" />
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+
+      <Canvas>
+        <Canvas.RenderTransform>
+          <TransformGroup>
+            <ScaleTransform ScaleX="{x:Bind PreviewScale, Mode=OneWay}"
+                            ScaleY="{x:Bind PreviewScale, Mode=OneWay}" />
+            <TranslateTransform X="{x:Bind PreviewOffsetX, Mode=OneWay}"
+                                Y="{x:Bind PreviewOffsetY, Mode=OneWay}" />
+          </TransformGroup>
+        </Canvas.RenderTransform>
+
+        <spriteImage:SpriteImage CharacterImage="{x:Bind CharacterImage, Mode=OneWay}" />
+
+        <ItemsControl ItemsSource="{x:Bind PreviewsHitboxes, Mode=OneWay}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <Canvas />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="areas:Area">
+              <Rectangle Fill="Red" Opacity="0.5" Stroke="White" StrokeThickness="1"
+                         Width="{x:Bind Width, Mode=OneWay}"
+                         Height="{x:Bind Height, Mode=OneWay}">
+                <Rectangle.RenderTransform>
+                  <TranslateTransform X="{x:Bind X, Mode=OneWay}"
+                                      Y="{x:Bind Y, Mode=OneWay}" />
+                </Rectangle.RenderTransform>
+              </Rectangle>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- Anchor Marker (caster origin at 0,0) -->
+        <Rectangle Width="{x:Bind AnchorBoxSize}"
+                   Height="{x:Bind AnchorBoxSize}"
+                   Fill="{StaticResource LightBlueBrush}"
+                   Opacity="0.5"
+                   Canvas.Left="0"
+                   Canvas.Top="0"
+                   Visibility="{x:Bind ShowAnchor, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}" />
+      </Canvas>
+    </Grid>
+  </Button>
+</UserControl>

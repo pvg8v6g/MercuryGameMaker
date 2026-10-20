@@ -35,11 +35,14 @@ public sealed partial class AreaCreatorState(Action? gridMetricsChanged = null) 
         {
             SetField(ref field, value);
             OnPropertyChanged(nameof(InternalGridSize));
+            OnPropertyChanged(nameof(AnchorHalfBoxSize));
             _gridMetricsChanged?.Invoke();
         }
     } = 48;
 
     public int InternalGridSize => GridSize * BoxSize;
+
+    public double AnchorHalfBoxSize => BoxSize / 2.0;
 
     public bool ShowGrid
     {

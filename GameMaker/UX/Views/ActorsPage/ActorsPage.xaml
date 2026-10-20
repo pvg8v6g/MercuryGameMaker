@@ -17,6 +17,7 @@
       xmlns:markup="using:GameLibrary.MarkupExtensions"
       xmlns:enums="using:GameLibrary.Enumerations"
       xmlns:gridArea="using:GameMaker.UX.Components.GridArea"
+      xmlns:hitboxPreview="using:GameMaker.UX.Components.HitboxPreview"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance actorsPage:ActorsPageViewModel}">
   <Grid ColumnSpacing="10" Padding="5">
@@ -68,63 +69,12 @@
             <ComboBox ItemsSource="{markup:EnumValues EnumType=enums:Direction}"
                       SelectedItem="{x:Bind ViewModel.SelectedDirection, Mode=TwoWay}"
                       MinWidth="148" />
-            <Button Padding="0"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    CornerRadius="0"
-                    behaviors:PointerCursorBehavior.CursorType="Hand">
-              <Button.Flyout>
-                <Flyout Placement="Full">
-                  <Flyout.FlyoutPresenterStyle>
-                    <Style TargetType="FlyoutPresenter">
-                      <Setter Property="Padding" Value="10" />
-                      <Setter Property="MinWidth" Value="0" />
-                      <Setter Property="MinHeight" Value="0" />
-                      <Setter Property="MaxWidth" Value="1000" />
-                      <Setter Property="MaxHeight" Value="10000" />
-                      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
-                      <Setter Property="VerticalContentAlignment" Value="Stretch" />
-                    </Style>
-                  </Flyout.FlyoutPresenterStyle>
-                  <gridArea:AreaCreatorView Hitboxes="{x:Bind ViewModel.SelectedDirectionHitboxes, Mode=TwoWay}"
-                                            CharacterImage="{x:Bind ViewModel.AnchorImage, Mode=OneWay}" />
-                </Flyout>
-              </Button.Flyout>
-              <Grid Width="{x:Bind ViewModel.HitboxViewGrid}" Height="{x:Bind ViewModel.HitboxViewGrid}">
-                <Canvas>
-                  <Canvas.RenderTransform>
-                    <TransformGroup>
-                      <ScaleTransform ScaleX="{x:Bind ViewModel.HitboxPreviewScale, Mode=OneWay}"
-                                      ScaleY="{x:Bind ViewModel.HitboxPreviewScale, Mode=OneWay}" />
-                      <TranslateTransform X="{x:Bind ViewModel.HitboxPreviewOffsetX, Mode=OneWay}"
-                                          Y="{x:Bind ViewModel.HitboxPreviewOffsetY, Mode=OneWay}" />
-                    </TransformGroup>
-                  </Canvas.RenderTransform>
-
-                  <spriteImage:SpriteImage CharacterImage="{x:Bind ViewModel.AnchorImage, Mode=OneWay}" />
-
-                  <ItemsControl ItemsSource="{x:Bind ViewModel.PreviewsHitboxes, Mode=OneWay}">
-                    <ItemsControl.ItemsPanel>
-                      <ItemsPanelTemplate>
-                        <Canvas />
-                      </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                      <DataTemplate x:DataType="areas:Area">
-                        <Rectangle Fill="Red" Opacity="0.5" Stroke="White" StrokeThickness="1"
-                                   Width="{x:Bind Width, Mode=OneWay}"
-                                   Height="{x:Bind Height, Mode=OneWay}">
-                          <Rectangle.RenderTransform>
-                            <TranslateTransform X="{x:Bind X, Mode=OneWay}"
-                                                Y="{x:Bind Y, Mode=OneWay}" />
-                          </Rectangle.RenderTransform>
-                        </Rectangle>
-                      </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                  </ItemsControl>
-                </Canvas>
-              </Grid>
-            </Button>
+            <hitboxPreview:HitboxPreview Hitboxes="{x:Bind ViewModel.SelectedDirectionHitboxes, Mode=TwoWay}"
+                                         CharacterImage="{x:Bind ViewModel.AnchorImage, Mode=OneWay}"
+                                         PreviewsHitboxes="{x:Bind ViewModel.PreviewsHitboxes, Mode=OneWay}"
+                                         PreviewScale="{x:Bind ViewModel.HitboxPreviewScale, Mode=OneWay}"
+                                         PreviewOffsetX="{x:Bind ViewModel.HitboxPreviewOffsetX, Mode=OneWay}"
+                                         PreviewOffsetY="{x:Bind ViewModel.HitboxPreviewOffsetY, Mode=OneWay}" />
           </StackPanel>
         </StackPanel>
         <Grid ColumnSpacing="40"

@@ -150,7 +150,8 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
             case "2": // disciplines
                 navigationService.NavigateTo<Views.DisciplinesPage.DisciplinesPage>();
                 break;
-            case "3":
+            case "3": // artes
+                navigationService.NavigateTo<Views.ArtesPage.ArtesPage>();
                 break;
             case "4":
                 break;

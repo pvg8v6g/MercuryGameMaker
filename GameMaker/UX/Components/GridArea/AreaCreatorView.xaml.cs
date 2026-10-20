@@ -32,6 +32,15 @@ public partial class AreaCreatorView
         set => SetValue(CharacterImageProperty, value);
     }
 
+    public static readonly DependencyProperty ShowAnchorProperty = DependencyProperty.Register(nameof(ShowAnchor), typeof(bool),
+        typeof(AreaCreatorView), new PropertyMetadata(false, OnShowAnchorChanged));
+
+    public bool ShowAnchor
+    {
+        get => (bool) GetValue(ShowAnchorProperty);
+        set => SetValue(ShowAnchorProperty, value);
+    }
+
     #endregion
 
     #region Internal State
@@ -166,18 +175,37 @@ public partial class AreaCreatorView
         control.Bindings.Update();
     }
 
+    private static void OnShowAnchorChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not AreaCreatorView control) return;
+        control.LoadAnchor();
+        control.Bindings.Update();
+    }
+
     #endregion
 
     #region Private Methods
 
     private void LoadAnchor()
     {
-        if (CharacterImage?.Rect is null) return;
-        var w = (State.InternalGridSize / 2.0) - (CharacterImage.Rect.Value.Width / 2.0);
-        var h = (State.InternalGridSize / 2.0) - (CharacterImage.Rect.Value.Height / 2.0);
-        var rw = Calculations.RoundToMultiple(w, State.BoxSize, Rounding.Down);
-        var rh = Calculations.RoundToMultiple(h, State.BoxSize, Rounding.Down);
-        State.AnchorPosition = new Position { X = rw, Y = rh };
+        if (CharacterImage?.Rect is not null)
+        {
+            var w = (State.InternalGridSize / 2.0) - (CharacterImage.Rect.Value.Width / 2.0);
+            var h = (State.InternalGridSize / 2.0) - (CharacterImage.Rect.Value.Height / 2.0);
+            var rw = Calculations.RoundToMultiple(w, State.BoxSize, Rounding.Down);
+            var rh = Calculations.RoundToMultiple(h, State.BoxSize, Rounding.Down);
+            State.AnchorPosition = new Position { X = rw, Y = rh };
+            return;
+        }
+
+        if (ShowAnchor)
+        {
+            var center = Calculations.RoundToMultiple(State.InternalGridSize / 2.0, State.BoxSize, Rounding.Down);
+            State.AnchorPosition = new Position { X = center, Y = center };
+            return;
+        }
+
+        State.AnchorPosition = null;
     }
 
     private void RebuildGridLines()
