@@ -1,0 +1,143 @@
+﻿<ContentDialog x:Class="GameMaker.UX.Views.Popups.MovementEditor.MovementEditorPopup"
+               xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+               xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+               xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+               xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+               xmlns:movementEditor="using:GameMaker.UX.Views.Popups.MovementEditor"
+               xmlns:movements="using:GameLibrary.Models.Movements"
+               xmlns:artes="using:GameLibrary.Models.Artes"
+               xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+               xmlns:engineIcon="using:GameMaker.UX.Components.EngineIcon"
+               xmlns:enums="using:GameLibrary.Enumerations"
+               xmlns:mercuryEnums="using:MercuryLibrary.Enumerations"
+               xmlns:extensions="using:GameLibrary.MarkupExtensions"
+               x:Name="Root"
+               mc:Ignorable="d"
+               Title="Edit Command"
+               Background="{StaticResource PrimaryBrush}"
+               PrimaryButtonText="Done"
+               SecondaryButtonText="Cancel"
+               DefaultButton="Primary">
+  <ContentDialog.Resources>
+    <DataTemplate x:Key="MoveTemplate" x:DataType="movements:MoveMovement">
+      <ComboBox Header="Direction"
+                HorizontalAlignment="Stretch"
+                ItemsSource="{extensions:EnumValues EnumType=enums:Direction}"
+                SelectedItem="{x:Bind Direction, Mode=TwoWay}" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="MoveTowardTemplate" x:DataType="movements:MoveTowardMovement">
+      <StackPanel Spacing="10">
+        <CheckBox Content="Target Player" IsChecked="{x:Bind TargetPlayer, Mode=TwoWay}" />
+        <engineTextBox:EngineTextBox Header="Target X" InputType="Integer"
+                                     Text="{x:Bind TargetX, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Target Y" InputType="Integer"
+                                     Text="{x:Bind TargetY, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="MoveAwayTemplate" x:DataType="movements:MoveAwayMovement">
+      <StackPanel Spacing="10">
+        <CheckBox Content="Target Player" IsChecked="{x:Bind TargetPlayer, Mode=TwoWay}" />
+        <engineTextBox:EngineTextBox Header="Target X" InputType="Integer"
+                                     Text="{x:Bind TargetX, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Target Y" InputType="Integer"
+                                     Text="{x:Bind TargetY, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="SpeedTemplate" x:DataType="movements:SpeedMovement">
+      <engineTextBox:EngineTextBox Header="Speed" InputType="Integer"
+                                   Text="{x:Bind Speed, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="OpacityTemplate" x:DataType="movements:OpacityMovement">
+      <StackPanel Spacing="10">
+        <engineTextBox:EngineTextBox Header="Opacity (0 - 1)" InputType="Double"
+                                     Text="{x:Bind Opacity, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Transition Time (ms)" InputType="Integer"
+                                     Text="{x:Bind TranslateTime, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="WaitTemplate" x:DataType="movements:WaitMovement">
+      <engineTextBox:EngineTextBox Header="Wait Time (ms)" InputType="Integer"
+                                   Text="{x:Bind Wait, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="TurnTemplate" x:DataType="movements:TurnMovement">
+      <ComboBox Header="Direction"
+                HorizontalAlignment="Stretch"
+                ItemsSource="{extensions:EnumValues EnumType=enums:Direction}"
+                SelectedItem="{x:Bind Direction, Mode=TwoWay}" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="BlendTemplate" x:DataType="movements:BlendModeMovement">
+      <StackPanel Spacing="10">
+        <ComboBox Header="Blend Mode"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{extensions:EnumValues EnumType=mercuryEnums:BlendMode}"
+                  SelectedItem="{x:Bind BlendMode, Mode=TwoWay}" />
+        <engineTextBox:EngineTextBox Header="Transition Time (ms)" InputType="Integer"
+                                     Text="{x:Bind BlendTime, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="CharacterImageTemplate" x:DataType="movements:CharacterImageMovement">
+      <StackPanel Spacing="10">
+        <TextBox Header="Character Name"
+                 Text="{x:Bind CharacterName, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Character Index" InputType="Integer"
+                                     Text="{x:Bind CharacterIndex, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="Direction"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{extensions:EnumValues EnumType=enums:Direction}"
+                  SelectedItem="{x:Bind Direction, Mode=TwoWay}" />
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ActivateArteTemplate" x:DataType="movements:ActivateArteMovement">
+      <ComboBox Header="Arte"
+                PlaceholderText="None"
+                HorizontalAlignment="Stretch"
+                MinHeight="48"
+                ItemsSource="{Binding ElementName=Root, Path=ViewModel.Artes}"
+                SelectedValue="{x:Bind ArteId, Mode=TwoWay, FallbackValue={x:Null}}"
+                SelectedValuePath="Guid">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="artes:Arte">
+            <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
+              <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" VerticalAlignment="Center" />
+            </StackPanel>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+    </DataTemplate>
+
+    <DataTemplate x:Key="EmptyTemplate">
+      <TextBlock Text="This command has no options to configure." TextWrapping="Wrap" />
+    </DataTemplate>
+
+    <movementEditor:MovementEditorTemplateSelector x:Key="MovementEditorTemplateSelector"
+                                                    Move="{StaticResource MoveTemplate}"
+                                                    MoveToward="{StaticResource MoveTowardTemplate}"
+                                                    MoveAway="{StaticResource MoveAwayTemplate}"
+                                                    Speed="{StaticResource SpeedTemplate}"
+                                                    Opacity="{StaticResource OpacityTemplate}"
+                                                    Wait="{StaticResource WaitTemplate}"
+                                                    Turn="{StaticResource TurnTemplate}"
+                                                    Blend="{StaticResource BlendTemplate}"
+                                                    CharacterImage="{StaticResource CharacterImageTemplate}"
+                                                    ActivateArte="{StaticResource ActivateArteTemplate}"
+                                                    Empty="{StaticResource EmptyTemplate}" />
+  </ContentDialog.Resources>
+
+  <Grid Width="420"
+        MinHeight="160">
+    <ContentControl HorizontalContentAlignment="Stretch"
+                    VerticalContentAlignment="Top"
+                    Content="{x:Bind ViewModel.Movement, Mode=OneWay}"
+                    ContentTemplateSelector="{StaticResource MovementEditorTemplateSelector}" />
+  </Grid>
+</ContentDialog>

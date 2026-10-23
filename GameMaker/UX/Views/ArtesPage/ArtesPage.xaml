@@ -23,8 +23,8 @@
         RowSpacing="10"
         Padding="5">
     <Grid.RowDefinitions>
-      <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="300" />
@@ -55,6 +55,7 @@
         <Grid ColumnSpacing="20"
               RowSpacing="10">
           <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -171,8 +172,9 @@
                                          ShowGrid="True" />
           </StackPanel>
 
-          <CheckBox Grid.Column="1"
-                    Grid.Row="5"
+          <CheckBox Grid.Column="0"
+                    Grid.ColumnSpan="2"
+                    Grid.Row="6"
                     IsChecked="{x:Bind ViewModel.SelectedEntity.DirectionRotate, Mode=TwoWay, FallbackValue='False', UpdateSourceTrigger=PropertyChanged}"
                     behaviors:PointerCursorBehavior.CursorType="Hand"
                     ToolTipService.ToolTip="Should the arte rotate to match the character's facing direction?"
@@ -212,6 +214,23 @@
                                      Text="{x:Bind ViewModel.SelectedEntity.Variance, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
                                      Tooltip="This is a percent variance of the damage dealt. For instance if the damage dealt happens to be 100, and you give it a variance of 10 it could cause anywhere from 90 to 110." />
       </Grid>
+    </enginePanel:EnginePanel>
+
+    <enginePanel:EnginePanel Grid.Column="2"
+                             Grid.Row="1"
+                             Title="Projectiles"
+                             Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+      <engineListView:EngineListView MinHeight="300"
+                                     VerticalAlignment="Stretch"
+                                     ItemsSource="{x:Bind ViewModel.SelectedEntity.Projectiles, Mode=OneWay}"
+                                     SelectedIndex="{x:Bind ViewModel.SelectedProjectileIndex, Mode=TwoWay}"
+                                     NewCommand="{x:Bind ViewModel.NewProjectileCommand}"
+                                     NewCommandParameter="New Projectile"
+                                     EditCommand="{x:Bind ViewModel.EditProjectileCommand}"
+                                     CopyCommand="{x:Bind ViewModel.CopyProjectileCommand}"
+                                     PasteCommand="{x:Bind ViewModel.PasteProjectileCommand}"
+                                     DeleteCommand="{x:Bind ViewModel.DeleteProjectileCommand}"
+                                     CopiedModel="{x:Bind ViewModel.CopiedProjectile, Mode=OneWay}" />
     </enginePanel:EnginePanel>
 
     <enginePanel:EnginePanel Grid.Column="4"

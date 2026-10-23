@@ -1,22 +1,29 @@
 ﻿using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using GameLibrary.Commands;
+using GameLibrary.Models;
 using GameLibrary.Models.Areas;
 using GameLibrary.Models.Artes;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Json;
+using GameLibrary.Utilities.Calculations;
+using GameLibrary.Utilities.ComponentModels;
+using GameMaker.Services.Navigation;
 using GameMaker.UX.Components.GridArea;
+using GameMaker.UX.ViewModels.Popups.EntityEditor;
 
 namespace GameMaker.UX.ViewModels.ArtesPage;
 
-public class ArtesPageViewModel(IGameDataService gameDataService, IJsonService jsonService) : BaseViewModel<Arte>(jsonService)
+public class ArtesPageViewModel(IGameDataService gameDataService, IJsonService jsonService, INavigationService navigationService)
+    : BaseViewModel<Arte>(jsonService)
 {
     #region Properties
 
     public IGameDataService GameDataService => gameDataService;
 
-    public int HitboxViewGrid => 144;
+    private int HitboxViewGrid => 144;
 
-    public int AnchorBoxSize => 48;
+    private int AnchorBoxSize => 48;
 
     public ObservableCollection<Area> PreviewsHitboxes { get; } = [];
 
@@ -48,6 +55,32 @@ public class ArtesPageViewModel(IGameDataService gameDataService, IJsonService j
 
     protected override ObservableCollection<Arte> EntityCollection => gameDataService.Artes;
 
+    public int SelectedProjectileIndex
+    {
+        get;
+        set => SetField(ref field, value);
+    } = -1;
+
+    public Entity? CopiedProjectile
+    {
+        get;
+        private set => SetField(ref field, value);
+    }
+
+    #endregion
+
+    #region Projectile relays
+
+    public RelayCommand<string?> NewProjectileCommand => new(NewProjectile);
+
+    public RelayCommand CopyProjectileCommand => new(CopyProjectile);
+
+    public RelayCommand PasteProjectileCommand => new(PasteProjectile);
+
+    public RelayCommand DeleteProjectileCommand => new(DeleteProjectile);
+
+    public AsyncRelayCommand EditProjectileCommand => new(EditProjectile);
+
     #endregion
 
     #region Actions
@@ -56,7 +89,77 @@ public class ArtesPageViewModel(IGameDataService gameDataService, IJsonService j
     {
         RefreshToggles();
         LinkHitboxes();
+        SelectedProjectileIndex = -1;
         return Task.CompletedTask;
+    }
+
+    private void NewProjectile(string? name = null)
+    {
+        if (SelectedEntity is null) return;
+
+        var projectiles = SelectedEntity.Projectiles;
+        var newObject = new Entity
+        {
+            Id = Calculations.GetNextId(projectiles.Select(x => x.Id).ToArray()),
+            Name = name ?? "New Projectile"
+        };
+
+        var index = projectiles.AddSorted(newObject, x => x.Id);
+        SelectedProjectileIndex = index;
+    }
+
+    private void CopyProjectile()
+    {
+        if (SelectedEntity is null) return;
+        if (SelectedProjectileIndex < 0 || SelectedProjectileIndex >= SelectedEntity.Projectiles.Count) return;
+        CopiedProjectile = SelectedEntity.Projectiles[SelectedProjectileIndex];
+    }
+
+    private void PasteProjectile()
+    {
+        if (SelectedEntity is null || CopiedProjectile is null) return;
+
+        var clone = JsonService.Clone(CopiedProjectile);
+        if (clone is null) return;
+
+        clone.Guid = Guid.NewGuid();
+        clone.Id = Calculations.GetNextId(SelectedEntity.Projectiles.Select(x => x.Id).ToArray());
+
+        var index = SelectedEntity.Projectiles.AddSorted(clone, x => x.Id);
+        SelectedProjectileIndex = index;
+    }
+
+    private void DeleteProjectile()
+    {
+        if (SelectedEntity is null) return;
+
+        var index = SelectedProjectileIndex;
+        if (index < 0 || index >= SelectedEntity.Projectiles.Count) return;
+
+        SelectedEntity.Projectiles.RemoveAt(index);
+
+        if (SelectedEntity.Projectiles.Count == 0)
+        {
+            SelectedProjectileIndex = -1;
+        }
+        else if (index >= SelectedEntity.Projectiles.Count)
+        {
+            SelectedProjectileIndex = SelectedEntity.Projectiles.Count - 1;
+        }
+        else
+        {
+            SelectedProjectileIndex = index;
+        }
+    }
+
+    private async Task EditProjectile()
+    {
+        if (SelectedEntity is null) return;
+        if (SelectedProjectileIndex < 0 || SelectedProjectileIndex >= SelectedEntity.Projectiles.Count) return;
+
+        var projectile = SelectedEntity.Projectiles[SelectedProjectileIndex];
+        var popupViewModel = new EntityEditorViewModel(projectile, gameDataService, JsonService, navigationService);
+        await navigationService.ShowEntityEditorPopup(popupViewModel);
     }
 
     private void OnHitboxesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)

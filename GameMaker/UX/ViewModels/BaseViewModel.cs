@@ -15,7 +15,7 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
     public T? CopiedModel
     {
         get;
-        set => SetField(ref field, value);
+        private set => SetField(ref field, value);
     }
 
     public int SelectedIndex
@@ -35,6 +35,8 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
         : EntityCollection[SelectedIndex];
 
     protected abstract ObservableCollection<T> EntityCollection { get; }
+
+    protected IJsonService JsonService => jsonService;
 
     #endregion
 
@@ -88,7 +90,7 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
 
     protected virtual void PasteEntity()
     {
-        var clone = jsonService.Clone(CopiedModel!);
+        var clone = JsonService.Clone(CopiedModel!);
         if (clone is null) return;
 
         clone.Guid = Guid.NewGuid();

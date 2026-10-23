@@ -44,6 +44,17 @@ public static class ListViewBehaviors
         if (dataContext == null) return;
 
         listView.SelectedItem = dataContext;
+
+        // Right-tapping a row and the context flyout's Opening event do not have a
+        // guaranteed order. On pages where the flyout's deferred enable/disable update
+        // runs before this selection is committed, every selection-requiring item would
+        // stay greyed out until an empty-space right-click. Since we just selected a valid
+        // item here, refresh the menu items synchronously so enablement no longer depends
+        // on event ordering.
+        if (listView.ContextFlyout is MenuFlyout flyout)
+        {
+            UpdateMenuItems(flyout.Items, listView);
+        }
     }
 
     public static readonly DependencyProperty RequireSelectionForMenuFlyoutItemProperty = DependencyProperty.RegisterAttached(

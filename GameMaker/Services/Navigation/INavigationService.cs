@@ -1,6 +1,9 @@
 ﻿using GameLibrary.Tasks;
 using GameMaker.UX.ViewModels.Popups.AnimationEffects;
+using GameMaker.UX.ViewModels.Popups.EntityEditor;
 using GameMaker.UX.ViewModels.Popups.FrameSpanning;
+using GameMaker.UX.ViewModels.Popups.MovementEditor;
+using GameMaker.UX.ViewModels.Popups.MovementRouteEditor;
 using Microsoft.UI.Xaml.Controls;
 
 namespace GameMaker.Services.Navigation;
@@ -20,4 +23,10 @@ public interface INavigationService
     Task ShowAnimationEffectsPopup(AnimationEffectsPopupViewModel viewModel);
 
     Task<ContentDialogResult> ShowFrameSpanningPopup(FrameSpanningPopupViewModel viewModel);
+
+    Task ShowEntityEditorPopup(EntityEditorViewModel viewModel);
+
+    Task ShowMovementRouteEditorPopup(MovementRouteEditorViewModel viewModel);
+
+    Task<ContentDialogResult> ShowMovementEditorPopup(MovementEditorViewModel viewModel);
 }

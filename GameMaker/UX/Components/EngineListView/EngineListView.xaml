@@ -28,6 +28,13 @@
             <SymbolIcon Symbol="Add" />
           </MenuFlyoutItem.Icon>
         </MenuFlyoutItem>
+        <MenuFlyoutItem Text="Edit" Command="{x:Bind EditCommand, Mode=OneWay}"
+                        Visibility="{x:Bind EditCommand, Mode=OneWay, Converter={StaticResource NullToCollapsedConverter}}"
+                        behaviors:ListViewBehaviors.RequireSelectionForMenuFlyoutItem="True">
+          <MenuFlyoutItem.Icon>
+            <SymbolIcon Symbol="Edit" />
+          </MenuFlyoutItem.Icon>
+        </MenuFlyoutItem>
         <MenuFlyoutItem Text="Copy" Command="{x:Bind CopyCommand, Mode=OneWay}" behaviors:ListViewBehaviors.RequireSelectionForMenuFlyoutItem="True">
           <MenuFlyoutItem.Icon>
             <SymbolIcon Symbol="Copy" />

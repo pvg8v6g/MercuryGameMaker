@@ -82,5 +82,7 @@ public partial class Arte : BaseModel
 
     public List<Guid> Elements { get; init; } = [];
 
+    public ObservableCollection<Entity> Projectiles { get; init; } = [];
+
     #endregion
 }

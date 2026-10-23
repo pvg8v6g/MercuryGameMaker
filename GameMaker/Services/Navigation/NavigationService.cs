@@ -1,9 +1,15 @@
 ﻿using GameLibrary.Tasks;
 using GameMaker.UX.ViewModels.Popups.AnimationEffects;
+using GameMaker.UX.ViewModels.Popups.EntityEditor;
 using GameMaker.UX.ViewModels.Popups.FrameSpanning;
+using GameMaker.UX.ViewModels.Popups.MovementEditor;
+using GameMaker.UX.ViewModels.Popups.MovementRouteEditor;
 using GameMaker.UX.Views.MainWindow;
 using GameMaker.UX.Views.Popups.AnimationEffects;
+using GameMaker.UX.Views.Popups.EntityEditor;
 using GameMaker.UX.Views.Popups.FrameSpanning;
+using GameMaker.UX.Views.Popups.MovementEditor;
+using GameMaker.UX.Views.Popups.MovementRouteEditor;
 using GameMaker.UX.Views.Popups.Progress;
 using MercuryLibrary.WinUI3Components;
 using Microsoft.UI.Xaml.Controls;
@@ -64,6 +70,33 @@ public partial class NavigationService(Func<Type, EngineTask> engineTaskFactory)
     public async Task<ContentDialogResult> ShowFrameSpanningPopup(FrameSpanningPopupViewModel viewModel)
     {
         var popup = new FrameSpanningPopup(viewModel)
+        {
+            XamlRoot = MainWindow.Window.Content.XamlRoot
+        };
+        return await popup.ShowAsync();
+    }
+
+    public async Task ShowEntityEditorPopup(EntityEditorViewModel viewModel)
+    {
+        var popup = new EntityEditorPopup(viewModel)
+        {
+            XamlRoot = MainWindow.Window.Content.XamlRoot
+        };
+        await popup.ShowAsync();
+    }
+
+    public async Task ShowMovementRouteEditorPopup(MovementRouteEditorViewModel viewModel)
+    {
+        var popup = new MovementRouteEditorPopup(viewModel)
+        {
+            XamlRoot = MainWindow.Window.Content.XamlRoot
+        };
+        await popup.ShowAsync();
+    }
+
+    public async Task<ContentDialogResult> ShowMovementEditorPopup(MovementEditorViewModel viewModel)
+    {
+        var popup = new MovementEditorPopup(viewModel)
         {
             XamlRoot = MainWindow.Window.Content.XamlRoot
         };

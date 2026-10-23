@@ -92,6 +92,15 @@ public sealed partial class EngineListView
         set => SetValue(DeleteCommandProperty, value);
     }
 
+    public static readonly DependencyProperty EditCommandProperty = DependencyProperty.Register(
+        nameof(EditCommand), typeof(ICommand), typeof(EngineListView), new PropertyMetadata(null));
+
+    public ICommand? EditCommand
+    {
+        get => (ICommand?) GetValue(EditCommandProperty);
+        set => SetValue(EditCommandProperty, value);
+    }
+
     public static readonly DependencyProperty CopiedModelProperty = DependencyProperty.Register(
         nameof(CopiedModel), typeof(object), typeof(EngineListView), new PropertyMetadata(null));
 
