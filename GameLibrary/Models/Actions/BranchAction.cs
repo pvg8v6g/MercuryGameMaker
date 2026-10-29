@@ -1,10 +1,18 @@
 ﻿using System.Collections.ObjectModel;
 using GameLibrary.Enumerations;
+using GameLibrary.Utilities;
 
 namespace GameLibrary.Models.Actions;
 
 public partial class BranchAction : PageAction
 {
+    /// <summary>Determines which condition is evaluated. The condition options are mutually exclusive.</summary>
+    public BranchConditionType ConditionType
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     #region Switch / Variable / Self Switch / Timer
 
     public string? SwitchConditionName
@@ -13,11 +21,11 @@ public partial class BranchAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public bool? SwitchConditionValue
+    public bool SwitchConditionValue
     {
         get;
         set => SetField(ref field, value);
-    }
+    } = true;
 
     public string? VariableConditionName
     {
@@ -43,11 +51,11 @@ public partial class BranchAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public bool? SelfSwitchConditionValue
+    public bool SelfSwitchConditionValue
     {
         get;
         set => SetField(ref field, value);
-    }
+    } = true;
 
     public string? TimerConditionName
     {
@@ -77,11 +85,11 @@ public partial class BranchAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public bool? ActorInPartyConditionValue
+    public bool ActorInPartyConditionValue
     {
         get;
         set => SetField(ref field, value);
-    }
+    } = true;
 
     public Guid? ActorHasNameConditionActor
     {
@@ -95,11 +103,11 @@ public partial class BranchAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public bool? ActorHasNameConditionValue
+    public bool ActorHasNameConditionValue
     {
         get;
         set => SetField(ref field, value);
-    }
+    } = true;
 
     public Guid? ActorIsDisciplineConditionActor
     {
@@ -113,11 +121,11 @@ public partial class BranchAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public bool? ActorIsDisciplineConditionValue
+    public bool ActorIsDisciplineConditionValue
     {
         get;
         set => SetField(ref field, value);
-    }
+    } = true;
 
     public Guid? ActorHasArteConditionActor
     {
@@ -131,11 +139,11 @@ public partial class BranchAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public bool? ActorHasArteConditionValue
+    public bool ActorHasArteConditionValue
     {
         get;
         set => SetField(ref field, value);
-    }
+    } = true;
 
     public Guid? ActorEquipmentConditionActor
     {
@@ -149,11 +157,11 @@ public partial class BranchAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public bool? ActorEquipmentConditionValue
+    public bool ActorEquipmentConditionValue
     {
         get;
         set => SetField(ref field, value);
-    }
+    } = true;
 
     public Guid? ActorHasStateConditionActor
     {
@@ -167,11 +175,11 @@ public partial class BranchAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public bool? ActorHasStateConditionValue
+    public bool ActorHasStateConditionValue
     {
         get;
         set => SetField(ref field, value);
-    }
+    } = true;
 
     public Guid? EnemyLifeConditionEnemy
     {
@@ -203,11 +211,11 @@ public partial class BranchAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public bool? EnemyHasStateConditionValue
+    public bool EnemyHasStateConditionValue
     {
         get;
         set => SetField(ref field, value);
-    }
+    } = true;
 
     #endregion
 
@@ -271,5 +279,5 @@ public partial class BranchAction : PageAction
 
     #endregion
 
-    public override string ToString() => "Branch Flow";
+    public override string ToString() => $"Branch Flow: {ConditionType.GetDisplayName()}";
 }

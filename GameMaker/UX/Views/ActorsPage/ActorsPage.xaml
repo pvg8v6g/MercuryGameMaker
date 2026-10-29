@@ -49,7 +49,7 @@
             <TextBlock Text="Face Image" />
             <imageChooser:ImageChooser FolderPath="{x:Bind ViewModel.FaceFolderPath, Mode=OneWay}"
                                        FileName="{x:Bind ViewModel.SelectedEntity.FaceName, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
-                                       Index="{x:Bind ViewModel.SelectedEntity.FaceIndex, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                       Index="{x:Bind ViewModel.SelectedEntity.FaceIndex, Mode=TwoWay, FallbackValue={x:Null}, UpdateSourceTrigger=PropertyChanged}"
                                        ChooserWidth="148"
                                        ChooserHeight="148" />
           </StackPanel>

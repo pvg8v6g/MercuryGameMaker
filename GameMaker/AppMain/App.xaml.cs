@@ -12,23 +12,31 @@ using GameMaker.UX.ViewModels.ArtesPage;
 using GameMaker.UX.ViewModels.AttributesPage;
 using GameMaker.UX.ViewModels.DisciplinesPage;
 using GameMaker.UX.ViewModels.ElementsPage;
+using GameMaker.UX.ViewModels.EnemiesPage;
 using GameMaker.UX.ViewModels.EquipmentPage;
 using GameMaker.UX.ViewModels.GrowthsPage;
 using GameMaker.UX.ViewModels.HomeView;
+using GameMaker.UX.ViewModels.ItemsPage;
+using GameMaker.UX.ViewModels.MediaPlayerPage;
 using GameMaker.UX.ViewModels.StatesPage;
 using GameMaker.UX.ViewModels.TopBar;
+using GameMaker.UX.ViewModels.TroopsPage;
 using GameMaker.UX.Views.ActorsPage;
 using GameMaker.UX.Views.AnimationsPage;
 using GameMaker.UX.Views.ArtesPage;
 using GameMaker.UX.Views.AttributesPage;
 using GameMaker.UX.Views.DisciplinesPage;
 using GameMaker.UX.Views.ElementsPage;
+using GameMaker.UX.Views.EnemiesPage;
 using GameMaker.UX.Views.EquipmentPage;
 using GameMaker.UX.Views.GrowthsPage;
 using GameMaker.UX.Views.HomeView;
+using GameMaker.UX.Views.ItemsPage;
 using GameMaker.UX.Views.MainWindow;
+using GameMaker.UX.Views.MediaPlayerPage;
 using GameMaker.UX.Views.StatesPage;
 using GameMaker.UX.Views.TopBar;
+using GameMaker.UX.Views.TroopsPage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.UI.Xaml;
 
@@ -59,8 +67,12 @@ public partial class App
         services.AddSingleton<DisciplinesPageViewModel>();
         services.AddSingleton<ArtesPageViewModel>();
         services.AddSingleton<EquipmentPageViewModel>();
+        services.AddSingleton<ItemsPageViewModel>();
+        services.AddSingleton<MediaPlayerPageViewModel>();
         services.AddSingleton<StatesPageViewModel>();
         services.AddSingleton<AnimationsPageViewModel>();
+        services.AddSingleton<EnemiesPageViewModel>();
+        services.AddSingleton<TroopsPageViewModel>();
 
         #endregion
 
@@ -76,8 +88,12 @@ public partial class App
         services.AddSingleton<DisciplinesPage>();
         services.AddSingleton<ArtesPage>();
         services.AddSingleton<EquipmentPage>();
+        services.AddSingleton<ItemsPage>();
+        services.AddSingleton<MediaPlayerPage>();
         services.AddSingleton<StatesPage>();
         services.AddSingleton<AnimationsPage>();
+        services.AddSingleton<EnemiesPage>();
+        services.AddSingleton<TroopsPage>();
 
         #endregion
 

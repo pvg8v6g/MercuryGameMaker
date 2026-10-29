@@ -24,9 +24,11 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
         MaxWork += gameDataService.Growths.Count;
         MaxWork += gameDataService.Actors.Count;
         MaxWork += gameDataService.Disciplines.Count;
+        MaxWork += gameDataService.Artes.Count;
         MaxWork += gameDataService.Consumables.Count;
         MaxWork += gameDataService.Equipment.Count;
         MaxWork += gameDataService.Enemies.Count;
+        MaxWork += gameDataService.Troops.Count;
         MaxWork += gameDataService.States.Count;
         MaxWork += gameDataService.Animations.Count;
     }
@@ -38,9 +40,11 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
         DataWork(Path.Combine(locationService.GameDirectory!, "Settings", "Growths"), gameDataService.Growths); // growths
         DataWork(Path.Combine(locationService.GameDirectory!, "Fighters", "Actors"), gameDataService.Actors); // actors
         DataWork(Path.Combine(locationService.GameDirectory!, "Disciplines"), gameDataService.Disciplines); // disciplines
+        DataWork(Path.Combine(locationService.GameDirectory!, "Artes"), gameDataService.Artes); // artes
         DataWork(Path.Combine(locationService.GameDirectory!, "Items", "Consumables"), gameDataService.Consumables); // consumables
         DataWork(Path.Combine(locationService.GameDirectory!, "Items", "Equipment"), gameDataService.Equipment); // equipment
         DataWork(Path.Combine(locationService.GameDirectory!, "Fighters", "Enemies"), gameDataService.Enemies); // enemies
+        DataWork(Path.Combine(locationService.GameDirectory!, "Troops"), gameDataService.Troops); // troops
         DataWork(Path.Combine(locationService.GameDirectory!, "States"), gameDataService.States); // states
         DataWork(Path.Combine(locationService.GameDirectory!, "Animations"), gameDataService.Animations); // animations
     }

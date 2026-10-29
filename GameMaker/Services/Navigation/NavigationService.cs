@@ -1,11 +1,20 @@
 ﻿using GameLibrary.Tasks;
+using GameMaker.UX.Components.Popup;
+using GameMaker.UX.ViewModels.Popups.ActionEditor;
+using GameMaker.UX.ViewModels.Popups.BranchActionEditor;
 using GameMaker.UX.ViewModels.Popups.AnimationEffects;
+using GameMaker.UX.ViewModels.Popups.ConditionEditor;
+using GameMaker.UX.ViewModels.Popups.EnemyArteEditor;
 using GameMaker.UX.ViewModels.Popups.EntityEditor;
 using GameMaker.UX.ViewModels.Popups.FrameSpanning;
 using GameMaker.UX.ViewModels.Popups.MovementEditor;
 using GameMaker.UX.ViewModels.Popups.MovementRouteEditor;
 using GameMaker.UX.Views.MainWindow;
+using GameMaker.UX.Views.Popups.ActionEditor;
+using GameMaker.UX.Views.Popups.BranchActionEditor;
 using GameMaker.UX.Views.Popups.AnimationEffects;
+using GameMaker.UX.Views.Popups.ConditionEditor;
+using GameMaker.UX.Views.Popups.EnemyArteEditor;
 using GameMaker.UX.Views.Popups.EntityEditor;
 using GameMaker.UX.Views.Popups.FrameSpanning;
 using GameMaker.UX.Views.Popups.MovementEditor;
@@ -78,29 +87,44 @@ public partial class NavigationService(Func<Type, EngineTask> engineTaskFactory)
 
     public async Task ShowEntityEditorPopup(EntityEditorViewModel viewModel)
     {
-        var popup = new EntityEditorPopup(viewModel)
-        {
-            XamlRoot = MainWindow.Window.Content.XamlRoot
-        };
-        await popup.ShowAsync();
+        if (PopupHost.Current is null) return;
+        await PopupHost.Current.ShowAsync(new EntityEditorPopup(viewModel));
     }
 
     public async Task ShowMovementRouteEditorPopup(MovementRouteEditorViewModel viewModel)
     {
-        var popup = new MovementRouteEditorPopup(viewModel)
-        {
-            XamlRoot = MainWindow.Window.Content.XamlRoot
-        };
-        await popup.ShowAsync();
+        if (PopupHost.Current is null) return;
+        await PopupHost.Current.ShowAsync(new MovementRouteEditorPopup(viewModel));
     }
 
     public async Task<ContentDialogResult> ShowMovementEditorPopup(MovementEditorViewModel viewModel)
     {
-        var popup = new MovementEditorPopup(viewModel)
-        {
-            XamlRoot = MainWindow.Window.Content.XamlRoot
-        };
-        return await popup.ShowAsync();
+        if (PopupHost.Current is null) return ContentDialogResult.None;
+        return await PopupHost.Current.ShowAsync(new MovementEditorPopup(viewModel));
+    }
+
+    public async Task<ContentDialogResult> ShowConditionEditorPopup(ConditionEditorViewModel viewModel)
+    {
+        if (PopupHost.Current is null) return ContentDialogResult.None;
+        return await PopupHost.Current.ShowAsync(new ConditionEditorPopup(viewModel));
+    }
+
+    public async Task<ContentDialogResult> ShowActionEditorPopup(ActionEditorViewModel viewModel)
+    {
+        if (PopupHost.Current is null) return ContentDialogResult.None;
+        return await PopupHost.Current.ShowAsync(new ActionEditorPopup(viewModel));
+    }
+
+    public async Task<ContentDialogResult> ShowBranchActionEditorPopup(BranchActionEditorViewModel viewModel)
+    {
+        if (PopupHost.Current is null) return ContentDialogResult.None;
+        return await PopupHost.Current.ShowAsync(new BranchActionEditorPopup(viewModel));
+    }
+
+    public async Task<ContentDialogResult> ShowEnemyArteEditorPopup(EnemyArteEditorViewModel viewModel)
+    {
+        if (PopupHost.Current is null) return ContentDialogResult.None;
+        return await PopupHost.Current.ShowAsync(new EnemyArteEditorPopup(viewModel));
     }
 
     #endregion

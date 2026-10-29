@@ -28,7 +28,10 @@ public partial class ImageChooser
         nameof(FileName), typeof(string), typeof(ImageChooser), new PropertyMetadata(null, OnFileNameChanged));
 
     public static readonly DependencyProperty IndexProperty = DependencyProperty.Register(
-        nameof(Index), typeof(int), typeof(ImageChooser), new PropertyMetadata(0, OnIndexChanged));
+        nameof(Index), typeof(int?), typeof(ImageChooser), new PropertyMetadata(null, OnIndexChanged));
+
+    public static readonly DependencyProperty ShowGridProperty = DependencyProperty.Register(
+        nameof(ShowGrid), typeof(bool), typeof(ImageChooser), new PropertyMetadata(true, OnShowGridChanged));
 
     public static readonly DependencyProperty OnImageChangedCommandProperty = DependencyProperty.Register(
         nameof(OnImageChangedCommand), typeof(ICommand), typeof(ImageChooser), new PropertyMetadata(null));
@@ -54,6 +57,11 @@ public partial class ImageChooser
         if (d is ImageChooser control) await control.UpdateCroppedImage();
     }
 
+    private static async void OnShowGridChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is ImageChooser control) await control.UpdateCroppedImage();
+    }
+
     public string FolderPath
     {
         get => (string) GetValue(FolderPathProperty);
@@ -66,10 +74,16 @@ public partial class ImageChooser
         set => SetValue(FileNameProperty, value);
     }
 
-    public int Index
+    public int? Index
     {
-        get => (int) GetValue(IndexProperty);
+        get => (int?) GetValue(IndexProperty);
         set => SetValue(IndexProperty, value);
+    }
+
+    public bool ShowGrid
+    {
+        get => (bool) GetValue(ShowGridProperty);
+        set => SetValue(ShowGridProperty, value);
     }
 
     public ICommand? OnImageChangedCommand
@@ -136,8 +150,34 @@ public partial class ImageChooser
         var source = await graphicsService.GetImage(path);
         if (ticket != _updateTicket) return;
 
+        if (!ShowGrid)
+        {
+            if (source.PixelWidth == 0)
+            {
+                source.ImageOpened += async (_, _) =>
+                {
+                    if (ticket != _updateTicket) return;
+                    var dims = await GetImageDimensions(path);
+                    if (ticket != _updateTicket) return;
+                    CroppedImage.ImageSource = source;
+                    CroppedImage.Rect = new Rect(0, 0, dims.width, dims.height);
+                    UpdateSelectedBorder();
+                };
+            }
+
+            var dimensions = await GetImageDimensions(path);
+            if (ticket != _updateTicket) return;
+
+            CroppedImage.ImageSource = source;
+            CroppedImage.Rect = new Rect(0, 0, dimensions.width, dimensions.height);
+            UpdateSelectedBorder();
+            return;
+        }
+
         var (w, h) = await graphicsService.GetSegmentation(path);
         if (ticket != _updateTicket) return;
+
+        var currentIndex = Index ?? 0;
 
         if (source.PixelWidth == 0)
         {
@@ -148,19 +188,19 @@ public partial class ImageChooser
                 if (ticket != _updateTicket) return;
 
                 var cols = (int) (dims.width / w);
-                var xPos = (Index % cols) * w;
-                var yPos = (Index / cols) * h;
+                var xPos = (currentIndex % cols) * w;
+                var yPos = (currentIndex / cols) * h;
                 CroppedImage.Rect = new Rect(xPos, yPos, w, h);
                 UpdateSelectedBorder();
             };
         }
 
-        var dimensions = await GetImageDimensions(path);
+        var dimensionsWithGrid = await GetImageDimensions(path);
         if (ticket != _updateTicket) return;
 
-        var columns = (int) (dimensions.width / w);
-        var x = (Index % columns) * w;
-        var y = (Index / columns) * h;
+        var columns = (int) (dimensionsWithGrid.width / w);
+        var x = (currentIndex % columns) * w;
+        var y = (currentIndex / columns) * h;
 
         CroppedImage.ImageSource = source;
         CroppedImage.Rect = new Rect(x, y, w, h);
@@ -184,14 +224,26 @@ public partial class ImageChooser
     private async void ImageFlyout_Opened(object? sender, object e)
     {
         if (FileListView.ItemsSource == null) LoadFiles();
+
+        // whole image mode: start from the confirmed file so a cancelled pick doesn't linger
+        if (!ShowGrid)
+        {
+            FileListView.SelectedItem = FileName.IsNullOrEmpty() ? null : FileName;
+            await LoadPreview(FileListView.SelectedItem as string);
+            return;
+        }
+
         if (FileListView.SelectedItem == null && !FileName.IsNullOrEmpty())
         {
             FileListView.SelectedItem = FileName;
         }
 
-        await LoadFullImage();
-        UpdateSelectedBorder();
-        ScrollToSelected();
+        if (ShowGrid)
+        {
+            await LoadFullImage();
+            UpdateSelectedBorder();
+            ScrollToSelected();
+        }
     }
 
     private async Task LoadFullImage()
@@ -221,10 +273,46 @@ public partial class ImageChooser
 
     private void FileListView_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
+        // whole image mode only previews - the choice is applied by the confirm button
+        if (!ShowGrid)
+        {
+            _ = LoadPreview(FileListView.SelectedItem as string);
+            return;
+        }
+
         if (FileListView.SelectedItem is not string selectedFile) return;
         FileName = selectedFile;
         _ = LoadFullImage();
     }
+
+    private void OnConfirmClicked(object sender, RoutedEventArgs e)
+    {
+        if (FileListView.SelectedItem is string selectedFile) FileName = selectedFile;
+        ImageFlyout.Hide();
+    }
+
+    private void OnCancelClicked(object sender, RoutedEventArgs e)
+    {
+        ImageFlyout.Hide();
+    }
+
+    private async Task LoadPreview(string? fileName)
+    {
+        ConfirmButton.IsEnabled = !fileName.IsNullOrEmpty();
+        PreviewName.Text = fileName ?? string.Empty;
+
+        if (fileName.IsNullOrEmpty())
+        {
+            PreviewImage.Source = null;
+            return;
+        }
+
+        var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
+        var path = Path.IsPathRooted(fileName) ? fileName : Path.Combine(FolderPath, fileName!);
+        PreviewImage.Source = await graphicsService.GetImage(path);
+    }
+
+    public Visibility PreviewVisibility(bool showGrid) => showGrid ? Visibility.Collapsed : Visibility.Visible;
 
     private void ScrollToSelected()
     {

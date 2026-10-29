@@ -1,8 +1,16 @@
-﻿namespace GameLibrary.Models.Actions;
+﻿using MercuryLibrary.Extensions;
+
+namespace GameLibrary.Models.Actions;
 
 public partial class ActorImageAction : PageAction
 {
     public Guid? ActorId
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public string? ActorName
     {
         get;
         set => SetField(ref field, value);
@@ -32,5 +40,12 @@ public partial class ActorImageAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public override string ToString() => "Actor Image";
+    public override string ToString()
+    {
+        var result = "Actor Image";
+        if (!ActorName.IsNullOrEmpty()) result += $" {ActorName}";
+        if (!CharacterName.IsNullOrEmpty()) result += $"\n    Character: {CharacterName} [{CharacterIndex}]";
+        if (!FaceName.IsNullOrEmpty()) result += $"\n    Face: {FaceName} [{FaceIndex}]";
+        return result;
+    }
 }

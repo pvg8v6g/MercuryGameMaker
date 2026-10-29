@@ -1,0 +1,317 @@
+﻿<UserControl x:Class="GameMaker.UX.Views.Popups.BranchActionEditor.BranchActionEditorPopup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fighter="using:GameLibrary.Models.Fighter"
+             xmlns:items="using:GameLibrary.Models.Items"
+             xmlns:artes="using:GameLibrary.Models.Artes"
+             xmlns:states="using:GameLibrary.Models.States"
+             xmlns:disciplines="using:GameLibrary.Models.Disciplines"
+             xmlns:enums="using:GameLibrary.Enumerations"
+             xmlns:extensions="using:GameLibrary.MarkupExtensions"
+             xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+             xmlns:popup="using:GameMaker.UX.Components.Popup"
+             x:Name="Root"
+             mc:Ignorable="d">
+    <popup:PopupShell Title="Branch Flow"
+                      PrimaryButtonText="Done"
+                      SecondaryButtonText="Cancel">
+        <ScrollViewer Width="440"
+                      MaxHeight="560"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="12">
+                <CheckBox Content="Has Else Branch" IsChecked="{x:Bind ViewModel.Branch.ElseBranch, Mode=TwoWay}" />
+                <ComboBox Header="Condition" HorizontalAlignment="Stretch"
+                          ItemsSource="{extensions:EnumValues EnumType=enums:BranchConditionType}"
+                          SelectedItem="{x:Bind ViewModel.Branch.ConditionType, Mode=TwoWay}" />
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Switch}">
+                    <TextBlock Text="Switch" FontWeight="Bold" />
+                    <engineTextBox:EngineTextBox Header="Switch Name" PlaceholderText="None"
+                                                 Text="{x:Bind ViewModel.Branch.SwitchConditionName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <CheckBox Content="Switch On"
+                              IsChecked="{x:Bind ViewModel.Branch.SwitchConditionValue, Mode=TwoWay}" />
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Variable}">
+                    <TextBlock Text="Variable" FontWeight="Bold" />
+                    <engineTextBox:EngineTextBox Header="Variable Name" PlaceholderText="None"
+                                                 Text="{x:Bind ViewModel.Branch.VariableConditionName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <engineTextBox:EngineTextBox Header="Equals Value" PlaceholderText="None"
+                                                 Text="{x:Bind ViewModel.Branch.VariableConditionValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SelfSwitch}">
+                    <TextBlock Text="Self Switch" FontWeight="Bold" />
+                    <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
+                                                 Text="{x:Bind ViewModel.Branch.SelfSwitchConditionEntity, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+                    <ComboBox Header="Self Switch Key" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{extensions:EnumValues EnumType=enums:SelfSwitch}"
+                              SelectedItem="{x:Bind ViewModel.Branch.SelfSwitchConditionKey, Mode=TwoWay}" />
+                    <CheckBox Content="Self Switch On"
+                              IsChecked="{x:Bind ViewModel.Branch.SelfSwitchConditionValue, Mode=TwoWay}" />
+
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Timer}">
+                    <TextBlock Text="Timer" FontWeight="Bold" />
+                    <engineTextBox:EngineTextBox Header="Timer Name" PlaceholderText="None"
+                                                 Text="{x:Bind ViewModel.Branch.TimerConditionName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <ComboBox Header="Comparison" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{extensions:EnumValues EnumType=enums:Comparison}"
+                              SelectedItem="{x:Bind ViewModel.Branch.TimerConditionComparison, Mode=TwoWay}" />
+                    <engineTextBox:EngineTextBox Header="Value" InputType="Integer" PlaceholderText="None"
+                                                 Text="{x:Bind ViewModel.Branch.TimerConditionValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ActorInParty}">
+                    <TextBlock Text="Actor In Party" FontWeight="Bold" />
+                    <ComboBox Header="Actor" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.ActorInPartyConditionActor, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="fighter:Fighter">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <CheckBox Content="Is In Party"
+                              IsChecked="{x:Bind ViewModel.Branch.ActorInPartyConditionValue, Mode=TwoWay}" />
+
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ActorHasName}">
+                    <TextBlock Text="Actor Has Name" FontWeight="Bold" />
+                    <ComboBox Header="Actor" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.ActorHasNameConditionActor, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="fighter:Fighter">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <engineTextBox:EngineTextBox Header="Name" PlaceholderText="None"
+                                                 Text="{x:Bind ViewModel.Branch.ActorHasNameConditionName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    <CheckBox Content="Has Name"
+                              IsChecked="{x:Bind ViewModel.Branch.ActorHasNameConditionValue, Mode=TwoWay}" />
+
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ActorIsDiscipline}">
+                    <TextBlock Text="Actor Is Discipline" FontWeight="Bold" />
+                    <ComboBox Header="Actor" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.ActorIsDisciplineConditionActor, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="fighter:Fighter">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ComboBox Header="Discipline" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Disciplines, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.ActorIsDisciplineConditionDiscipline, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="disciplines:Discipline">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <CheckBox Content="Is Discipline"
+                              IsChecked="{x:Bind ViewModel.Branch.ActorIsDisciplineConditionValue, Mode=TwoWay}" />
+
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ActorHasArte}">
+                    <TextBlock Text="Actor Has Arte" FontWeight="Bold" />
+                    <ComboBox Header="Actor" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.ActorHasArteConditionActor, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="fighter:Fighter">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ComboBox Header="Arte" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Artes, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.ActorHasArteConditionArte, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="artes:Arte">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <CheckBox Content="Has Arte"
+                              IsChecked="{x:Bind ViewModel.Branch.ActorHasArteConditionValue, Mode=TwoWay}" />
+
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ActorEquipment}">
+                    <TextBlock Text="Actor Equipment" FontWeight="Bold" />
+                    <ComboBox Header="Actor" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.ActorEquipmentConditionActor, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="fighter:Fighter">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ComboBox Header="Equipment" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Equipment, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.ActorEquipmentConditionEquipment, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="items:Equipment">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <CheckBox Content="Has Equipped"
+                              IsChecked="{x:Bind ViewModel.Branch.ActorEquipmentConditionValue, Mode=TwoWay}" />
+
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=ActorHasState}">
+                    <TextBlock Text="Actor Has State" FontWeight="Bold" />
+                    <ComboBox Header="Actor" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.ActorHasStateConditionActor, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="fighter:Fighter">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ComboBox Header="State" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.States, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.ActorHasStateConditionState, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="states:State">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <CheckBox Content="Has State"
+                              IsChecked="{x:Bind ViewModel.Branch.ActorHasStateConditionValue, Mode=TwoWay}" />
+
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=EnemyLife}">
+                    <TextBlock Text="Enemy Life" FontWeight="Bold" />
+                    <ComboBox Header="Enemy" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Enemies, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.EnemyLifeConditionEnemy, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="fighter:Fighter">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ComboBox Header="Comparison" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{extensions:EnumValues EnumType=enums:Comparison}"
+                              SelectedItem="{x:Bind ViewModel.Branch.EnemyLifeConditionComparison, Mode=TwoWay}" />
+                    <engineTextBox:EngineTextBox Header="Value" InputType="Integer" PlaceholderText="None"
+                                                 Text="{x:Bind ViewModel.Branch.EnemyLifeConditionValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=EnemyHasState}">
+                    <TextBlock Text="Enemy Has State" FontWeight="Bold" />
+                    <ComboBox Header="Enemy" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Enemies, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.EnemyHasStateConditionEnemy, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="fighter:Fighter">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ComboBox Header="State" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.States, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.EnemyHasStateConditionState, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="states:State">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <CheckBox Content="Has State"
+                              IsChecked="{x:Bind ViewModel.Branch.EnemyHasStateConditionValue, Mode=TwoWay}" />
+
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=EntityDirection}">
+                    <TextBlock Text="Entity Direction" FontWeight="Bold" />
+                    <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
+                                                 Text="{x:Bind ViewModel.Branch.EntityDirectionConditionEntity, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+                    <ComboBox Header="Direction" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{extensions:EnumValues EnumType=enums:Direction}"
+                              SelectedItem="{x:Bind ViewModel.Branch.EntityDirectionConditionDirection, Mode=TwoWay}" />
+
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=PartyHasItem}">
+                    <TextBlock Text="Party Has Item" FontWeight="Bold" />
+                    <ComboBox Header="Item" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.Consumables, Mode=OneWay}"
+                              SelectedValue="{x:Bind ViewModel.Branch.PartyHasItemConditionItem, Mode=TwoWay, FallbackValue={x:Null}}"
+                              SelectedValuePath="Guid">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="items:Consumable">
+                                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                    <ComboBox Header="Comparison" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{extensions:EnumValues EnumType=enums:Comparison}"
+                              SelectedItem="{x:Bind ViewModel.Branch.PartyHasItemConditionComparison, Mode=TwoWay}" />
+                    <engineTextBox:EngineTextBox Header="Value" InputType="Integer" PlaceholderText="None"
+                                                 Text="{x:Bind ViewModel.Branch.PartyHasItemConditionValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+                </StackPanel>
+
+                <StackPanel Spacing="12"
+                            Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=PartyHasMoney}">
+                    <TextBlock Text="Party Has Money" FontWeight="Bold" />
+                    <ComboBox Header="Comparison" PlaceholderText="None" HorizontalAlignment="Stretch"
+                              ItemsSource="{extensions:EnumValues EnumType=enums:Comparison}"
+                              SelectedItem="{x:Bind ViewModel.Branch.PartyHasMoneyConditionComparison, Mode=TwoWay}" />
+                    <engineTextBox:EngineTextBox Header="Value" InputType="Integer" PlaceholderText="None"
+                                                 Text="{x:Bind ViewModel.Branch.PartyHasMoneyConditionValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+    </popup:PopupShell>
+</UserControl>

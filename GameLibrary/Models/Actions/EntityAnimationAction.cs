@@ -1,4 +1,6 @@
-﻿namespace GameLibrary.Models.Actions;
+﻿using MercuryLibrary.Extensions;
+
+namespace GameLibrary.Models.Actions;
 
 public partial class EntityAnimationAction : PageAction
 {
@@ -14,5 +16,12 @@ public partial class EntityAnimationAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public override string ToString() => "Show Animation";
+    public string? AnimationName
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public override string ToString() =>
+        AnimationName.IsNullOrEmpty() ? "Show Animation" : $"Show Animation: {AnimationName}";
 }

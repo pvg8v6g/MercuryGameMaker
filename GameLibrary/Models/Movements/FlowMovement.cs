@@ -32,7 +32,7 @@ public partial class FlowMovement : Movement
         set => SetField(ref field, value);
     }
 
-    public Guid? SelfSwitchEntity
+    public int? SelfSwitchEntity
     {
         get;
         set => SetField(ref field, value);

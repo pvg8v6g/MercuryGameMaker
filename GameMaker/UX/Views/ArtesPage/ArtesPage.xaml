@@ -9,10 +9,8 @@
       xmlns:engineIcon="using:GameMaker.UX.Components.EngineIcon"
       xmlns:iconView="using:GameMaker.UX.Components.IconView"
       xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
-      xmlns:gridArea="using:GameMaker.UX.Components.GridArea"
       xmlns:hitboxPreview="using:GameMaker.UX.Components.HitboxPreview"
       xmlns:animations="using:GameLibrary.Models.Animations"
-      xmlns:areas="using:GameLibrary.Models.Areas"
       xmlns:enums="using:GameLibrary.Enumerations"
       xmlns:extensions="using:GameLibrary.MarkupExtensions"
       xmlns:behaviors="using:GameLibrary.Behaviors"
@@ -28,7 +26,7 @@
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="300" />
-      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="1.6*" />
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="*" />
@@ -51,9 +49,8 @@
                              Grid.RowSpan="2"
                              Title="Arte Metadata"
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-      <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <Grid ColumnSpacing="20"
-              RowSpacing="10">
+      <Grid ColumnSpacing="20"
+            RowSpacing="10">
           <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -180,9 +177,8 @@
                     ToolTipService.ToolTip="Should the arte rotate to match the character's facing direction?"
                     VerticalAlignment="Bottom">
             Rotate Arte With Character Direction
-          </CheckBox>
-        </Grid>
-      </ScrollViewer>
+        </CheckBox>
+      </Grid>
     </enginePanel:EnginePanel>
 
     <enginePanel:EnginePanel Grid.Column="2"
@@ -190,6 +186,11 @@
                              Title="Arte Damage"
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
       <Grid ColumnSpacing="20">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="*" />
@@ -197,18 +198,21 @@
         </Grid.ColumnDefinitions>
 
         <engineTextBox:EngineTextBox Grid.Column="0"
+                                     Grid.Row="0"
                                      Header="Life Damage"
                                      InputType="Integer"
                                      Text="{x:Bind ViewModel.SelectedEntity.HpDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
                                      Tooltip="How much life damage does this arte deal? Negative values heal." />
 
-        <engineTextBox:EngineTextBox Grid.Column="1"
+        <engineTextBox:EngineTextBox Grid.Column="0"
+                                     Grid.Row="1"
                                      Header="Mana Damage"
                                      InputType="Integer"
                                      Text="{x:Bind ViewModel.SelectedEntity.ManaDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
                                      Tooltip="How much mana damage does this arte deal? Negative values restore mana." />
 
-        <engineTextBox:EngineTextBox Grid.Column="2"
+        <engineTextBox:EngineTextBox Grid.Column="0"
+                                     Grid.Row="2"
                                      Header="Damage Variance %"
                                      InputType="Integer"
                                      Text="{x:Bind ViewModel.SelectedEntity.Variance, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"

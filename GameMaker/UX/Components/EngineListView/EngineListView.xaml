@@ -14,16 +14,15 @@
             HorizontalAlignment="Stretch"
             VerticalAlignment="Stretch"
             Background="{StaticResource MediumGreyBrush}"
-            behaviors:ListViewBehaviors.SelectOnRightClick="True"
-            behaviors:ListViewBehaviors.ManageContextFlyoutSelection="True">
+            DoubleTapped="OnListViewDoubleTapped">
     <ListView.Resources>
       <DataTemplate x:Key="DefaultItemTemplate" x:DataType="models:BaseModel">
         <items:EngineIdNameItem Model="{x:Bind Mode=OneWay}" />
       </DataTemplate>
     </ListView.Resources>
     <ListView.ContextFlyout>
-      <MenuFlyout>
-        <MenuFlyoutItem Text="New" Command="{x:Bind NewCommand, Mode=OneWay}" CommandParameter="{x:Bind NewCommandParameter, Mode=OneWay}">
+      <MenuFlyout x:Name="ContextMenuFlyout">
+        <MenuFlyoutItem x:Name="NewMenuItem" Text="New" Command="{x:Bind NewCommand, Mode=OneWay}" CommandParameter="{x:Bind NewCommandParameter, Mode=OneWay}">
           <MenuFlyoutItem.Icon>
             <SymbolIcon Symbol="Add" />
           </MenuFlyoutItem.Icon>

@@ -1,16 +1,18 @@
-﻿namespace GameLibrary.Models.Movements;
+﻿using GameLibrary.Enumerations;
+
+namespace GameLibrary.Models.Movements;
 
 public partial class MoveAwayMovement : Movement
 {
-    /// <summary>When set the movement moves away from the player instead of an entity or location.</summary>
-    public bool TargetPlayer
+    /// <summary>Determines whether the movement moves away from the player, an entity, or a location. These options are mutually exclusive.</summary>
+    public MovementTarget TargetType
     {
         get;
         set => SetField(ref field, value);
     }
 
     /// <summary>The entity to move away from. When null (and not targeting the player) the location is used.</summary>
-    public Guid? TargetEntityId
+    public int? TargetEntityId
     {
         get;
         set => SetField(ref field, value);
@@ -28,10 +30,10 @@ public partial class MoveAwayMovement : Movement
         set => SetField(ref field, value);
     }
 
-    public override string ToString()
+    public override string ToString() => TargetType switch
     {
-        if (TargetPlayer) return "Move Away From Player";
-        if (TargetEntityId != null) return "Move Away From Entity";
-        return $"Move Away From Location: {TargetX}, {TargetY}";
-    }
+        MovementTarget.Player => "Move Away From Player",
+        MovementTarget.Entity => "Move Away From Entity",
+        _ => $"Move Away From Location: {TargetX}, {TargetY}"
+    };
 }

@@ -45,7 +45,7 @@ public partial class Fighter : BaseModel
         set => SetField(ref field, value);
     }
 
-    public int FaceIndex
+    public int? FaceIndex
     {
         get;
         set => SetField(ref field, value);
@@ -230,6 +230,12 @@ public partial class Fighter : BaseModel
     }
 
     public ObservableCollection<Guid> Artes
+    {
+        get;
+        set => SetField(ref field, value);
+    } = [];
+
+    public ObservableCollection<FighterArte> ConditionalArtes
     {
         get;
         set => SetField(ref field, value);

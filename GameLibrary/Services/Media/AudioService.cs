@@ -1,5 +1,6 @@
-﻿using Windows.Media.Core;
-using Windows.Media.Playback;
+﻿using Windows.Media.Audio;
+using Windows.Media.Render;
+using Windows.Storage;
 
 namespace GameLibrary.Services.Media;
 
@@ -8,19 +9,26 @@ public class AudioService(IMediaService mediaService) : IAudioService
     #region Fields
 
     // The maximum number of concurrent one-shot sounds (SFX/footsteps) that may
-    // be alive at once. In the old JavaFX engine a fixed thread pool was used and
-    // finished sounds were never disposed, which slowly exhausted memory. Here we
-    // keep a bounded list of players and dispose each one the moment it finishes
-    // (or fails), so memory never grows unbounded regardless of how many sounds
-    // are triggered over the lifetime of the game.
+    // be alive at once. We keep a bounded list of input nodes and dispose each
+    // one the moment it finishes, so memory never grows unbounded regardless of
+    // how many sounds are triggered over the lifetime of the game.
     private const int MaxConcurrentSounds = 50;
 
-    private readonly List<MediaPlayer> _soundPool = [];
+    // Playback is routed through an AudioGraph instead of MediaPlayer because
+    // MediaPlayer.PlaybackRate preserves pitch (it time-stretches, only changing
+    // tempo). AudioFileInputNode.PlaybackSpeedFactor is a pure resample, so the
+    // pitch slider raises/lowers the actual pitch of the sound (as well as its
+    // speed, which is the expected resample behaviour).
+    private readonly List<AudioFileInputNode> _soundPool = [];
     private readonly Lock _soundPoolLock = new();
 
-    private MediaPlayer? _bgm;
-    private MediaPlayer? _bgs;
-    private MediaPlayer? _me;
+    private readonly SemaphoreSlim _initLock = new(1, 1);
+    private AudioGraph? _graph;
+    private AudioDeviceOutputNode? _output;
+
+    private AudioFileInputNode? _bgm;
+    private AudioFileInputNode? _bgs;
+    private AudioFileInputNode? _me;
 
     private CancellationTokenSource? _bgmFade;
     private CancellationTokenSource? _bgsFade;
@@ -30,10 +38,10 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     #region BGM
 
-    public void PlayBgm(string file, double volume = 1.0, double pitch = 1.0)
+    public async void PlayBgm(string file, double volume = 1.0, double pitch = 1.0)
     {
         StopBgm();
-        _bgm = PlayLooping(mediaService.GetBgm(file), volume, pitch);
+        _bgm = await CreateLoopingNode(mediaService.GetBgm(file), volume, pitch);
     }
 
     public void StopBgm()
@@ -61,10 +69,10 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     #region BGS
 
-    public void PlayBgs(string file, double volume = 1.0, double pitch = 1.0)
+    public async void PlayBgs(string file, double volume = 1.0, double pitch = 1.0)
     {
         StopBgs();
-        _bgs = PlayLooping(mediaService.GetBgs(file), volume, pitch);
+        _bgs = await CreateLoopingNode(mediaService.GetBgs(file), volume, pitch);
     }
 
     public void StopBgs()
@@ -92,10 +100,10 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     #region ME
 
-    public void PlayMe(string file, double volume = 1.0, double pitch = 1.0)
+    public async void PlayMe(string file, double volume = 1.0, double pitch = 1.0)
     {
         StopMe();
-        _me = PlayLooping(mediaService.GetMe(file), volume, pitch);
+        _me = await CreateLoopingNode(mediaService.GetMe(file), volume, pitch);
     }
 
     public void StopMe()
@@ -153,7 +161,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
         lock (_soundPoolLock)
         {
-            foreach (var player in _soundPool.ToArray()) DisposePlayer(player);
+            foreach (var node in _soundPool.ToArray()) DisposeNode(node);
             _soundPool.Clear();
         }
     }
@@ -162,38 +170,53 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     #region Private methods
 
-    private static MediaPlayer PlayLooping(Uri source, double volume, double pitch)
+    private async Task EnsureGraphAsync()
     {
-        var player = new MediaPlayer
+        if (_graph is not null) return;
+
+        await _initLock.WaitAsync();
+        try
         {
-            Source = MediaSource.CreateFromUri(source),
-            Volume = Math.Clamp(volume, 0.0, 1.0),
-            IsLoopingEnabled = true
-        };
-        player.PlaybackSession.PlaybackRate = pitch;
-        player.Play();
-        return player;
+            if (_graph is not null) return;
+
+            var settings = new AudioGraphSettings(AudioRenderCategory.Media);
+            var graphResult = await AudioGraph.CreateAsync(settings);
+            if (graphResult.Status != AudioGraphCreationStatus.Success) return;
+
+            var graph = graphResult.Graph;
+            var outputResult = await graph.CreateDeviceOutputNodeAsync();
+            if (outputResult.Status != AudioDeviceNodeCreationStatus.Success)
+            {
+                graph.Dispose();
+                return;
+            }
+
+            _output = outputResult.DeviceOutputNode;
+            graph.Start();
+            _graph = graph;
+        }
+        finally
+        {
+            _initLock.Release();
+        }
     }
 
-    private static void StopChannel(ref MediaPlayer? player)
+    private async Task<AudioFileInputNode?> CreateLoopingNode(Uri source, double volume, double pitch)
     {
-        if (player is null) return;
-        player.Pause();
-        player.Dispose();
-        player = null;
+        var node = await CreateNode(source, volume, pitch);
+        if (node is null) return null;
+
+        node.LoopCount = null; // infinite
+        node.Start();
+        return node;
     }
 
-    private void PlayOneShot(Uri source, double volume, double pitch)
+    private async void PlayOneShot(Uri source, double volume, double pitch)
     {
-        var player = new MediaPlayer
-        {
-            Source = MediaSource.CreateFromUri(source),
-            Volume = Math.Clamp(volume, 0.0, 1.0),
-            IsLoopingEnabled = false
-        };
-        player.PlaybackSession.PlaybackRate = pitch;
-        player.MediaEnded += OnOneShotFinished;
-        player.MediaFailed += OnOneShotFailed;
+        var node = await CreateNode(source, volume, pitch);
+        if (node is null) return;
+
+        node.FileCompleted += OnOneShotFinished;
 
         lock (_soundPoolLock)
         {
@@ -203,51 +226,66 @@ public class AudioService(IMediaService mediaService) : IAudioService
             {
                 var oldest = _soundPool[0];
                 _soundPool.RemoveAt(0);
-                DisposePlayer(oldest);
+                DisposeNode(oldest);
             }
 
-            _soundPool.Add(player);
+            _soundPool.Add(node);
         }
 
-        player.Play();
+        node.Start();
     }
 
-    private void OnOneShotFinished(MediaPlayer sender, object args)
+    private async Task<AudioFileInputNode?> CreateNode(Uri source, double volume, double pitch)
     {
-        RemoveFromPool(sender);
+        await EnsureGraphAsync();
+        if (_graph is null || _output is null) return null;
+
+        var storageFile = await StorageFile.GetFileFromPathAsync(source.LocalPath);
+        var nodeResult = await _graph.CreateFileInputNodeAsync(storageFile);
+        if (nodeResult.Status != AudioFileNodeCreationStatus.Success) return null;
+
+        var node = nodeResult.FileInputNode;
+        node.Stop();
+        node.PlaybackSpeedFactor = pitch;
+        node.OutgoingGain = Math.Clamp(volume, 0.0, 1.0);
+        node.AddOutgoingConnection(_output);
+        return node;
     }
 
-    private void OnOneShotFailed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
+    private static void StopChannel(ref AudioFileInputNode? node)
     {
-        RemoveFromPool(sender);
+        if (node is null) return;
+        node.Stop();
+        node.Dispose();
+        node = null;
     }
 
-    private void RemoveFromPool(MediaPlayer player)
+    private void OnOneShotFinished(AudioFileInputNode sender, object args)
     {
         lock (_soundPoolLock)
         {
-            _soundPool.Remove(player);
+            _soundPool.Remove(sender);
         }
 
-        DisposePlayer(player);
+        DisposeNode(sender);
     }
 
-    private void DisposePlayer(MediaPlayer player)
+    private void DisposeNode(AudioFileInputNode node)
     {
-        player.MediaEnded -= OnOneShotFinished;
-        player.MediaFailed -= OnOneShotFailed;
-        player.Dispose();
+        node.FileCompleted -= OnOneShotFinished;
+        node.Stop();
+        node.Dispose();
     }
 
-    private static void Fade(MediaPlayer? player, double target, double seconds, ref CancellationTokenSource? tokenSource)
+    private static void Fade(AudioFileInputNode? node, double target, double seconds, ref CancellationTokenSource? tokenSource)
     {
-        if (player is null) return;
+        if (node is null) return;
 
         tokenSource?.Cancel();
         tokenSource = new CancellationTokenSource();
         var token = tokenSource.Token;
 
-        var start = player.Volume;
+        var start = node.OutgoingGain;
         var duration = Math.Max(0.0, seconds);
 
         _ = Task.Run(async () =>
@@ -255,7 +293,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
             const int steps = 60;
             if (duration <= 0.0)
             {
-                player.Volume = Math.Clamp(target, 0.0, 1.0);
+                node.OutgoingGain = Math.Clamp(target, 0.0, 1.0);
                 return;
             }
 
@@ -264,7 +302,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
             {
                 if (token.IsCancellationRequested) return;
                 var value = start + (target - start) * (i / (double) steps);
-                player.Volume = Math.Clamp(value, 0.0, 1.0);
+                node.OutgoingGain = Math.Clamp(value, 0.0, 1.0);
                 await Task.Delay(Math.Max(1, delay), token).ContinueWith(_ => { });
             }
         }, token);

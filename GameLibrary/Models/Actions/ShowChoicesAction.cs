@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using MercuryLibrary.Extensions;
 
 namespace GameLibrary.Models.Actions;
 
@@ -11,7 +12,17 @@ public partial class ShowChoicesAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public ObservableCollection<string> Choices { get; init; } = [];
+    public ObservableCollection<Choice> Choices { get; init; } = [];
 
-    public override string ToString() => "Show Choices";
+    public override string ToString()
+    {
+        var result = "Show Choices";
+        if (!Variable.IsNullOrEmpty()) result += $"\n    \u2192 {Variable}";
+        foreach (var choice in Choices)
+        {
+            result += $"\n    \u2022 {choice.Text}";
+        }
+
+        return result;
+    }
 }

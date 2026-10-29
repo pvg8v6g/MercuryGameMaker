@@ -1,0 +1,48 @@
+<UserControl x:Class="GameMaker.UX.Views.Popups.EnemyArteEditor.EnemyArteEditorPopup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:artes="using:GameLibrary.Models.Artes"
+             xmlns:conditions="using:GameLibrary.Models.Conditions"
+             xmlns:engineListView="using:GameMaker.UX.Components.EngineListView"
+             xmlns:popup="using:GameMaker.UX.Components.Popup"
+             mc:Ignorable="d">
+  <popup:PopupShell Title="Enemy Arte"
+                    PrimaryButtonText="Done"
+                    SecondaryButtonText="Cancel">
+    <StackPanel Width="420"
+                Spacing="15">
+      <ComboBox Header="Arte"
+                PlaceholderText="Choose an arte"
+                HorizontalAlignment="Stretch"
+                ItemsSource="{x:Bind ViewModel.Artes, Mode=OneWay}"
+                SelectedValue="{x:Bind ViewModel.FighterArte.ArteGuid, Mode=TwoWay, FallbackValue={x:Null}}"
+                SelectedValuePath="Guid">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="artes:Arte">
+            <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
+
+      <TextBlock Text="Conditions" />
+      <engineListView:EngineListView Height="200"
+                                     ItemsSource="{x:Bind ViewModel.Conditions}"
+                                     SelectedIndex="{x:Bind ViewModel.SelectedConditionIndex, Mode=TwoWay}"
+                                     NewOptions="{x:Bind ViewModel.ConditionNewOptions}"
+                                     EditCommand="{x:Bind ViewModel.EditConditionCommand}"
+                                     CopyCommand="{x:Bind ViewModel.CopyConditionCommand}"
+                                     PasteCommand="{x:Bind ViewModel.PasteConditionCommand}"
+                                     DeleteCommand="{x:Bind ViewModel.DeleteConditionCommand}"
+                                     CopiedModel="{x:Bind ViewModel.CopiedCondition, Mode=OneWay}"
+                                     ToolTipService.ToolTip="Right-click to add a condition. Every condition must be met for the enemy to gain this arte. No conditions means the enemy always knows it.">
+        <engineListView:EngineListView.ItemTemplate>
+          <DataTemplate x:DataType="conditions:Condition">
+            <TextBlock Text="{x:Bind ToString()}" TextTrimming="CharacterEllipsis" />
+          </DataTemplate>
+        </engineListView:EngineListView.ItemTemplate>
+      </engineListView:EngineListView>
+    </StackPanel>
+  </popup:PopupShell>
+</UserControl>

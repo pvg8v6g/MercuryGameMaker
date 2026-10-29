@@ -1,8 +1,16 @@
-﻿namespace GameLibrary.Models.Actions;
+﻿using MercuryLibrary.Extensions;
+
+namespace GameLibrary.Models.Actions;
 
 public partial class ChangeItemAction : PageAction
 {
     public Guid? ItemId
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public string? ItemName
     {
         get;
         set => SetField(ref field, value);
@@ -14,5 +22,11 @@ public partial class ChangeItemAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public override string ToString() => $"Change Item: {Amount:+#;-#;0}";
+    public override string ToString()
+    {
+        var result = "Change Item";
+        if (!ItemName.IsNullOrEmpty()) result += $" {ItemName}";
+        result += $": {Amount:+#;-#;0}";
+        return result;
+    }
 }

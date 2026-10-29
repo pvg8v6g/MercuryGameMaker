@@ -25,9 +25,11 @@ public class LoadDataTask(ILocationService locationService, IJsonService jsonSer
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Settings", "Growths")).Length; // growths
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Fighters", "Actors")).Length; // actors
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Disciplines")).Length; // disciplines
+        MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Artes")).Length; // artes
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Items", "Consumables")).Length; // consumables
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Items", "Equipment")).Length; // equipment
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Fighters", "Enemies")).Length; // enemies
+        MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Troops")).Length; // troops
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "States")).Length; // states
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Animations")).Length; // animations
     }
@@ -39,9 +41,11 @@ public class LoadDataTask(ILocationService locationService, IJsonService jsonSer
         DecryptData(Path.Combine("Settings", "Growths"), gameDataService.Growths);
         DecryptData(Path.Combine("Fighters", "Actors"), gameDataService.Actors);
         DecryptData(Path.Combine("Disciplines"), gameDataService.Disciplines);
+        DecryptData(Path.Combine("Artes"), gameDataService.Artes);
         DecryptData(Path.Combine("Items", "Consumables"), gameDataService.Consumables);
         DecryptData(Path.Combine("Items", "Equipment"), gameDataService.Equipment);
         DecryptData(Path.Combine("Fighters", "Enemies"), gameDataService.Enemies);
+        DecryptData(Path.Combine("Troops"), gameDataService.Troops);
         DecryptData(Path.Combine("States"), gameDataService.States);
         DecryptData(Path.Combine("Animations"), gameDataService.Animations);
     }

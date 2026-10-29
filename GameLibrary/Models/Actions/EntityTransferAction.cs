@@ -1,4 +1,5 @@
 ﻿using GameLibrary.Enumerations;
+using MercuryLibrary.Extensions;
 
 namespace GameLibrary.Models.Actions;
 
@@ -11,6 +12,12 @@ public partial class EntityTransferAction : PageAction
     }
 
     public Guid? MapId
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public string? MapName
     {
         get;
         set => SetField(ref field, value);
@@ -34,5 +41,11 @@ public partial class EntityTransferAction : PageAction
         set => SetField(ref field, value);
     } = Direction.Down;
 
-    public override string ToString() => "Transfer Entity";
+    public override string ToString()
+    {
+        var result = "Transfer Entity";
+        if (!MapName.IsNullOrEmpty()) result += $"\n    Map: {MapName}";
+        result += $"\n    To: {X}, {Y}\n    Facing: {Direction}";
+        return result;
+    }
 }

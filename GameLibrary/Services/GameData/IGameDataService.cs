@@ -42,9 +42,9 @@ public interface IGameDataService
 
     int LevelCap { get; set; }
 
-    public Guid LifeAttributeGuid { get; set; }
+    public Guid LifeAttributeGuid { get; }
 
-    public Guid ManaAttributeGuid { get; set; }
+    public Guid ManaAttributeGuid { get; }
 
     ObservableCollection<GameMap> GameMaps { get; }
 

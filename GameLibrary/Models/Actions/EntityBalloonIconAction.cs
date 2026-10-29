@@ -14,5 +14,5 @@ public partial class EntityBalloonIconAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public override string ToString() => "Show Balloon Icon";
+    public override string ToString() => $"Show Balloon Icon: {BalloonIconIndex}";
 }

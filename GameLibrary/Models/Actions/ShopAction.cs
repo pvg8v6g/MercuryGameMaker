@@ -18,5 +18,11 @@ public partial class ShopAction : PageAction
 
     public ObservableCollection<Guid> ShopItems { get; init; } = [];
 
-    public override string ToString() => "Open Shop";
+    public override string ToString()
+    {
+        var result = $"Open Shop ({ShopItems.Count} item{(ShopItems.Count == 1 ? "" : "s")})";
+        result += $"\n    Selling: {(CanSell ? "Allowed" : "Disabled")}";
+        result += $"\n    Exit: {(CanExit ? "Allowed" : "Disabled")}";
+        return result;
+    }
 }

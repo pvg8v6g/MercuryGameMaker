@@ -9,5 +9,5 @@ public partial class FadeMediaAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public override string ToString() => "Fade Out Media";
+    public override string ToString() => $"Fade Out Media: {FadeTime}ms";
 }

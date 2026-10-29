@@ -1,5 +1,6 @@
 ﻿using GameLibrary.Configuration;
 using GameLibrary.Services.Json;
+using MercuryLibrary.Extensions;
 using Windows.Storage.Pickers;
 using WinRT.Interop;
 
@@ -42,7 +43,7 @@ public class LocationService(IJsonService jsonService) : ILocationService
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(config.GameDirectory))
+        if (config.GameDirectory.IsNullOrEmpty())
         {
             var picker = new FolderPicker();
             picker.FileTypeFilter.Add("*");

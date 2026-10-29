@@ -1,16 +1,18 @@
-﻿namespace GameLibrary.Models.Movements;
+﻿using GameLibrary.Enumerations;
+
+namespace GameLibrary.Models.Movements;
 
 public partial class MoveTowardMovement : Movement
 {
-    /// <summary>When set the movement targets the player instead of an entity or location.</summary>
-    public bool TargetPlayer
+    /// <summary>Determines whether the movement targets the player, an entity, or a location. These options are mutually exclusive.</summary>
+    public MovementTarget TargetType
     {
         get;
         set => SetField(ref field, value);
     }
 
     /// <summary>The entity to move toward. When null (and not targeting the player) the location is used.</summary>
-    public Guid? TargetEntityId
+    public int? TargetEntityId
     {
         get;
         set => SetField(ref field, value);
@@ -28,10 +30,10 @@ public partial class MoveTowardMovement : Movement
         set => SetField(ref field, value);
     }
 
-    public override string ToString()
+    public override string ToString() => TargetType switch
     {
-        if (TargetPlayer) return "Move Toward Player";
-        if (TargetEntityId != null) return "Move Toward Entity";
-        return $"Move Toward Location: {TargetX}, {TargetY}";
-    }
+        MovementTarget.Player => "Move Toward Player",
+        MovementTarget.Entity => "Move Toward Entity",
+        _ => $"Move Toward Location: {TargetX}, {TargetY}"
+    };
 }

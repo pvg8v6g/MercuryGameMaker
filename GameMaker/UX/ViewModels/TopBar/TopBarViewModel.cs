@@ -14,19 +14,19 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
     public ObservableCollection<EngineRadioIconModel> EngineImages
     {
         get;
-        set => SetField(ref field, value);
+        private set => SetField(ref field, value);
     } = [];
 
     public EngineRadioIconModel? MediaImage
     {
         get;
-        set => SetField(ref field, value);
+        private set => SetField(ref field, value);
     }
 
     public EngineRadioIconModel? SaveImage
     {
         get;
-        set => SetField(ref field, value);
+        private set => SetField(ref field, value);
     }
 
     #endregion
@@ -153,14 +153,17 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
             case "3": // artes
                 navigationService.NavigateTo<Views.ArtesPage.ArtesPage>();
                 break;
-            case "4":
+            case "4": // items
+                navigationService.NavigateTo<Views.ItemsPage.ItemsPage>();
                 break;
             case "5": // equipment
                 navigationService.NavigateTo<Views.EquipmentPage.EquipmentPage>();
                 break;
-            case "6":
+            case "6": // enemies
+                navigationService.NavigateTo<Views.EnemiesPage.EnemiesPage>();
                 break;
-            case "7":
+            case "7": // troops
+                navigationService.NavigateTo<Views.TroopsPage.TroopsPage>();
                 break;
             case "8": // states
                 navigationService.NavigateTo<Views.StatesPage.StatesPage>();
@@ -181,6 +184,7 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
                 navigationService.NavigateTo<Views.GrowthsPage.GrowthsPage>();
                 break;
             case "11": // media
+                navigationService.NavigateTo<Views.MediaPlayerPage.MediaPlayerPage>();
                 break;
             case "12": // saving
                 navigationService.ShowProgressPopup<SaveDataTask>("Saving Game Files");

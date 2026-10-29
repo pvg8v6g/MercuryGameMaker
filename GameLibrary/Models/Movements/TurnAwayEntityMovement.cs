@@ -10,7 +10,7 @@ public partial class TurnAwayEntityMovement : Movement
     }
 
     /// <summary>The entity to turn away from. When null (and not targeting the player) nothing is targeted.</summary>
-    public Guid? TargetEntityId
+    public int? TargetEntityId
     {
         get;
         set => SetField(ref field, value);

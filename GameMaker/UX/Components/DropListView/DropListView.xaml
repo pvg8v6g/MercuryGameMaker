@@ -1,0 +1,104 @@
+﻿<UserControl x:Class="GameMaker.UX.Components.DropListView.DropListView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:behaviors="using:GameLibrary.Behaviors"
+             xmlns:dropListView="using:GameMaker.UX.Components.DropListView"
+             xmlns:engineIcon="using:GameMaker.UX.Components.EngineIcon"
+             xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+             xmlns:items="using:GameLibrary.Models.Items"
+             mc:Ignorable="d"
+             HorizontalAlignment="Stretch"
+             VerticalAlignment="Stretch">
+  <UserControl.Resources>
+    <Flyout x:Name="EditorFlyout">
+      <StackPanel x:Name="EditorRoot"
+                  Width="240"
+                  Spacing="12">
+        <ComboBox Header="Item"
+                  PlaceholderText="Item"
+                  ItemsSource="{Binding AllItems, Mode=OneWay}"
+                  SelectedValue="{Binding SelectedItemGuid, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid"
+                  HorizontalAlignment="Stretch">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="items:Item">
+              <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
+                <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
+                <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
+              </StackPanel>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <engineTextBox:EngineTextBox Header="Chance %"
+                                     InputType="Integer"
+                                     Text="{Binding PercentText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                     Tooltip="The percent chance this item drops." />
+
+        <Button Content="Save"
+                Command="{Binding SaveCommand}"
+                IsEnabled="{Binding CanSave, Mode=OneWay}"
+                behaviors:PointerCursorBehavior.CursorType="Hand"
+                HorizontalAlignment="Right" />
+      </StackPanel>
+    </Flyout>
+  </UserControl.Resources>
+
+  <ListView x:Name="ListView"
+            ItemsSource="{x:Bind Rows, Mode=OneWay}"
+            SelectionMode="Single"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Background="{StaticResource MediumGreyBrush}">
+    <ListView.ItemTemplate>
+      <DataTemplate x:DataType="dropListView:DropRowModel">
+        <Grid ColumnSpacing="10" Padding="4">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="32" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+
+          <engineIcon:EngineIcon Grid.Column="0"
+                                 IconIndex="{x:Bind Icon, Mode=OneWay}"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center" />
+
+          <TextBlock Grid.Column="1"
+                     Text="{x:Bind Name, Mode=OneWay}"
+                     VerticalAlignment="Center"
+                     TextWrapping="NoWrap"
+                     TextTrimming="CharacterEllipsis" />
+
+          <TextBlock Grid.Column="2"
+                     Text="{x:Bind PercentDisplay, Mode=OneWay}"
+                     VerticalAlignment="Center" />
+        </Grid>
+      </DataTemplate>
+    </ListView.ItemTemplate>
+    <ListView.ContextFlyout>
+      <MenuFlyout>
+        <MenuFlyoutItem Text="New" Command="{x:Bind NewCommand}">
+          <MenuFlyoutItem.Icon>
+            <SymbolIcon Symbol="Add" />
+          </MenuFlyoutItem.Icon>
+        </MenuFlyoutItem>
+        <MenuFlyoutItem Text="Edit" Command="{x:Bind EditCommand}"
+                        behaviors:ListViewBehaviors.RequireSelectionForMenuFlyoutItem="True">
+          <MenuFlyoutItem.Icon>
+            <SymbolIcon Symbol="Edit" />
+          </MenuFlyoutItem.Icon>
+        </MenuFlyoutItem>
+        <MenuFlyoutSeparator />
+        <MenuFlyoutItem Text="Delete" Command="{x:Bind DeleteCommand}"
+                        behaviors:ListViewBehaviors.RequireSelectionForMenuFlyoutItem="True">
+          <MenuFlyoutItem.Icon>
+            <SymbolIcon Symbol="Delete" />
+          </MenuFlyoutItem.Icon>
+        </MenuFlyoutItem>
+      </MenuFlyout>
+    </ListView.ContextFlyout>
+  </ListView>
+</UserControl>

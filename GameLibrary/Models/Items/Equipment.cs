@@ -18,6 +18,12 @@ public partial class Equipment : Item
         set => SetField(ref field, value);
     }
 
+    public Guid? Arte
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     public Dictionary<Guid, int> AttributeStats { get; init; } = new();
 
     public Dictionary<Guid, int> ElementResist { get; init; } = new();

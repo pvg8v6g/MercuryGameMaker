@@ -1,8 +1,16 @@
-﻿namespace GameLibrary.Models.Actions;
+﻿using MercuryLibrary.Extensions;
+
+namespace GameLibrary.Models.Actions;
 
 public partial class PartyAction : PageAction
 {
     public Guid? ActorId
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public string? ActorName
     {
         get;
         set => SetField(ref field, value);
@@ -20,5 +28,10 @@ public partial class PartyAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public override string ToString() => $"Change Party: {(Add ? "Add" : "Remove")}";
+    public override string ToString()
+    {
+        var result = $"Change Party: {(Add ? "Add" : "Remove")}";
+        if (!ActorName.IsNullOrEmpty()) result += $" {ActorName}";
+        return result;
+    }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.ObjectModel;
+using GameLibrary.Commands;
 using GameLibrary.Models.Items;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Json;
@@ -19,9 +20,17 @@ public class EquipmentPageViewModel(IGameDataService gameDataService, IJsonServi
 
     protected override ObservableCollection<Equipment> EntityCollection => gameDataService.Equipment;
 
+    public RelayCommand ClearArteCommand => new(ClearArte);
+
     #endregion
 
     #region Actions
+
+    private void ClearArte()
+    {
+        if (SelectedEntity is null) return;
+        SelectedEntity.Arte = null;
+    }
 
     protected override Task OnSelectedIndexChanged(int index)
     {

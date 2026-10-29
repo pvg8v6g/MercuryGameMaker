@@ -1,5 +1,11 @@
+using System.Collections;
 using System.Windows.Input;
+using GameLibrary.Behaviors;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 
 namespace GameMaker.UX.Components.EngineListView;
 
@@ -110,11 +116,141 @@ public sealed partial class EngineListView
         set => SetValue(CopiedModelProperty, value);
     }
 
+    public static readonly DependencyProperty NewOptionsProperty = DependencyProperty.Register(
+        nameof(NewOptions), typeof(IEnumerable), typeof(EngineListView), new PropertyMetadata(null, OnNewOptionsChanged));
+
+    /// <summary>
+    /// When set, the single "New" entry is replaced by an "Add" submenu built from the supplied
+    /// <see cref="EngineListNewOption"/> items, letting a list create several different item types.
+    /// </summary>
+    public IEnumerable? NewOptions
+    {
+        get => (IEnumerable?) GetValue(NewOptionsProperty);
+        set => SetValue(NewOptionsProperty, value);
+    }
+
+    private static void OnNewOptionsChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is EngineListView engineListView)
+        {
+            engineListView.UpdateNewOptions();
+        }
+    }
+
+    private void UpdateNewOptions()
+    {
+        // Remove a previously built submenu (if any).
+        var existing = ContextMenuFlyout.Items.FirstOrDefault(i => i is MenuFlyoutSubItem { Name: "AddSubMenu" });
+        if (existing is not null)
+        {
+            ContextMenuFlyout.Items.Remove(existing);
+        }
+
+        if (NewOptions is null)
+        {
+            NewMenuItem.Visibility = Visibility.Visible;
+            return;
+        }
+
+        // Replace the plain "New" item with a typed "Add" submenu.
+        NewMenuItem.Visibility = Visibility.Collapsed;
+
+        var subMenu = new MenuFlyoutSubItem
+        {
+            Name = "AddSubMenu",
+            Text = "Add",
+            Icon = new SymbolIcon(Symbol.Add)
+        };
+
+        foreach (var option in NewOptions.OfType<EngineListNewOption>())
+        {
+            subMenu.Items.Add(BuildOption(option));
+        }
+
+        ContextMenuFlyout.Items.Insert(0, subMenu);
+    }
+
+    private static MenuFlyoutItemBase BuildOption(EngineListNewOption option, Brush? inheritedForeground = null)
+    {
+        // Children inherit their parent group's accent colour unless they specify their own.
+        var foreground = option.Foreground ?? inheritedForeground;
+
+        if (option.Children is not null)
+        {
+            var group = new MenuFlyoutSubItem { Text = option.Text };
+            if (foreground is not null)
+            {
+                group.Foreground = foreground;
+            }
+
+            foreach (var child in option.Children)
+            {
+                group.Items.Add(BuildOption(child, foreground));
+            }
+
+            return group;
+        }
+
+        var item = new MenuFlyoutItem
+        {
+            Text = option.Text,
+            Command = option.Command,
+            CommandParameter = option.CommandParameter
+        };
+
+        if (foreground is not null)
+        {
+            item.Foreground = foreground;
+        }
+
+        return item;
+    }
+
+    public static readonly DependencyProperty DoubleTapCommandProperty = DependencyProperty.Register(
+        nameof(DoubleTapCommand), typeof(ICommand), typeof(EngineListView), new PropertyMetadata(null));
+
+    /// <summary>
+    /// When set, double-tapping a row executes this command (used to insert a new item above the tapped row)
+    /// and then opens the context flyout so the item type can be chosen.
+    /// </summary>
+    public ICommand? DoubleTapCommand
+    {
+        get => (ICommand?) GetValue(DoubleTapCommandProperty);
+        set => SetValue(DoubleTapCommandProperty, value);
+    }
+
     #endregion
 
     public EngineListView()
     {
         InitializeComponent();
         UpdateItemTemplate();
+        UpdateNewOptions();
+
+        // Set these attached properties from code rather than XAML. In WinUI 3 the
+        // PropertyChangedCallback for an attached property set on an element inside a
+        // UserControl's XAML is not reliably invoked, so the right-tap/context handlers
+        // were never wired up. Setting via SetValue here guarantees the callback fires.
+        ListViewBehaviors.SetSelectOnRightClick(ListView, true);
+        ListViewBehaviors.SetManageContextFlyoutSelection(ListView, true);
+    }
+
+    private void OnListViewDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        if (DoubleTapCommand is null) return;
+
+        // Rows that opt out of the context menu (e.g. Else/End markers) ignore the
+        // double-click "add action above" interaction as well.
+        if ((e.OriginalSource as FrameworkElement)?.DataContext is IContextMenuSuppressible { SuppressContextMenu: true })
+        {
+            return;
+        }
+
+        if (DoubleTapCommand.CanExecute(null))
+        {
+            DoubleTapCommand.Execute(null);
+        }
+
+        ContextMenuFlyout.ShowAt(ListView, new FlyoutShowOptions { Position = e.GetPosition(ListView) });
     }
 }

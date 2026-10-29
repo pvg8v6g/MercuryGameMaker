@@ -8,17 +8,23 @@ namespace GameLibrary.Models.Actions;
 /// </summary>
 public partial class FlowAction : PageAction
 {
+    public FlowConditionType ConditionType
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     public string? SwitchName
     {
         get;
         set => SetField(ref field, value);
     }
 
-    public bool? SwitchValue
+    public bool SwitchValue
     {
         get;
         set => SetField(ref field, value);
-    }
+    } = true;
 
     public string? VariableName
     {
@@ -32,7 +38,7 @@ public partial class FlowAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public Guid? SelfSwitchEntity
+    public int? SelfSwitchEntity
     {
         get;
         set => SetField(ref field, value);
@@ -44,11 +50,11 @@ public partial class FlowAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public string? SelfSwitchValue
+    public bool SelfSwitchValue
     {
         get;
         set => SetField(ref field, value);
-    }
+    } = true;
 
     public string? TimerName
     {
@@ -62,5 +68,12 @@ public partial class FlowAction : PageAction
         set => SetField(ref field, value);
     }
 
-    public override string ToString() => "Control Flow";
+    public override string ToString() => "Control Flow\n    " + ConditionType switch
+    {
+        FlowConditionType.Switch => $"Switch {SwitchName} = {(SwitchValue ? "ON" : "OFF")}",
+        FlowConditionType.Variable => $"Variable {VariableName} = {VariableValue}",
+        FlowConditionType.SelfSwitch => $"Self Switch {SelfSwitchKey} = {(SelfSwitchValue ? "ON" : "OFF")}",
+        FlowConditionType.Timer => $"Timer {TimerName} = {TimerValue}",
+        _ => ConditionType.ToString()
+    };
 }

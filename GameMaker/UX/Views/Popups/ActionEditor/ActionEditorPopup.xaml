@@ -1,0 +1,618 @@
+﻿<UserControl x:Class="GameMaker.UX.Views.Popups.ActionEditor.ActionEditorPopup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fighter="using:GameLibrary.Models.Fighter"
+             xmlns:items="using:GameLibrary.Models.Items"
+             xmlns:artes="using:GameLibrary.Models.Artes"
+             xmlns:attributes="using:GameLibrary.Models.Attributes"
+             xmlns:states="using:GameLibrary.Models.States"
+             xmlns:animations="using:GameLibrary.Models.Animations"
+             xmlns:troops="using:GameLibrary.Models.Troops"
+             xmlns:gamemaps="using:GameLibrary.Models.GameMaps"
+             xmlns:actions="using:GameLibrary.Models.Actions"
+             xmlns:enums="using:GameLibrary.Enumerations"
+             xmlns:extensions="using:GameLibrary.MarkupExtensions"
+             xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+             xmlns:popup="using:GameMaker.UX.Components.Popup"
+             x:Name="Root"
+             mc:Ignorable="d">
+  <popup:PopupShell Title="Edit Action"
+                    PrimaryButtonText="Done"
+                    SecondaryButtonText="Cancel">
+    <Grid Width="420"
+          MinHeight="160">
+
+      <!-- Show Text -->
+      <StackPanel x:Name="ShowTextPanel" x:Load="{x:Bind ViewModel.IsShowText}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Face Name" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsShowText.FaceName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Face Index" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsShowText.FaceIndex, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Title" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsShowText.Title, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <TextBox Header="Message"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 Height="120"
+                 Text="{x:Bind ViewModel.AsShowText.Message, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Wait -->
+      <StackPanel x:Name="WaitPanel" x:Load="{x:Bind ViewModel.IsWait}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Wait Time (frames)" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsWait.WaitTime, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Change Money -->
+      <StackPanel x:Name="MoneyPanel" x:Load="{x:Bind ViewModel.IsMoney}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Money Amount" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsMoney.MoneyValue, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Change Item -->
+      <StackPanel x:Name="ChangeItemPanel" x:Load="{x:Bind ViewModel.IsChangeItem}" Spacing="10">
+        <Grid ColumnSpacing="5">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <ComboBox Header="Item"
+                    PlaceholderText="None"
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{x:Bind ViewModel.Consumables, Mode=OneWay}"
+                    SelectedValue="{x:Bind ViewModel.ChangeItemItemId, Mode=TwoWay, FallbackValue={x:Null}}"
+                    SelectedValuePath="Guid">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="items:Consumable">
+                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Grid.Column="1"
+                  Content="Clear"
+                  VerticalAlignment="Bottom"
+                  Command="{x:Bind ViewModel.ClearItemCommand}" />
+        </Grid>
+        <engineTextBox:EngineTextBox Header="Amount" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsChangeItem.Amount, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Actor Name -->
+      <StackPanel x:Name="ActorNamePanel" x:Load="{x:Bind ViewModel.IsActorName}" Spacing="10">
+        <ComboBox Header="Actor"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.AsActorName.ActorId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <engineTextBox:EngineTextBox Header="New Name" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsActorName.ActorName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Actor Description -->
+      <StackPanel x:Name="ActorDescriptionPanel" x:Load="{x:Bind ViewModel.IsActorDescription}" Spacing="10">
+        <ComboBox Header="Actor"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorDescriptionActorId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <TextBox Header="Description"
+                 AcceptsReturn="True"
+                 TextWrapping="Wrap"
+                 Height="120"
+                 Text="{x:Bind ViewModel.AsActorDescription.ActorDescription, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Actor Life -->
+      <StackPanel x:Name="ActorLifePanel" x:Load="{x:Bind ViewModel.IsActorLife}" Spacing="10">
+        <ComboBox Header="Actor"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorLifeActorId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <engineTextBox:EngineTextBox Header="Life Amount" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsActorLife.LifeValue, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Actor Mana -->
+      <StackPanel x:Name="ActorManaPanel" x:Load="{x:Bind ViewModel.IsActorMana}" Spacing="10">
+        <ComboBox Header="Actor"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorManaActorId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <engineTextBox:EngineTextBox Header="Mana Amount" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsActorMana.ManaValue, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Actor Experience -->
+      <StackPanel x:Name="ActorExperiencePanel" x:Load="{x:Bind ViewModel.IsActorExperience}" Spacing="10">
+        <ComboBox Header="Actor"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorExperienceActorId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <engineTextBox:EngineTextBox Header="Experience Amount" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsActorExperience.Experience, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Actor Level -->
+      <StackPanel x:Name="ActorLevelPanel" x:Load="{x:Bind ViewModel.IsActorLevel}" Spacing="10">
+        <ComboBox Header="Actor"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorLevelActorId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <engineTextBox:EngineTextBox Header="Level Amount" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsActorLevel.Level, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Actor Attribute -->
+      <StackPanel x:Name="ActorAttributePanel" x:Load="{x:Bind ViewModel.IsActorAttribute}" Spacing="10">
+        <ComboBox Header="Actor"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorAttributeActorId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <ComboBox Header="Attribute"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Attributes, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorAttributeAttributeId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="attributes:Attribute">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <engineTextBox:EngineTextBox Header="Amount" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsActorAttribute.Amount, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Actor Arte -->
+      <StackPanel x:Name="ActorArtePanel" x:Load="{x:Bind ViewModel.IsActorArte}" Spacing="10">
+        <ComboBox Header="Actor"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorArteActorId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <ComboBox Header="Arte"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Artes, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorArteArteId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="artes:Arte">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <CheckBox Content="Add (uncheck to Remove)"
+                  IsChecked="{x:Bind ViewModel.AsActorArte.Add, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Actor Equipment -->
+      <StackPanel x:Name="ActorEquipmentPanel" x:Load="{x:Bind ViewModel.IsActorEquipment}" Spacing="10">
+        <ComboBox Header="Actor" PlaceholderText="None" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorEquipmentActorId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <ComboBox Header="Equipment" PlaceholderText="None" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Equipment, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorEquipmentEquipmentId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="items:Equipment">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <CheckBox Content="Equip (uncheck to Unequip)" IsChecked="{x:Bind ViewModel.AsActorEquipment.Equip, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Actor Image -->
+      <StackPanel x:Name="ActorImagePanel" x:Load="{x:Bind ViewModel.IsActorImage}" Spacing="10">
+        <ComboBox Header="Actor" PlaceholderText="None" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorImageActorId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <engineTextBox:EngineTextBox Header="Face Name" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsActorImage.FaceName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Face Index" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsActorImage.FaceIndex, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Character Name" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsActorImage.CharacterName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Character Index" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsActorImage.CharacterIndex, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Actor State -->
+      <StackPanel x:Name="ActorStatePanel" x:Load="{x:Bind ViewModel.IsActorState}" Spacing="10">
+        <ComboBox Header="Actor" PlaceholderText="None" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorStateActorId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <ComboBox Header="State" PlaceholderText="None" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.States, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.ActorStateStateId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="states:State">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <CheckBox Content="Add (uncheck to Remove)" IsChecked="{x:Bind ViewModel.AsActorState.Add, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Entity Animation -->
+      <StackPanel x:Name="EntityAnimationPanel" x:Load="{x:Bind ViewModel.IsEntityAnimation}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsEntityAnimation.EntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="Animation" PlaceholderText="None" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Animations, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.EntityAnimationAnimationId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="animations:Animation">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+      </StackPanel>
+
+      <!-- Entity Balloon Icon -->
+      <StackPanel x:Name="EntityBalloonIconPanel" x:Load="{x:Bind ViewModel.IsEntityBalloonIcon}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsEntityBalloonIcon.EntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Balloon Icon Index" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsEntityBalloonIcon.BalloonIconIndex, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Entity Erase -->
+      <StackPanel x:Name="EntityErasePanel" x:Load="{x:Bind ViewModel.IsEntityErase}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsEntityErase.EntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Entity Opacity -->
+      <StackPanel x:Name="EntityOpacityPanel" x:Load="{x:Bind ViewModel.IsEntityOpacity}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsEntityOpacity.EntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Opacity (0 - 1)" InputType="Double"
+                                     Text="{x:Bind ViewModel.AsEntityOpacity.Opacity, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Transition Time (ms)" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsEntityOpacity.TranslateTime, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Entity State -->
+      <StackPanel x:Name="EntityStatePanel" x:Load="{x:Bind ViewModel.IsEntityState}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsEntityState.EntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="State" PlaceholderText="None" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.States, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.EntityStateStateId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="states:State">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <CheckBox Content="Add (uncheck to Remove)" IsChecked="{x:Bind ViewModel.AsEntityState.Add, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Entity Transfer -->
+      <StackPanel x:Name="EntityTransferPanel" x:Load="{x:Bind ViewModel.IsEntityTransfer}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsEntityTransfer.EntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="Map" PlaceholderText="None" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.GameMaps, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.EntityTransferMapId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="gamemaps:GameMap">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <engineTextBox:EngineTextBox Header="X" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsEntityTransfer.X, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Y" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsEntityTransfer.Y, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="Direction" HorizontalAlignment="Stretch"
+                  ItemsSource="{extensions:EnumValues EnumType=enums:Direction}"
+                  SelectedItem="{x:Bind ViewModel.AsEntityTransfer.Direction, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Exit Processing -->
+      <StackPanel x:Name="ExitProcessingPanel" x:Load="{x:Bind ViewModel.IsExitProcessing}" Spacing="10">
+        <TextBlock Text="Exits the current page's action processing." TextWrapping="Wrap" />
+      </StackPanel>
+
+      <!-- Game Over -->
+      <StackPanel x:Name="GameOverPanel" x:Load="{x:Bind ViewModel.IsGameOver}" Spacing="10">
+        <TextBlock Text="Triggers the Game Over sequence." TextWrapping="Wrap" />
+      </StackPanel>
+
+      <!-- Weather -->
+      <StackPanel x:Name="WeatherPanel" x:Load="{x:Bind ViewModel.IsWeather}" Spacing="10">
+        <TextBlock Text="Sets the current weather." TextWrapping="Wrap" />
+      </StackPanel>
+
+      <!-- Fade Media -->
+      <StackPanel x:Name="FadeMediaPanel" x:Load="{x:Bind ViewModel.IsFadeMedia}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Fade Time (ms)" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsFadeMedia.FadeTime, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Input Number -->
+      <StackPanel x:Name="InputNumberPanel" x:Load="{x:Bind ViewModel.IsInputNumber}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Variable To Store Inputted Number" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsInputNumber.Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Select Item -->
+      <StackPanel x:Name="SelectItemPanel" x:Load="{x:Bind ViewModel.IsSelectItem}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Variable To Store Selected Item" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsSelectItem.Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Menu Access -->
+      <StackPanel x:Name="MenuAccessPanel" x:Load="{x:Bind ViewModel.IsMenuAccess}" Spacing="10">
+        <CheckBox Content="Disable Menu Access" IsChecked="{x:Bind ViewModel.AsMenuAccess.Disable, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Open Menu -->
+      <StackPanel x:Name="MenuPanel" x:Load="{x:Bind ViewModel.IsMenu}" Spacing="10">
+        <CheckBox Content="Disable Exit" IsChecked="{x:Bind ViewModel.AsMenu.DisableExit, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Party -->
+      <StackPanel x:Name="PartyPanel" x:Load="{x:Bind ViewModel.IsParty}" Spacing="10">
+        <ComboBox Header="Actor" PlaceholderText="None" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.PartyActorId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <CheckBox Content="Add (uncheck to Remove)" IsChecked="{x:Bind ViewModel.AsParty.Add, Mode=TwoWay}" />
+        <CheckBox Content="Initialize" IsChecked="{x:Bind ViewModel.AsParty.Initialize, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Recover -->
+      <StackPanel x:Name="RecoverPanel" x:Load="{x:Bind ViewModel.IsRecover}" Spacing="10">
+        <ComboBox Header="Actor" PlaceholderText="None" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.RecoverActorId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <CheckBox Content="Clear States" IsChecked="{x:Bind ViewModel.AsRecover.ClearStates, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Initiate Battle -->
+      <StackPanel x:Name="InitiateBattlePanel" x:Load="{x:Bind ViewModel.IsInitiateBattle}" Spacing="10">
+        <ComboBox Header="Troop" PlaceholderText="None" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Troops, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.InitiateBattleTroopId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="troops:Troop">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <CheckBox Content="Can Run" IsChecked="{x:Bind ViewModel.AsInitiateBattle.CanRun, Mode=TwoWay}" />
+        <CheckBox Content="Can Lose" IsChecked="{x:Bind ViewModel.AsInitiateBattle.CanLose, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Save -->
+      <StackPanel x:Name="SavePanel" x:Load="{x:Bind ViewModel.IsSave}" Spacing="10">
+        <ComboBox Header="Animation" PlaceholderText="None" HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Animations, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.SaveAnimationId, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="animations:Animation">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <CheckBox Content="Recover Party" IsChecked="{x:Bind ViewModel.AsSave.RecoverParty, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Screen Fade -->
+      <StackPanel x:Name="ScreenFadePanel" x:Load="{x:Bind ViewModel.IsScreenFade}" Spacing="10">
+        <ComboBox Header="Fade" HorizontalAlignment="Stretch"
+                  ItemsSource="{extensions:EnumValues EnumType=enums:Fade}"
+                  SelectedItem="{x:Bind ViewModel.AsScreenFade.Fade, Mode=TwoWay}" />
+        <engineTextBox:EngineTextBox Header="Fade Time (ms)" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsScreenFade.FadeTime, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Play Media -->
+      <StackPanel x:Name="PlayMediaPanel" x:Load="{x:Bind ViewModel.IsPlayMedia}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Media Name" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsPlayMedia.MediaName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Path" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsPlayMedia.Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Volume" InputType="Double"
+                                     Text="{x:Bind ViewModel.AsPlayMedia.Volume, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Pitch" InputType="Double"
+                                     Text="{x:Bind ViewModel.AsPlayMedia.Pitch, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Scroll Map -->
+      <StackPanel x:Name="ScrollMapPanel" x:Load="{x:Bind ViewModel.IsScrollMap}" Spacing="10">
+        <CheckBox Content="Target Player" IsChecked="{x:Bind ViewModel.AsScrollMap.TargetPlayer, Mode=TwoWay}" />
+        <engineTextBox:EngineTextBox Header="Target Entity Id" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsScrollMap.TargetEntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Target X" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsScrollMap.TargetX, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Target Y" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsScrollMap.TargetY, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Shop -->
+      <StackPanel x:Name="ShopPanel" x:Load="{x:Bind ViewModel.IsShop}" Spacing="10">
+        <CheckBox Content="Can Exit" IsChecked="{x:Bind ViewModel.AsShop.CanExit, Mode=TwoWay}" />
+        <CheckBox Content="Can Sell" IsChecked="{x:Bind ViewModel.AsShop.CanSell, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Show Choices -->
+      <StackPanel x:Name="ShowChoicesPanel" x:Load="{x:Bind ViewModel.IsShowChoices}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Variable To Store Choice" PlaceholderText="None"
+                                     Text="{x:Bind ViewModel.AsShowChoices.Variable, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <Grid ColumnSpacing="5">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <TextBlock Text="Choices" VerticalAlignment="Center" />
+          <Button Grid.Column="1" Content="Add" Command="{x:Bind ViewModel.AddChoiceCommand}" />
+          <Button Grid.Column="2" Content="Remove" Command="{x:Bind ViewModel.RemoveChoiceCommand}" />
+        </Grid>
+        <ListView ItemsSource="{x:Bind ViewModel.AsShowChoices.Choices, Mode=OneWay}"
+                  SelectedItem="{x:Bind ViewModel.SelectedChoice, Mode=TwoWay}"
+                  SelectionMode="Single"
+                  Height="160"
+                  Background="{StaticResource MediumGreyBrush}">
+          <ListView.ItemTemplate>
+            <DataTemplate x:DataType="actions:Choice">
+              <TextBox Text="{x:Bind Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                       HorizontalAlignment="Stretch" />
+            </DataTemplate>
+          </ListView.ItemTemplate>
+        </ListView>
+      </StackPanel>
+
+      <!-- Control Flow -->
+      <StackPanel x:Name="FlowPanel" x:Load="{x:Bind ViewModel.IsFlow}" Spacing="10">
+        <ComboBox Header="Condition" HorizontalAlignment="Stretch"
+                  ItemsSource="{extensions:EnumValues EnumType=enums:FlowConditionType}"
+                  SelectedItem="{x:Bind ViewModel.AsFlow.ConditionType, Mode=TwoWay}" />
+
+        <StackPanel Spacing="10"
+                    Visibility="{x:Bind ViewModel.AsFlow.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Switch}">
+          <engineTextBox:EngineTextBox Header="Switch Name" PlaceholderText="None"
+                                       Text="{x:Bind ViewModel.AsFlow.SwitchName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+          <CheckBox Content="Switch On" IsChecked="{x:Bind ViewModel.AsFlow.SwitchValue, Mode=TwoWay}" />
+        </StackPanel>
+
+        <StackPanel Spacing="10"
+                    Visibility="{x:Bind ViewModel.AsFlow.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Variable}">
+          <engineTextBox:EngineTextBox Header="Variable Name" PlaceholderText="None"
+                                       Text="{x:Bind ViewModel.AsFlow.VariableName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+          <engineTextBox:EngineTextBox Header="Variable Value" PlaceholderText="None"
+                                       Text="{x:Bind ViewModel.AsFlow.VariableValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+
+        <StackPanel Spacing="10"
+                    Visibility="{x:Bind ViewModel.AsFlow.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SelfSwitch}">
+          <engineTextBox:EngineTextBox Header="Self Switch Entity Id" InputType="Integer" PlaceholderText="None"
+                                       Text="{x:Bind ViewModel.AsFlow.SelfSwitchEntity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+          <ComboBox Header="Self Switch Key" PlaceholderText="None" HorizontalAlignment="Stretch"
+                    ItemsSource="{extensions:EnumValues EnumType=enums:SelfSwitch}"
+                    SelectedItem="{x:Bind ViewModel.AsFlow.SelfSwitchKey, Mode=TwoWay}" />
+          <CheckBox Content="Self Switch On" IsChecked="{x:Bind ViewModel.AsFlow.SelfSwitchValue, Mode=TwoWay}" />
+        </StackPanel>
+
+        <StackPanel Spacing="10"
+                    Visibility="{x:Bind ViewModel.AsFlow.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Timer}">
+          <engineTextBox:EngineTextBox Header="Timer Name" PlaceholderText="None"
+                                       Text="{x:Bind ViewModel.AsFlow.TimerName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+          <engineTextBox:EngineTextBox Header="Timer Value" InputType="Integer" PlaceholderText="None"
+                                       Text="{x:Bind ViewModel.AsFlow.TimerValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+      </StackPanel>
+
+    </Grid>
+  </popup:PopupShell>
+</UserControl>

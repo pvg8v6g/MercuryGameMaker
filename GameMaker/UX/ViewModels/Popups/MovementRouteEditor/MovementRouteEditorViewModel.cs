@@ -6,6 +6,7 @@ using GameLibrary.Models.Movements;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Json;
 using GameMaker.Services.Navigation;
+using GameMaker.UX.Components.EngineListView;
 using GameMaker.UX.ViewModels.Popups.MovementEditor;
 using MercuryLibrary.WinUI3Components;
 using Microsoft.UI.Xaml.Controls;
@@ -65,6 +66,52 @@ public class MovementRouteEditorViewModel(
         get;
         private set => SetField(ref field, value);
     }
+
+    public IReadOnlyList<EngineListNewOption> MovementNewOptions =>
+    [
+        new()
+        {
+            Text = "Move",
+            Children =
+            [
+                new() { Text = "Move Once", Command = AddMovementCommand, CommandParameter = "Move" },
+                new() { Text = "Move Random", Command = AddMovementCommand, CommandParameter = "MoveRandom" },
+                new() { Text = "Move Toward", Command = AddMovementCommand, CommandParameter = "MoveToward" },
+                new() { Text = "Move Away", Command = AddMovementCommand, CommandParameter = "MoveAway" },
+                new() { Text = "1 Step Forward", Command = AddMovementCommand, CommandParameter = "StepForward" },
+                new() { Text = "1 Step Backward", Command = AddMovementCommand, CommandParameter = "StepAway" }
+            ]
+        },
+        new()
+        {
+            Text = "Turn",
+            Children =
+            [
+                new() { Text = "Turn", Command = AddMovementCommand, CommandParameter = "Turn" },
+                new() { Text = "Turn Random", Command = AddMovementCommand, CommandParameter = "TurnRandom" },
+                new() { Text = "Turn 180", Command = AddMovementCommand, CommandParameter = "Turn180" },
+                new() { Text = "Turn Toward", Command = AddMovementCommand, CommandParameter = "TurnToward" },
+                new() { Text = "Turn Away", Command = AddMovementCommand, CommandParameter = "TurnAway" }
+            ]
+        },
+        new()
+        {
+            Text = "Appearance",
+            Children =
+            [
+                new() { Text = "Set Speed", Command = AddMovementCommand, CommandParameter = "Speed" },
+                new() { Text = "Set Opacity", Command = AddMovementCommand, CommandParameter = "Opacity" },
+                new() { Text = "Set Blend Mode", Command = AddMovementCommand, CommandParameter = "Blend" },
+                new() { Text = "Set Character Image", Command = AddMovementCommand, CommandParameter = "CharacterImage" },
+                new() { Text = "Stepping Animation", Command = AddMovementCommand, CommandParameter = "Stepping" },
+                new() { Text = "Direction Fix", Command = AddMovementCommand, CommandParameter = "DirectionFix" },
+                new() { Text = "Through", Command = AddMovementCommand, CommandParameter = "Through" }
+            ]
+        },
+        new() { Text = "Wait", Command = AddMovementCommand, CommandParameter = "Wait" },
+        new() { Text = "Detonate", Command = AddMovementCommand, CommandParameter = "Detonate" },
+        new() { Text = "Activate Arte", Command = AddMovementCommand, CommandParameter = "ActivateArte" }
+    ];
 
     #endregion
 

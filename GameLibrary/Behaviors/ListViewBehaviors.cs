@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 
 namespace GameLibrary.Behaviors;
 
@@ -27,10 +28,12 @@ public static class ListViewBehaviors
         if ((bool) e.NewValue)
         {
             listView.RightTapped += ListView_RightTapped;
+            listView.ContextRequested += ListView_ContextRequested;
         }
         else
         {
             listView.RightTapped -= ListView_RightTapped;
+            listView.ContextRequested -= ListView_ContextRequested;
         }
     }
 
@@ -42,6 +45,33 @@ public static class ListViewBehaviors
         var dataContext = frameworkElement?.DataContext;
 
         if (dataContext == null) return;
+
+        // Rows that opt out of the context menu (e.g. Else/End markers) swallow the
+        // right-tap so the default context flyout is never shown for them. The framework
+        // opens ListView.ContextFlyout automatically on the ContextRequested event (which
+        // fires right after RightTapped), and setting e.Handled is not reliable enough to
+        // stop it. Instead we temporarily detach the ContextFlyout so there is nothing for
+        // the framework to open, then restore it on the next dispatcher tick.
+        if (dataContext is IContextMenuSuppressible { SuppressContextMenu: true })
+        {
+            e.Handled = true;
+
+            if (listView.ContextFlyout is { } flyoutToSuppress)
+            {
+                listView.ContextFlyout = null;
+                var queue = listView.DispatcherQueue;
+                if (queue != null)
+                {
+                    queue.TryEnqueue(() => listView.ContextFlyout ??= flyoutToSuppress);
+                }
+                else
+                {
+                    listView.ContextFlyout = flyoutToSuppress;
+                }
+            }
+
+            return;
+        }
 
         listView.SelectedItem = dataContext;
 
@@ -55,6 +85,38 @@ public static class ListViewBehaviors
         {
             UpdateMenuItems(flyout.Items, listView);
         }
+    }
+
+    private static void ListView_ContextRequested(UIElement sender, ContextRequestedEventArgs e)
+    {
+        // For non-pointer triggers (e.g. the keyboard menu key) RightTapped does not fire,
+        // so suppress here based on the resolved row data context.
+        var dataContext = ResolveRowDataContext(e.OriginalSource as DependencyObject);
+        if (dataContext is IContextMenuSuppressible { SuppressContextMenu: true })
+        {
+            e.Handled = true;
+        }
+    }
+
+    private static object? ResolveRowDataContext(DependencyObject? source)
+    {
+        var current = source;
+        while (current != null)
+        {
+            switch (current)
+            {
+                case ListViewItem item:
+                    return item.Content ?? item.DataContext;
+                case FrameworkElement { DataContext: IContextMenuSuppressible } fe:
+                    return fe.DataContext;
+                default:
+                    current = VisualTreeHelper.GetParent(current);
+                    break;
+            }
+        }
+
+        // Fall back to the originating element's own data context.
+        return (source as FrameworkElement)?.DataContext;
     }
 
     public static readonly DependencyProperty RequireSelectionForMenuFlyoutItemProperty = DependencyProperty.RegisterAttached(
@@ -109,6 +171,7 @@ public static class ListViewBehaviors
     private static void Flyout_Opening(object? sender, object e)
     {
         if (sender is not MenuFlyout flyout) return;
+
         if (!FlyoutToListViewMap.TryGetValue(flyout, out var listView))
         {
             listView = flyout.Target as ListView;

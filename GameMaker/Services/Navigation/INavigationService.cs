@@ -1,5 +1,9 @@
 ﻿using GameLibrary.Tasks;
+using GameMaker.UX.ViewModels.Popups.ActionEditor;
+using GameMaker.UX.ViewModels.Popups.BranchActionEditor;
 using GameMaker.UX.ViewModels.Popups.AnimationEffects;
+using GameMaker.UX.ViewModels.Popups.ConditionEditor;
+using GameMaker.UX.ViewModels.Popups.EnemyArteEditor;
 using GameMaker.UX.ViewModels.Popups.EntityEditor;
 using GameMaker.UX.ViewModels.Popups.FrameSpanning;
 using GameMaker.UX.ViewModels.Popups.MovementEditor;
@@ -29,4 +33,12 @@ public interface INavigationService
     Task ShowMovementRouteEditorPopup(MovementRouteEditorViewModel viewModel);
 
     Task<ContentDialogResult> ShowMovementEditorPopup(MovementEditorViewModel viewModel);
+
+    Task<ContentDialogResult> ShowConditionEditorPopup(ConditionEditorViewModel viewModel);
+
+    Task<ContentDialogResult> ShowActionEditorPopup(ActionEditorViewModel viewModel);
+
+    Task<ContentDialogResult> ShowBranchActionEditorPopup(BranchActionEditorViewModel viewModel);
+
+    Task<ContentDialogResult> ShowEnemyArteEditorPopup(EnemyArteEditorViewModel viewModel);
 }

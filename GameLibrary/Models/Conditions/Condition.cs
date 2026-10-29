@@ -9,6 +9,7 @@ namespace GameLibrary.Models.Conditions;
 [JsonDerivedType(typeof(VariableCondition), "variable_condition")]
 [JsonDerivedType(typeof(ItemCondition), "item_condition")]
 [JsonDerivedType(typeof(ActorCondition), "actor_condition")]
+[JsonDerivedType(typeof(LevelCondition), "level_condition")]
 public abstract partial class Condition : PropertyChangedUpdater
 {
     #region Properties

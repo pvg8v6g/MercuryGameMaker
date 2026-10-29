@@ -6,18 +6,26 @@
       xmlns:statesPage="using:GameMaker.UX.ViewModels.StatesPage"
       xmlns:engineListView="using:GameMaker.UX.Components.EngineListView"
       xmlns:enginePanel="using:GameMaker.UX.Components.EnginePanel"
+      xmlns:engineIcon="using:GameMaker.UX.Components.EngineIcon"
       xmlns:iconView="using:GameMaker.UX.Components.IconView"
+      xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+      xmlns:animations="using:GameLibrary.Models.Animations"
+      xmlns:behaviors="using:GameLibrary.Behaviors"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance statesPage:StatesPageViewModel}">
-  <Grid ColumnSpacing="10" Padding="5">
+  <Grid ColumnSpacing="10"
+        RowSpacing="10"
+        Padding="5">
     <Grid.RowDefinitions>
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="300" />
+      <ColumnDefinition Width="*" />
       <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
-    <engineListView:EngineListView ItemsSource="{x:Bind ViewModel.GameDataService.States}"
+    <engineListView:EngineListView Grid.Column="0"
+                                   ItemsSource="{x:Bind ViewModel.GameDataService.States}"
                                    SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}"
                                    NewCommand="{x:Bind ViewModel.NewEntityCommand}"
                                    NewCommandParameter="New State"
@@ -25,21 +33,143 @@
                                    PasteCommand="{x:Bind ViewModel.PasteEntityCommand}"
                                    DeleteCommand="{x:Bind ViewModel.DeleteEntityCommand}"
                                    CopiedModel="{x:Bind ViewModel.CopiedModel, Mode=OneWay}" />
-    <enginePanel:EnginePanel Grid.Column="1" Title="State Metadata"
+    <enginePanel:EnginePanel Grid.Column="1"
+                             Title="State Metadata"
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-      <StackPanel Orientation="Horizontal" Spacing="40">
-        <TextBox Header="Name"
-                 Text="{x:Bind ViewModel.SelectedEntity.Name,
-                 Mode=TwoWay,
-                 FallbackValue='',
-                 UpdateSourceTrigger=PropertyChanged}"
+      <Grid ColumnSpacing="40"
+            RowSpacing="15">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <TextBox Grid.Column="0"
+                 Grid.Row="0"
+                 Header="Name"
+                 Text="{x:Bind ViewModel.SelectedEntity.Name, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
                  VerticalAlignment="Bottom" />
 
-        <StackPanel VerticalAlignment="Bottom">
+        <StackPanel Grid.Column="1"
+                    Grid.Row="0"
+                    VerticalAlignment="Bottom">
           <TextBlock HorizontalAlignment="Center">Icon</TextBlock>
-          <iconView:IconView IconIndex="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay, FallbackValue=0}" HorizontalAlignment="Center" />
+          <iconView:IconView IconIndex="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay, FallbackValue=0}"
+                             HorizontalAlignment="Center" />
         </StackPanel>
-      </StackPanel>
+
+        <engineTextBox:EngineTextBox Grid.Column="0"
+                                     Grid.Row="1"
+                                     Header="Duration (Ticks)"
+                                     InputType="Integer"
+                                     Text="{x:Bind ViewModel.SelectedEntity.Ticks, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                     Tooltip="Duration in frames (60 = 1 second). Zero causes a permanent effect." />
+
+        <engineTextBox:EngineTextBox Grid.Column="0"
+                                     Grid.Row="2"
+                                     Header="HP Damage"
+                                     InputType="Integer"
+                                     Text="{x:Bind ViewModel.SelectedEntity.HpDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                     Tooltip="Flat HP damage applied each tick. Negative values heal." />
+
+        <engineTextBox:EngineTextBox Grid.Column="1"
+                                     Grid.Row="2"
+                                     Header="HP Percent"
+                                     InputType="Double"
+                                     Text="{x:Bind ViewModel.SelectedEntity.HpPercent, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                     Tooltip="Percentage of max HP damage applied each tick. Negative values heal." />
+
+        <engineTextBox:EngineTextBox Grid.Column="0"
+                                     Grid.Row="3"
+                                     Header="Mana Damage"
+                                     InputType="Integer"
+                                     Text="{x:Bind ViewModel.SelectedEntity.ManaDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                     Tooltip="Flat mana damage applied each tick. Negative values restore." />
+
+        <engineTextBox:EngineTextBox Grid.Column="1"
+                                     Grid.Row="3"
+                                     Header="Mana Percent"
+                                     InputType="Double"
+                                     Text="{x:Bind ViewModel.SelectedEntity.ManaPercent, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                     Tooltip="Percentage of max mana damage applied each tick. Negative values restore." />
+      </Grid>
     </enginePanel:EnginePanel>
+    <StackPanel Grid.Column="2"
+                Orientation="Horizontal"
+                Spacing="10">
+      <enginePanel:EnginePanel Title="Tick Animation"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <StackPanel Orientation="Horizontal"
+                    Spacing="5"
+                    VerticalAlignment="Top">
+          <ComboBox Header="Animation"
+                    PlaceholderText="None"
+                    ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
+                    SelectedValue="{x:Bind ViewModel.SelectedTickAnimation, Mode=TwoWay}"
+                    SelectedValuePath="Guid"
+                    MinWidth="180"
+                    MinHeight="48"
+                    ToolTipService.ToolTip="This animation plays every time this state affects the fighter."
+                    HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="animations:Animation">
+                <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
+                  <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
+                  <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
+                </StackPanel>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Content="Clear"
+                  Command="{x:Bind ViewModel.ClearTickAnimationCommand}"
+                  behaviors:PointerCursorBehavior.CursorType="Hand"
+                  ToolTipService.ToolTip="Remove the tick animation from this state."
+                  VerticalAlignment="Bottom" />
+        </StackPanel>
+      </enginePanel:EnginePanel>
+      <enginePanel:EnginePanel Title="Element Effect"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <ItemsControl ItemsSource="{x:Bind ViewModel.ElementEffects, Mode=OneWay}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Spacing="15" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="statesPage:ElementEffectViewModel">
+              <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="32" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <engineIcon:EngineIcon Grid.Column="0"
+                                       IconIndex="{x:Bind Icon}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+
+                <TextBlock Grid.Column="1"
+                           Text="{x:Bind Name}"
+                           VerticalAlignment="Center"
+                           TextWrapping="NoWrap"
+                           TextTrimming="CharacterEllipsis" />
+
+                <CheckBox Grid.Column="2"
+                          IsChecked="{x:Bind IsAffected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          behaviors:PointerCursorBehavior.CursorType="Hand"
+                          VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </enginePanel:EnginePanel>
+    </StackPanel>
   </Grid>
 </Page>

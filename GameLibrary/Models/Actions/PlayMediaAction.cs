@@ -26,5 +26,10 @@ public partial class PlayMediaAction : PageAction
         set => SetField(ref field, value);
     } = 1.0;
 
-    public override string ToString() => $"Play Media: {MediaName}";
+    public override string ToString()
+    {
+        var result = $"Play Media: {MediaName}";
+        result += $"\n    Volume: {Volume:P0}, Pitch: {Pitch:P0}";
+        return result;
+    }
 }

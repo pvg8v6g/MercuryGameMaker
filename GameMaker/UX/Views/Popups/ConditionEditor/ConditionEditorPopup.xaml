@@ -1,0 +1,152 @@
+﻿<UserControl x:Class="GameMaker.UX.Views.Popups.ConditionEditor.ConditionEditorPopup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:fighter="using:GameLibrary.Models.Fighter"
+             xmlns:items="using:GameLibrary.Models.Items"
+             xmlns:enums="using:GameLibrary.Enumerations"
+             xmlns:extensions="using:GameLibrary.MarkupExtensions"
+             xmlns:popup="using:GameMaker.UX.Components.Popup"
+             xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+             x:Name="Root"
+             mc:Ignorable="d">
+  <popup:PopupShell Title="Edit Condition"
+                    PrimaryButtonText="Done"
+                    SecondaryButtonText="Cancel">
+    <Grid Width="420"
+          MinHeight="160">
+
+      <!-- Self Switch -->
+      <StackPanel x:Name="SelfSwitchPanel" x:Load="{x:Bind ViewModel.IsSelfSwitch}" Spacing="10">
+        <ComboBox Header="Self Switch"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{extensions:EnumValues EnumType=enums:SelfSwitch}"
+                  SelectedItem="{x:Bind ViewModel.AsSelfSwitch.SelfSwitch, Mode=TwoWay}" />
+        <CheckBox Content="Is On"
+                  IsChecked="{x:Bind ViewModel.AsSelfSwitch.Value, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Switch -->
+      <StackPanel x:Name="SwitchPanel" x:Load="{x:Bind ViewModel.IsSwitch}" Spacing="10">
+        <TextBox Header="Switch Name"
+                 Text="{x:Bind ViewModel.AsSwitch.SwitchName, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}" />
+        <CheckBox Content="Is On"
+                  IsChecked="{x:Bind ViewModel.AsSwitch.Value, Mode=TwoWay}" />
+      </StackPanel>
+
+      <!-- Variable -->
+      <StackPanel x:Name="VariablePanel" x:Load="{x:Bind ViewModel.IsVariable}" Spacing="10">
+        <TextBox Header="Variable Name"
+                 Text="{x:Bind ViewModel.AsVariable.VariableName, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}" />
+        <TextBox Header="Equals Value"
+                 Text="{x:Bind ViewModel.AsVariable.Value, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
+
+      <!-- Item -->
+      <StackPanel x:Name="ItemPanel" x:Load="{x:Bind ViewModel.IsItem}" Spacing="10">
+        <Grid ColumnSpacing="5">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <ComboBox Header="Owns Item"
+                    PlaceholderText="None"
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{x:Bind ViewModel.Consumables, Mode=OneWay}"
+                    SelectedValue="{x:Bind ViewModel.AsItem.OwnItem, Mode=TwoWay, FallbackValue={x:Null}}"
+                    SelectedValuePath="Guid">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="items:Consumable">
+                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Grid.Column="1"
+                  Content="Clear"
+                  VerticalAlignment="Bottom"
+                  Command="{x:Bind ViewModel.ClearOwnItemCommand}" />
+        </Grid>
+        <Grid ColumnSpacing="5">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <ComboBox Header="Does Not Own Item"
+                    PlaceholderText="None"
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{x:Bind ViewModel.Consumables, Mode=OneWay}"
+                    SelectedValue="{x:Bind ViewModel.AsItem.DoNotOwnItem, Mode=TwoWay, FallbackValue={x:Null}}"
+                    SelectedValuePath="Guid">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="items:Consumable">
+                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Grid.Column="1"
+                  Content="Clear"
+                  VerticalAlignment="Bottom"
+                  Command="{x:Bind ViewModel.ClearDoNotOwnItemCommand}" />
+        </Grid>
+      </StackPanel>
+
+      <!-- Actor -->
+      <StackPanel x:Name="ActorPanel" x:Load="{x:Bind ViewModel.IsActor}" Spacing="10">
+        <Grid ColumnSpacing="5">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <ComboBox Header="Actor In Party"
+                    PlaceholderText="None"
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                    SelectedValue="{x:Bind ViewModel.AsActor.OwnActor, Mode=TwoWay, FallbackValue={x:Null}}"
+                    SelectedValuePath="Guid">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="fighter:Fighter">
+                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Grid.Column="1"
+                  Content="Clear"
+                  VerticalAlignment="Bottom"
+                  Command="{x:Bind ViewModel.ClearOwnActorCommand}" />
+        </Grid>
+        <Grid ColumnSpacing="5">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <ComboBox Header="Actor Not In Party"
+                    PlaceholderText="None"
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                    SelectedValue="{x:Bind ViewModel.AsActor.DoNotOwnActor, Mode=TwoWay, FallbackValue={x:Null}}"
+                    SelectedValuePath="Guid">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="fighter:Fighter">
+                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Grid.Column="1"
+                  Content="Clear"
+                  VerticalAlignment="Bottom"
+                  Command="{x:Bind ViewModel.ClearDoNotOwnActorCommand}" />
+        </Grid>
+      </StackPanel>
+
+      <!-- Level -->
+      <StackPanel x:Name="LevelPanel" x:Load="{x:Bind ViewModel.IsLevel}" Spacing="10">
+        <engineTextBox:EngineTextBox Header="Minimum Level"
+                                     InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsLevel.Level, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}"
+                                     Tooltip="The level the fighter must reach before this condition is met." />
+      </StackPanel>
+
+    </Grid>
+  </popup:PopupShell>
+</UserControl>

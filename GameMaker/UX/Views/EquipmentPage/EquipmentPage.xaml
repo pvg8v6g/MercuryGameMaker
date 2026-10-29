@@ -9,6 +9,7 @@
       xmlns:engineIcon="using:GameMaker.UX.Components.EngineIcon"
       xmlns:iconView="using:GameMaker.UX.Components.IconView"
       xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+      xmlns:artes="using:GameLibrary.Models.Artes"
       xmlns:enums="using:GameLibrary.Enumerations"
       xmlns:extensions="using:GameLibrary.MarkupExtensions"
       xmlns:behaviors="using:GameLibrary.Behaviors"
@@ -92,9 +93,10 @@
                              Grid.Row="1"
                              Title="Equipment Metadata"
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-      <Grid RowSpacing="40">
+      <Grid RowSpacing="20">
         <Grid.RowDefinitions>
-          <RowDefinition Height="*" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -109,8 +111,38 @@
                   VerticalAlignment="Bottom"
                   HorizontalAlignment="Stretch" />
 
+        <StackPanel Grid.Column="0"
+                    Grid.Row="1"
+                    Orientation="Horizontal"
+                    Spacing="5"
+                    VerticalAlignment="Bottom">
+          <ComboBox Header="Arte"
+                    PlaceholderText="None"
+                    ItemsSource="{x:Bind ViewModel.GameDataService.Artes, Mode=OneWay}"
+                    SelectedValue="{x:Bind ViewModel.SelectedEntity.Arte, Mode=TwoWay, FallbackValue={x:Null}}"
+                    SelectedValuePath="Guid"
+                    MinWidth="180"
+                    MinHeight="48"
+                    ToolTipService.ToolTip="The arte this equipment grants while equipped."
+                    HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="artes:Arte">
+                <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
+                  <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
+                  <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
+                </StackPanel>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Content="Clear"
+                  Command="{x:Bind ViewModel.ClearArteCommand}"
+                  behaviors:PointerCursorBehavior.CursorType="Hand"
+                  ToolTipService.ToolTip="Remove the arte from this equipment."
+                  VerticalAlignment="Bottom" />
+        </StackPanel>
+
         <CheckBox Grid.Column="0"
-                  Grid.Row="1"
+                  Grid.Row="2"
                   IsChecked="{x:Bind ViewModel.SelectedEntity.ResistAllStates, Mode=TwoWay, FallbackValue='False', UpdateSourceTrigger=PropertyChanged}"
                   behaviors:PointerCursorBehavior.CursorType="Hand"
                   ToolTipService.ToolTip="Does wearing this prevent all good and bad states from being applied?"

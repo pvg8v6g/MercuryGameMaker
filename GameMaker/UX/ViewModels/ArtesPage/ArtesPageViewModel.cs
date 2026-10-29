@@ -71,7 +71,7 @@ public class ArtesPageViewModel(IGameDataService gameDataService, IJsonService j
 
     #region Projectile relays
 
-    public RelayCommand<string?> NewProjectileCommand => new(NewProjectile);
+    public AsyncRelayCommand<string?> NewProjectileCommand => new(NewProjectile);
 
     public RelayCommand CopyProjectileCommand => new(CopyProjectile);
 
@@ -93,7 +93,7 @@ public class ArtesPageViewModel(IGameDataService gameDataService, IJsonService j
         return Task.CompletedTask;
     }
 
-    private void NewProjectile(string? name = null)
+    private async Task NewProjectile(string? name = null)
     {
         if (SelectedEntity is null) return;
 
@@ -106,6 +106,8 @@ public class ArtesPageViewModel(IGameDataService gameDataService, IJsonService j
 
         var index = projectiles.AddSorted(newObject, x => x.Id);
         SelectedProjectileIndex = index;
+
+        await EditProjectile();
     }
 
     private void CopyProjectile()

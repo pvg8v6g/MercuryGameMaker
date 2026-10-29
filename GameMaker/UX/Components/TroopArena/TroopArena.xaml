@@ -1,0 +1,99 @@
+<UserControl x:Class="GameMaker.UX.Components.TroopArena.TroopArena"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:behaviors="using:GameLibrary.Behaviors"
+             xmlns:gridArea="using:GameMaker.UX.Components.GridArea"
+             xmlns:spriteImage="using:GameMaker.UX.Components.SpriteImage"
+             xmlns:troopsPage="using:GameMaker.UX.Models.TroopsPage"
+             mc:Ignorable="d">
+  <Grid x:Name="RootGrid"
+        Background="{StaticResource MediumGreyBrush}"
+        Width="{x:Bind ArenaSize, Mode=OneWay}"
+        Height="{x:Bind ArenaSize, Mode=OneWay}"
+        HorizontalAlignment="Left"
+        VerticalAlignment="Top"
+        behaviors:PointerCursorBehavior.CursorType="Hand"
+        PointerPressed="OnRootGridPointerPressed"
+        PointerMoved="OnRootGridPointerMoved"
+        PointerExited="OnRootGridPointerExited">
+
+    <!-- Background -->
+    <Image Source="{x:Bind BackgroundSource, Mode=OneWay}"
+           Stretch="None"
+           HorizontalAlignment="Left"
+           VerticalAlignment="Top"
+           IsHitTestVisible="False" />
+
+    <!-- Grid Overlay -->
+    <ItemsControl ItemsSource="{x:Bind GridLines}"
+                  IsHitTestVisible="False"
+                  Visibility="{x:Bind ShowGrid, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+      <ItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <Canvas />
+        </ItemsPanelTemplate>
+      </ItemsControl.ItemsPanel>
+      <ItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="gridArea:GridLine">
+          <Line X1="{x:Bind X1}"
+                Y1="{x:Bind Y1}"
+                X2="{x:Bind X2}"
+                Y2="{x:Bind Y2}"
+                Stroke="{StaticResource DarkGreyBrush}"
+                StrokeThickness="0.5" />
+        </DataTemplate>
+      </ItemsControl.ItemTemplate>
+    </ItemsControl>
+
+    <!-- Enemies (placed by their 0,0) -->
+    <gridArea:CanvasItemsControl ItemsSource="{x:Bind Enemies, Mode=OneWay}"
+                                 LeftPropertyName="X"
+                                 TopPropertyName="Y">
+      <gridArea:CanvasItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <Canvas />
+        </ItemsPanelTemplate>
+      </gridArea:CanvasItemsControl.ItemsPanel>
+      <gridArea:CanvasItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="troopsPage:TroopEnemyModel">
+          <Grid Visibility="{x:Bind IsPlaced, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                MinWidth="24"
+                MinHeight="24"
+                ToolTipService.ToolTip="{x:Bind Name}"
+                PointerPressed="OnEnemyPointerPressed">
+            <spriteImage:SpriteImage CharacterImage="{x:Bind Sprite, Mode=OneWay}" />
+            <TextBlock Text="{x:Bind Name}"
+                       FontSize="10"
+                       Margin="2"
+                       Visibility="{x:Bind Sprite, Mode=OneWay, Converter={StaticResource NullToVisibleConverter}}" />
+            <Rectangle Stroke="{StaticResource MediumPinkBrush}"
+                       StrokeThickness="2"
+                       IsHitTestVisible="False"
+                       Visibility="{x:Bind IsSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            <Ellipse Width="6"
+                     Height="6"
+                     Margin="-3,-3,0,0"
+                     Fill="{StaticResource LightBlueBrush}"
+                     HorizontalAlignment="Left"
+                     VerticalAlignment="Top"
+                     IsHitTestVisible="False" />
+          </Grid>
+        </DataTemplate>
+      </gridArea:CanvasItemsControl.ItemTemplate>
+    </gridArea:CanvasItemsControl>
+
+    <!-- Hover Block -->
+    <Canvas IsHitTestVisible="False">
+      <Rectangle x:Name="HoverBlock"
+                 Fill="{StaticResource LightGreyBrush}"
+                 Opacity="0.3"
+                 Stroke="{StaticResource LightYellowBrush}"
+                 StrokeDashArray="2,2"
+                 Width="{x:Bind BlockSize, Mode=OneWay}"
+                 Height="{x:Bind BlockSize, Mode=OneWay}"
+                 Visibility="Collapsed" />
+    </Canvas>
+  </Grid>
+</UserControl>

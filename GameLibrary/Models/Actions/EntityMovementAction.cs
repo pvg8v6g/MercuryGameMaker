@@ -31,5 +31,12 @@ public partial class EntityMovementAction : PageAction
 
     public ObservableCollection<Movement> Route { get; init; } = [];
 
-    public override string ToString() => "Set Movement Route";
+    public override string ToString()
+    {
+        var result = $"Set Movement Route ({Route.Count} step{(Route.Count == 1 ? "" : "s")})";
+        if (Repeat) result += "\n    Repeat";
+        if (WaitForCompletion) result += "\n    Wait for completion";
+        if (SkipIfInterrupted) result += "\n    Skip if cannot move";
+        return result;
+    }
 }
