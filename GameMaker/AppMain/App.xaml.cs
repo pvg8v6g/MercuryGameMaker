@@ -17,6 +17,7 @@ using GameMaker.UX.ViewModels.EquipmentPage;
 using GameMaker.UX.ViewModels.GrowthsPage;
 using GameMaker.UX.ViewModels.HomeView;
 using GameMaker.UX.ViewModels.ItemsPage;
+using GameMaker.UX.ViewModels.MainPage;
 using GameMaker.UX.ViewModels.MediaPlayerPage;
 using GameMaker.UX.ViewModels.StatesPage;
 using GameMaker.UX.ViewModels.TopBar;
@@ -32,6 +33,7 @@ using GameMaker.UX.Views.EquipmentPage;
 using GameMaker.UX.Views.GrowthsPage;
 using GameMaker.UX.Views.HomeView;
 using GameMaker.UX.Views.ItemsPage;
+using GameMaker.UX.Views.MainPage;
 using GameMaker.UX.Views.MainWindow;
 using GameMaker.UX.Views.MediaPlayerPage;
 using GameMaker.UX.Views.StatesPage;
@@ -60,6 +62,7 @@ public partial class App
 
         services.AddSingleton<TopBarViewModel>();
         services.AddSingleton<HomeViewViewModel>();
+        services.AddSingleton<MainPageViewModel>();
         services.AddSingleton<ActorsPageViewModel>();
         services.AddSingleton<AttributesPageViewModel>();
         services.AddSingleton<ElementsPageViewModel>();
@@ -81,6 +84,7 @@ public partial class App
         services.AddSingleton<MainWindow>();
         services.AddSingleton<HomeView>();
         services.AddSingleton<TopBar>();
+        services.AddSingleton<MainPage>();
         services.AddSingleton<ActorsPage>();
         services.AddSingleton<AttributesPage>();
         services.AddSingleton<ElementsPage>();

@@ -133,7 +133,7 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
             })
             .ToArray();
 
-        EngineImages = new ObservableCollection<EngineRadioIconModel>(await Task.WhenAll(tasks));
+        EngineImages = [.. await Task.WhenAll(tasks)];
     }
 
     public RelayCommand<string> TopBarCommand => new(TopBarAction);
@@ -142,7 +142,8 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
     {
         switch (index)
         {
-            case "0":
+            case "0": // main
+                navigationService.NavigateTo<Views.MainPage.MainPage>();
                 break;
             case "1":
                 navigationService.NavigateTo<Views.ActorsPage.ActorsPage>();

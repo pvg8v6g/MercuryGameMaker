@@ -10,9 +10,11 @@ public class EquipmentSlotModel : PropertyChangedUpdater
     {
         SlotName = slotName;
         Slot = slot;
-        Options = filteredEquipment
-            .Select(e => new EquipmentOption(e)).Prepend(new EquipmentOption(null))
-            .ToArray();
+        Options =
+        [
+            .. filteredEquipment
+                .Select(e => new EquipmentOption(e)).Prepend(new EquipmentOption(null))
+        ];
 
         Slot.PropertyChanged += (_, e) =>
         {

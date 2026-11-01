@@ -72,7 +72,7 @@ public class MediaService(ILocationService locationService) : IMediaService
         };
 
         if (!Directory.Exists(path)) return [];
-        return Directory.GetFiles(path).Select(Path.GetFileName).Where(x => x is not null).ToArray()!;
+        return [.. Directory.GetFiles(path).Select(Path.GetFileName).Where(x => x is not null)]!;
     }
 
     #endregion

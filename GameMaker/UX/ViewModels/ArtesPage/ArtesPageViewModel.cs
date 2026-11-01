@@ -100,7 +100,7 @@ public class ArtesPageViewModel(IGameDataService gameDataService, IJsonService j
         var projectiles = SelectedEntity.Projectiles;
         var newObject = new Entity
         {
-            Id = Calculations.GetNextId(projectiles.Select(x => x.Id).ToArray()),
+            Id = Calculations.GetNextId([.. projectiles.Select(x => x.Id)]),
             Name = name ?? "New Projectile"
         };
 
@@ -125,7 +125,7 @@ public class ArtesPageViewModel(IGameDataService gameDataService, IJsonService j
         if (clone is null) return;
 
         clone.Guid = Guid.NewGuid();
-        clone.Id = Calculations.GetNextId(SelectedEntity.Projectiles.Select(x => x.Id).ToArray());
+        clone.Id = Calculations.GetNextId([.. SelectedEntity.Projectiles.Select(x => x.Id)]);
 
         var index = SelectedEntity.Projectiles.AddSorted(clone, x => x.Id);
         SelectedProjectileIndex = index;

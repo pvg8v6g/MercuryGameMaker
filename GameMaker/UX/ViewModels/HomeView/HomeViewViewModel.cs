@@ -24,6 +24,7 @@ public partial class HomeViewViewModel(ILocationService locationService, INaviga
         locationService.SetGameMakerGraphicsDirectory(gameMakerGraphicsPath);
         await navigationService.ShowProgressPopup<LoadDataTask>("Loading Game Data");
         NavigationService.SetTopBar<Views.TopBar.TopBar>();
+        NavigationService.NavigateTo<Views.MainPage.MainPage>(); // "Main" is the checked top bar button on start
     }
 
     #endregion

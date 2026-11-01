@@ -229,9 +229,11 @@ public partial class TroopsPageViewModel(
             : [None];
 
         // rebuilt every visit so enemies added on the enemies page show up
-        EnemyNewOptions = Enemies
-            .Select(x => new EngineListNewOption { Text = x.Name, Command = AddEnemyCommand, CommandParameter = x })
-            .ToArray();
+        EnemyNewOptions =
+        [
+            .. Enemies
+                .Select(x => new EngineListNewOption { Text = x.Name, Command = AddEnemyCommand, CommandParameter = x })
+        ];
 
         RefreshMusic();
         return Task.CompletedTask;

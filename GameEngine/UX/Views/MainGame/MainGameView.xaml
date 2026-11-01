@@ -1,0 +1,26 @@
+<Page x:Class="GameEngine.UX.Views.MainGame.MainGameView"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:mainGame="using:GameEngine.UX.ViewModels.MainGame"
+      xmlns:behaviors="using:GameLibrary.Behaviors"
+      xmlns:mercury="using:MercuryLibrary.CanvasComponents"
+      mc:Ignorable="d"
+      d:DataContext="{d:DesignInstance mainGame:MainGameViewModel}"
+      Background="Black"
+      behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
+
+  <!-- the game: screen height tall, six tiles narrower than the screen, centered -->
+  <mercury:GameCanvasView Width="{x:Bind ViewModel.GameWidth, Mode=OneWay}"
+                          Height="{x:Bind ViewModel.GameHeight, Mode=OneWay}"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Top"
+                          IsTabStop="True"
+                          UpdateRate="{x:Bind ViewModel.FrameRate}"
+                          UpdateCallback="{x:Bind ViewModel.UpdateCallback}"
+                          Sprites="{x:Bind ViewModel.Nodes}"
+                          behaviors:KeyCommandBehavior.FocusOnLoaded="True"
+                          behaviors:KeyCommandBehavior.KeyDownCommand="{x:Bind ViewModel.KeyDownCommand}"
+                          behaviors:KeyCommandBehavior.KeyUpCommand="{x:Bind ViewModel.KeyUpCommand}" />
+</Page>

@@ -1,0 +1,9 @@
+﻿{
+  "profiles": {
+    "GameEngine (Unpackaged)": {
+      "commandName": "Project",
+      "commandLineArgs": "--winui-unpackaged",
+      "nativeDebugging": false
+    }
+  }
+}

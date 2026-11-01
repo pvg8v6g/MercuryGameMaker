@@ -1,5 +1,6 @@
 ﻿using System.Windows.Input;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 
 namespace GameLibrary.Behaviors;
@@ -21,6 +22,17 @@ public class PointerCommandBehavior
 
     public static readonly DependencyProperty PointerReleasedCommandProperty = DependencyProperty.RegisterAttached(
         "PointerReleasedCommand", typeof(ICommand), typeof(PointerCommandBehavior), new PropertyMetadata(null, OnPointerReleasedCommandChanged));
+
+    // gives a tab stop control keyboard focus on press so its scoped keyboard accelerators work
+    public static readonly DependencyProperty FocusOnPressedProperty = DependencyProperty.RegisterAttached(
+        "FocusOnPressed", typeof(bool), typeof(PointerCommandBehavior), new PropertyMetadata(false));
+
+    public static readonly DependencyProperty PointerWheelChangedCommandProperty = DependencyProperty.RegisterAttached(
+        "PointerWheelChangedCommand", typeof(ICommand), typeof(PointerCommandBehavior), new PropertyMetadata(null, OnPointerWheelChangedCommandChanged));
+
+    // executed with the Point (relative to the element) that was double tapped
+    public static readonly DependencyProperty DoubleTappedCommandProperty = DependencyProperty.RegisterAttached(
+        "DoubleTappedCommand", typeof(ICommand), typeof(PointerCommandBehavior), new PropertyMetadata(null, OnDoubleTappedCommandChanged));
 
     public static void SetCapturePointerOnPressed(DependencyObject element, bool value)
     {
@@ -72,6 +84,36 @@ public class PointerCommandBehavior
         return (ICommand?) element.GetValue(PointerReleasedCommandProperty);
     }
 
+    public static void SetFocusOnPressed(DependencyObject element, bool value)
+    {
+        element.SetValue(FocusOnPressedProperty, value);
+    }
+
+    public static bool GetFocusOnPressed(DependencyObject element)
+    {
+        return (bool) element.GetValue(FocusOnPressedProperty);
+    }
+
+    public static void SetPointerWheelChangedCommand(DependencyObject element, ICommand? value)
+    {
+        element.SetValue(PointerWheelChangedCommandProperty, value);
+    }
+
+    public static ICommand? GetPointerWheelChangedCommand(DependencyObject element)
+    {
+        return (ICommand?) element.GetValue(PointerWheelChangedCommandProperty);
+    }
+
+    public static void SetDoubleTappedCommand(DependencyObject element, ICommand? value)
+    {
+        element.SetValue(DoubleTappedCommandProperty, value);
+    }
+
+    public static ICommand? GetDoubleTappedCommand(DependencyObject element)
+    {
+        return (ICommand?) element.GetValue(DoubleTappedCommandProperty);
+    }
+
     private static void OnInvokeReleasedOnPointerCaptureLostChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not UIElement element) return;
@@ -116,11 +158,38 @@ public class PointerCommandBehavior
         }
     }
 
+    private static void OnPointerWheelChangedCommandChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not UIElement element) return;
+
+        element.PointerWheelChanged -= OnPointerWheelChanged;
+        if (e.NewValue is not null)
+        {
+            element.PointerWheelChanged += OnPointerWheelChanged;
+        }
+    }
+
+    private static void OnDoubleTappedCommandChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        if (d is not UIElement element) return;
+
+        element.DoubleTapped -= OnDoubleTapped;
+        if (e.NewValue is not null)
+        {
+            element.DoubleTapped += OnDoubleTapped;
+        }
+    }
+
     private static void OnPointerPressed(object sender, PointerRoutedEventArgs e)
     {
         if (sender is UIElement element && GetCapturePointerOnPressed(element))
         {
             element.CapturePointer(e.Pointer);
+        }
+
+        if (sender is Control control && GetFocusOnPressed(control))
+        {
+            control.Focus(FocusState.Pointer);
         }
 
         Execute(sender, e, GetPointerPressedCommand);
@@ -136,6 +205,24 @@ public class PointerCommandBehavior
         }
 
         Execute(sender, e, GetPointerReleasedCommand);
+    }
+
+    private static void OnPointerWheelChanged(object sender, PointerRoutedEventArgs e)
+    {
+        Execute(sender, e, GetPointerWheelChangedCommand);
+        e.Handled = true;
+    }
+
+    private static void OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
+    {
+        if (sender is not UIElement element) return;
+
+        var command = GetDoubleTappedCommand(element);
+        var position = e.GetPosition(element);
+        if (command is null || !command.CanExecute(position)) return;
+
+        command.Execute(position);
+        e.Handled = true;
     }
 
     private static void OnPointerCaptureLost(object sender, PointerRoutedEventArgs e)

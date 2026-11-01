@@ -39,7 +39,8 @@ public class ActionEditorViewModel(PageAction action, IGameDataService gameDataS
 
     public ObservableCollection<Troop> Troops => gameDataService.Troops;
 
-    public ObservableCollection<GameMap> GameMaps => gameDataService.GameMaps;
+    // folders only organize the map tree, entities can only be transferred to real maps
+    public GameMap[] GameMaps => [.. gameDataService.GameMaps.Where(x => !x.FolderOnly).OrderBy(x => x.Id)];
 
     #endregion
 

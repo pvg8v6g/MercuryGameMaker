@@ -25,7 +25,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
     private Dictionary<Guid, Growth> _growthLookup = new();
     private Dictionary<Guid, int[]> _growthValueArrays = new();
 
-    public ObservableCollection<AttributeGrowthSetting> AttributeSettings { get; } = new();
+    public ObservableCollection<AttributeGrowthSetting> AttributeSettings { get; } = [];
 
     #endregion
 
@@ -161,7 +161,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
 
         if (!_growthValueArrays.TryGetValue(targetGuid, out var values))
         {
-            values = growth.GrowthValues.OrderBy(x => x.Key).Select(x => x.Value).ToArray();
+            values = [.. growth.GrowthValues.OrderBy(x => x.Key).Select(x => x.Value)];
             _growthValueArrays[targetGuid] = values;
         }
 

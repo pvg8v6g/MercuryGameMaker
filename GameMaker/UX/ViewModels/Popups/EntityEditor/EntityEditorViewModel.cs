@@ -290,7 +290,7 @@ public class EntityEditorViewModel : BaseViewModel<Page>
         newEntityName ??= "New Page";
         var newObject = new Page
         {
-            Id = Calculations.GetNextId(EntityCollection.Select(x => x.Id).ToArray()),
+            Id = Calculations.GetNextId([.. EntityCollection.Select(x => x.Id)]),
             Name = newEntityName,
             EntityId = Entity.Guid
         };

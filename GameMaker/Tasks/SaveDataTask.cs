@@ -31,6 +31,7 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
         MaxWork += gameDataService.Troops.Count;
         MaxWork += gameDataService.States.Count;
         MaxWork += gameDataService.Animations.Count;
+        MaxWork += gameDataService.GameMaps.Count;
     }
 
     private void SaveData()
@@ -47,6 +48,7 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
         DataWork(Path.Combine(locationService.GameDirectory!, "Troops"), gameDataService.Troops); // troops
         DataWork(Path.Combine(locationService.GameDirectory!, "States"), gameDataService.States); // states
         DataWork(Path.Combine(locationService.GameDirectory!, "Animations"), gameDataService.Animations); // animations
+        DataWork(Path.Combine(locationService.GameDirectory!, "Maps"), gameDataService.GameMaps); // maps
     }
 
     private void DataWork<T>(string directory, ObservableCollection<T> collection) where T : BaseModel

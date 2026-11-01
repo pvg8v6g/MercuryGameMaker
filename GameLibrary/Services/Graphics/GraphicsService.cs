@@ -97,7 +97,7 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
     {
         var path = GetAnimationImagesPath();
         var files = Directory.GetFiles(path, "*.png");
-        return files.Select(x => new FileSelection(Path.GetFileName(x), x)).ToArray();
+        return [.. files.Select(x => new FileSelection(Path.GetFileName(x), x))];
     }
 
     public async Task<CroppedImage> GetAnimationImage(string fileName, int frame)

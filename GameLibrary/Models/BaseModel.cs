@@ -1,4 +1,5 @@
-﻿using MercuryLibrary.WinUI3Components;
+﻿using System.Text.Json.Serialization;
+using MercuryLibrary.WinUI3Components;
 
 namespace GameLibrary.Models;
 
@@ -11,6 +12,13 @@ public partial class BaseModel : PropertyChangedUpdater
         get;
         set => SetField(ref field, value);
     } = Guid.NewGuid();
+
+    // reads the "uuid" saved by the java editor, never written
+    [JsonInclude]
+    private Guid Uuid
+    {
+        set => Guid = value;
+    }
 
     public int Id
     {

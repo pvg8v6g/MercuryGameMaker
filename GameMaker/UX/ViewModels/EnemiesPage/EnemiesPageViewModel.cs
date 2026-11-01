@@ -42,11 +42,13 @@ public partial class EnemiesPageViewModel(
 
     public ObservableCollection<ActorElementModel> ElementResistanceStats { get; } = [];
 
-    public Item[] AllItems => GameDataService.Consumables
-        .Cast<Item>()
-        .Concat(GameDataService.Equipment)
-        .OrderBy(x => x.Name)
-        .ToArray();
+    public Item[] AllItems =>
+    [
+        .. GameDataService.Consumables
+            .Cast<Item>()
+            .Concat(GameDataService.Equipment)
+            .OrderBy(x => x.Name)
+    ];
 
     protected override ObservableCollection<Fighter> EntityCollection => gameDataService.Enemies;
 

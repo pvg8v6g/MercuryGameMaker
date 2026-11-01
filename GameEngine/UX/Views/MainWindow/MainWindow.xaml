@@ -1,0 +1,12 @@
+﻿<Window x:Class="GameEngine.UX.Views.MainWindow.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:mainGame="using:GameEngine.UX.Views.MainGame"
+        mc:Ignorable="d"
+        Title="Mercury Game Engine">
+  <Grid Background="Black">
+    <mainGame:MainGameView />
+  </Grid>
+</Window>

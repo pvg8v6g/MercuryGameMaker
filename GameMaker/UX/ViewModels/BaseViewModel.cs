@@ -75,7 +75,7 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
         newEntityName ??= $"New {typeof(T).Name}";
         var newObject = new T
         {
-            Id = Calculations.GetNextId(EntityCollection.Select(x => x.Id).ToArray()),
+            Id = Calculations.GetNextId([.. EntityCollection.Select(x => x.Id)]),
             Name = newEntityName
         };
 
@@ -94,7 +94,7 @@ public abstract class BaseViewModel<T>(IJsonService jsonService) : PropertyChang
         if (clone is null) return;
 
         clone.Guid = Guid.NewGuid();
-        clone.Id = Calculations.GetNextId(EntityCollection.Select(x => x.Id).ToArray());
+        clone.Id = Calculations.GetNextId([.. EntityCollection.Select(x => x.Id)]);
 
         var index = EntityCollection.AddSorted(clone, x => x.Id);
         SelectedIndex = index;

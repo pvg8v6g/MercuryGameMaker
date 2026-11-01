@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using GameLibrary.Models;
 
 namespace GameLibrary.Services.Json;
@@ -7,7 +8,10 @@ public class JsonService : IJsonService
 {
     private static readonly JsonSerializerOptions Options = new()
     {
-        PropertyNameCaseInsensitive = true
+        PropertyNameCaseInsensitive = true,
+
+        // enums are written by name and still read when saved as numbers (older files) or by name (java editor files)
+        Converters = { new JsonStringEnumConverter() }
     };
 
     #region Encrypt
