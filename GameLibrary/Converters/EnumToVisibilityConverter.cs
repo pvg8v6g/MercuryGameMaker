@@ -9,7 +9,7 @@ public sealed class EnumToVisibilityConverter : IValueConverter
 
     public object Convert(object? value, Type targetType, object parameter, string language)
     {
-        var match = value?.ToString() == parameter?.ToString();
+        var match = value?.ToString() == parameter.ToString();
         if (Invert) match = !match;
         return match ? Visibility.Visible : Visibility.Collapsed;
     }

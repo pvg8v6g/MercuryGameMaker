@@ -190,22 +190,33 @@ public partial class AreaCreatorView
     {
         if (CharacterImage?.Rect is not null)
         {
-            var w = (State.InternalGridSize / 2.0) - (CharacterImage.Rect.Value.Width / 2.0);
-            var h = (State.InternalGridSize / 2.0) - (CharacterImage.Rect.Value.Height / 2.0);
-            var rw = Calculations.RoundToMultiple(w, State.BoxSize, Rounding.Down);
-            var rh = Calculations.RoundToMultiple(h, State.BoxSize, Rounding.Down);
-            State.AnchorPosition = new Position { X = rw, Y = rh };
+            // center in whole blocks so an even sprite on an even grid gets equal space on both sides
+            var x = CenteredBlockOffset(CharacterImage.Rect.Value.Width);
+            var y = CenteredBlockOffset(CharacterImage.Rect.Value.Height);
+            State.AnchorPosition = new Position { X = x, Y = y };
             return;
         }
 
         if (ShowAnchor)
         {
+            Console.WriteLine(1);
             var center = Calculations.RoundToMultiple(State.InternalGridSize / 2.0, State.BoxSize, Rounding.Down);
             State.AnchorPosition = new Position { X = center, Y = center };
             return;
         }
 
         State.AnchorPosition = null;
+    }
+
+    // pixel offset that leaves the same number of blank blocks on each side (odd leftovers go to the far side)
+    private int CenteredBlockOffset(double spriteSize)
+    {
+        if (State.BoxSize <= 0) return 0;
+
+        // the half pixel tolerance keeps frames like 48.08px from counting as an extra block
+        var spriteBlocks = Math.Max(1, (int) Math.Ceiling((spriteSize - 0.5) / State.BoxSize));
+        var blankBlocks = State.GridSize - spriteBlocks;
+        return (int) Math.Floor(blankBlocks / 2.0) * State.BoxSize;
     }
 
     private void RebuildGridLines()
