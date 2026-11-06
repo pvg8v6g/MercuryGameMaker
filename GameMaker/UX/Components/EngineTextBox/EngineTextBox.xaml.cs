@@ -1,5 +1,8 @@
 ﻿using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Data;
+using Microsoft.UI.Xaml.Input;
+using Windows.System;
 using GameLibrary.Enumerations;
 using System.Text.RegularExpressions;
 
@@ -81,6 +84,16 @@ public sealed partial class EngineTextBox
         set => SetValue(TooltipProperty, value);
     }
 
+    // PropertyChanged sends every keystroke, LostFocus waits for enter or for the box to lose focus
+    public static readonly DependencyProperty UpdateTriggerProperty = DependencyProperty.Register(
+        nameof(UpdateTrigger), typeof(UpdateSourceTrigger), typeof(EngineTextBox), new PropertyMetadata(UpdateSourceTrigger.PropertyChanged));
+
+    public UpdateSourceTrigger UpdateTrigger
+    {
+        get => (UpdateSourceTrigger) GetValue(UpdateTriggerProperty);
+        set => SetValue(UpdateTriggerProperty, value);
+    }
+
     #endregion
 
     #region Fields
@@ -125,9 +138,44 @@ public sealed partial class EngineTextBox
         }
     }
 
+    private void OnTextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (UpdateTrigger != UpdateSourceTrigger.LostFocus) Commit((TextBox) sender, false);
+    }
+
+    private void OnLostFocus(object sender, RoutedEventArgs e)
+    {
+        Commit((TextBox) sender, true);
+    }
+
+    private void OnKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == VirtualKey.Enter && !AcceptsReturn) Commit((TextBox) sender, true);
+    }
+
     #endregion
 
     #region Private Methods
+
+    // number boxes are bound to number properties, and the binding throws on text that isn't a number ("" or "-"
+    // while retyping), so only whole numbers are sent. Finishing on one that isn't puts the last value back
+    private void Commit(TextBox textBox, bool finished)
+    {
+        if (!IsNumber(textBox.Text))
+        {
+            if (finished) textBox.Text = Text;
+            return;
+        }
+
+        if (Text != textBox.Text) Text = textBox.Text;
+    }
+
+    private bool IsNumber(string text) => InputType switch
+    {
+        InputType.Integer => int.TryParse(text, out _),
+        InputType.Double => double.TryParse(text, out _),
+        _ => true
+    };
 
     private bool IsValid(string textToCheck)
     {

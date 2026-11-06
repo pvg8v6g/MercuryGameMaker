@@ -1,10 +1,10 @@
-﻿using GameEngine.Services.Conditions;
+﻿using GameEngine.Scenes;
+using GameEngine.Services.Conditions;
 using GameEngine.Services.GameState;
 using GameEngine.Services.Input;
-using GameEngine.Services.Modules;
-using GameEngine.Services.Movement;
-using GameEngine.Services.Update;
+using GameEngine.Services.Start;
 using GameEngine.Services.Window;
+using GameEngine.Systems;
 using GameEngine.UX.ViewModels.MainGame;
 using GameEngine.UX.Views.MainGame;
 using GameEngine.UX.Views.MainWindow;
@@ -57,9 +57,28 @@ public partial class App
         services.AddSingleton<IGameStateService, GameStateService>();
         services.AddSingleton<IInputService, InputService>();
         services.AddSingleton<IConditionService, ConditionService>();
-        services.AddSingleton<IModuleService, ModuleService>();
-        services.AddSingleton<IMovementService, MovementService>();
-        services.AddSingleton<IUpdateService, UpdateService>();
+        services.AddSingleton<IStartService, StartService>();
+
+        #endregion
+
+        #region Register Systems
+
+        // systems run in this order every update
+        AddSystem<ActivePageSystem>(services);
+        AddSystem<InputSystem>(services);
+        AddSystem<MovementSystem>(services);
+        AddSystem<HitboxSystem>(services);
+        AddSystem<CharacterImageSystem>(services);
+
+        #endregion
+
+        #region Register Scenes
+
+        services.AddSingleton<Renderer>();
+        services.AddSingleton<PlayerSpawner>();
+        services.AddSingleton<MapAudio>();
+        services.AddSingleton<DebugOverlay>();
+        services.AddSingleton<MapScene>();
 
         #endregion
 
@@ -77,4 +96,11 @@ public partial class App
     }
 
     private Window? _window;
+
+    // a system is injected by type into the systems that use it and listed with every other system for the scene
+    private static void AddSystem<T>(ServiceCollection services) where T : class, IEntitySystem
+    {
+        services.AddSingleton<T>();
+        services.AddSingleton<IEntitySystem>(provider => provider.GetRequiredService<T>());
+    }
 }

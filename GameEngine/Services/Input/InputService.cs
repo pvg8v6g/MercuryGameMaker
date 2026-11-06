@@ -1,4 +1,5 @@
 ﻿using Windows.System;
+using GameLibrary.Enumerations;
 
 namespace GameEngine.Services.Input;
 
@@ -10,7 +11,13 @@ public class InputService : IInputService
 {
     #region Fields
 
-    private static readonly VirtualKey[] DirectionKeys = [VirtualKey.Down, VirtualKey.Left, VirtualKey.Right, VirtualKey.Up];
+    private static readonly Dictionary<VirtualKey, Direction> DirectionKeys = new()
+    {
+        [VirtualKey.Down] = GameLibrary.Enumerations.Direction.Down,
+        [VirtualKey.Left] = GameLibrary.Enumerations.Direction.Left,
+        [VirtualKey.Right] = GameLibrary.Enumerations.Direction.Right,
+        [VirtualKey.Up] = GameLibrary.Enumerations.Direction.Up
+    };
 
     private readonly object _lock = new();
     private readonly List<VirtualKey> _directions = [];
@@ -36,11 +43,12 @@ public class InputService : IInputService
         }
     }
 
-    public VirtualKey? Direction
+    // the most recently pressed arrow that is still held
+    public Direction? Direction
     {
         get
         {
-            lock (_lock) return _directions.Count > 0 ? _directions[0] : null;
+            lock (_lock) return _directions.Count > 0 ? DirectionKeys[_directions[0]] : null;
         }
     }
 
@@ -78,7 +86,7 @@ public class InputService : IInputService
 
     #region Private Methods
 
-    private static bool IsDirectional(VirtualKey key) => DirectionKeys.Contains(key);
+    private static bool IsDirectional(VirtualKey key) => DirectionKeys.ContainsKey(key);
 
     private bool KeyAny(VirtualKey key)
     {

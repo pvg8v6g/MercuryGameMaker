@@ -1,0 +1,193 @@
+﻿<UserControl x:Class="GameMaker.UX.Views.Popups.MapSettings.MapSettingsPopup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mainPageModels="using:GameMaker.UX.Models.MainPage"
+             xmlns:behaviors="using:GameLibrary.Behaviors"
+             xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+             xmlns:popup="using:GameMaker.UX.Components.Popup"
+             mc:Ignorable="d">
+  <popup:PopupShell Title="{x:Bind ViewModel.Title}"
+                    PrimaryButtonText="{x:Bind ViewModel.PrimaryText}"
+                    SecondaryButtonText="{x:Bind ViewModel.CancelText}">
+    <ScrollViewer MaxHeight="640" Padding="0,0,16,0">
+      <StackPanel Width="420" Spacing="15">
+        <Grid ColumnSpacing="10">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="Auto" />
+          </Grid.ColumnDefinitions>
+          <engineTextBox:EngineTextBox Header="Id"
+                                       InputType="Integer"
+                                       UpdateTrigger="LostFocus"
+                                       Text="{x:Bind ViewModel.Editor.SelectedMapId.Id, Mode=TwoWay, FallbackValue='0'}"
+                                       Tooltip="Picks the map's images (map{id}.png). Press enter or click away to apply." />
+          <Button Grid.Column="1"
+                  VerticalAlignment="Bottom"
+                  Content="Next Free"
+                  Command="{x:Bind ViewModel.Editor.SelectedMapId.NextIdCommand, Mode=OneWay}"
+                  ToolTipService.ToolTip="Use the lowest id no other map has." />
+        </Grid>
+
+        <TextBox Header="Name"
+                 Text="{x:Bind ViewModel.Editor.SelectedMap.Name, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
+                 ToolTipService.ToolTip="What is this map called?" />
+
+        <ComboBox Header="Parent"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Editor.ParentOptions, Mode=OneWay}"
+                  SelectedItem="{x:Bind ViewModel.Editor.SelectedParent, Mode=TwoWay}"
+                  ToolTipService.ToolTip="Which folder or map this sits under in the map tree." />
+
+        <StackPanel Spacing="15"
+                    Visibility="{x:Bind ViewModel.Editor.IsMapSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+          <Grid ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <engineTextBox:EngineTextBox Header="Width"
+                                         InputType="Integer"
+                                         Text="{x:Bind ViewModel.Editor.MapWidth, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Tooltip="How many tiles wide the map is." />
+            <engineTextBox:EngineTextBox Grid.Column="1"
+                                         Header="Height"
+                                         InputType="Integer"
+                                         Text="{x:Bind ViewModel.Editor.MapHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                         Tooltip="How many tiles tall the map is." />
+            <Button Grid.Column="2"
+                    VerticalAlignment="Bottom"
+                    Content="Fit"
+                    Command="{x:Bind ViewModel.Editor.FitToGroundCommand}"
+                    ToolTipService.ToolTip="Size the map to its ground image." />
+          </Grid>
+
+          <StackPanel Spacing="15">
+            <TextBlock Text="Audio" FontWeight="Bold" />
+            <ComboBox Header="Music"
+                      HorizontalAlignment="Stretch"
+                      ItemsSource="{x:Bind ViewModel.Editor.BgmFiles, Mode=OneWay}"
+                      SelectedItem="{x:Bind ViewModel.Editor.SelectedBgm, Mode=TwoWay}"
+                      ToolTipService.ToolTip="Music that plays on this map." />
+            <Grid ColumnSpacing="10">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <NumberBox Header="Volume"
+                         Minimum="0"
+                         SmallChange="0.1"
+                         SpinButtonPlacementMode="Inline"
+                         IsEnabled="{x:Bind ViewModel.Editor.SelectedMap.Bgm, Mode=OneWay, Converter={StaticResource NullToFalseConverter}, FallbackValue=False}"
+                         Value="{x:Bind ViewModel.Editor.SelectedMap.Bgm.Volume, Mode=TwoWay, FallbackValue=1}" />
+              <NumberBox Grid.Column="1"
+                         Header="Pitch"
+                         Minimum="0"
+                         SmallChange="0.1"
+                         SpinButtonPlacementMode="Inline"
+                         IsEnabled="{x:Bind ViewModel.Editor.SelectedMap.Bgm, Mode=OneWay, Converter={StaticResource NullToFalseConverter}, FallbackValue=False}"
+                         Value="{x:Bind ViewModel.Editor.SelectedMap.Bgm.Pitch, Mode=TwoWay, FallbackValue=1}" />
+              <Button Grid.Column="2"
+                      VerticalAlignment="Bottom"
+                      Command="{x:Bind ViewModel.Editor.PlayBgmCommand}"
+                      ToolTipService.ToolTip="Play Music">
+                <SymbolIcon Symbol="Play" />
+              </Button>
+            </Grid>
+
+            <ComboBox Header="Ambience"
+                      HorizontalAlignment="Stretch"
+                      ItemsSource="{x:Bind ViewModel.Editor.BgsFiles, Mode=OneWay}"
+                      SelectedItem="{x:Bind ViewModel.Editor.SelectedBgs, Mode=TwoWay}"
+                      ToolTipService.ToolTip="Background sound (wind, rain, crowds) that plays on this map." />
+            <Grid ColumnSpacing="10">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+              </Grid.ColumnDefinitions>
+              <NumberBox Header="Volume"
+                         Minimum="0"
+                         SmallChange="0.1"
+                         SpinButtonPlacementMode="Inline"
+                         IsEnabled="{x:Bind ViewModel.Editor.SelectedMap.Bgs, Mode=OneWay, Converter={StaticResource NullToFalseConverter}, FallbackValue=False}"
+                         Value="{x:Bind ViewModel.Editor.SelectedMap.Bgs.Volume, Mode=TwoWay, FallbackValue=1}" />
+              <NumberBox Grid.Column="1"
+                         Header="Pitch"
+                         Minimum="0"
+                         SmallChange="0.1"
+                         SpinButtonPlacementMode="Inline"
+                         IsEnabled="{x:Bind ViewModel.Editor.SelectedMap.Bgs, Mode=OneWay, Converter={StaticResource NullToFalseConverter}, FallbackValue=False}"
+                         Value="{x:Bind ViewModel.Editor.SelectedMap.Bgs.Pitch, Mode=TwoWay, FallbackValue=1}" />
+              <Button Grid.Column="2"
+                      VerticalAlignment="Bottom"
+                      Command="{x:Bind ViewModel.Editor.PlayBgsCommand}"
+                      ToolTipService.ToolTip="Play Ambience">
+                <SymbolIcon Symbol="Play" />
+              </Button>
+            </Grid>
+            <Button Content="Stop Audio"
+                    HorizontalAlignment="Stretch"
+                    Command="{x:Bind ViewModel.Editor.StopAudioCommand}" />
+
+            <TextBlock Text="Options" FontWeight="Bold" />
+            <CheckBox IsChecked="{x:Bind ViewModel.Editor.SelectedMap.DisableDash, Mode=TwoWay, FallbackValue='False'}"
+                      behaviors:PointerCursorBehavior.CursorType="Hand"
+                      ToolTipService.ToolTip="Stop the party from running on this map.">
+              Disable Dash
+            </CheckBox>
+            <CheckBox IsChecked="{x:Bind ViewModel.Editor.SelectedMap.BattleMap, Mode=TwoWay, FallbackValue='False'}"
+                      behaviors:PointerCursorBehavior.CursorType="Hand"
+                      ToolTipService.ToolTip="Battles are fought on this map.">
+              Battle Map
+            </CheckBox>
+            <CheckBox IsChecked="{x:Bind ViewModel.Editor.SelectedMap.Interior, Mode=TwoWay, FallbackValue='False'}"
+                      behaviors:PointerCursorBehavior.CursorType="Hand"
+                      ToolTipService.ToolTip="Weather effects do not show up on this map.">
+              Interior
+            </CheckBox>
+
+            <TextBlock Text="Connections" FontWeight="Bold" />
+            <Grid ColumnSpacing="10" RowSpacing="10">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+              </Grid.ColumnDefinitions>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+              </Grid.RowDefinitions>
+              <ComboBox Header="North"
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{x:Bind ViewModel.Editor.ConnectionOptions, Mode=OneWay}"
+                        SelectedItem="{x:Bind ViewModel.Editor.NorthMap, Mode=TwoWay}"
+                        ToolTipService.ToolTip="Walking off the top of the map goes to this map." />
+              <ComboBox Grid.Column="1"
+                        Header="South"
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{x:Bind ViewModel.Editor.ConnectionOptions, Mode=OneWay}"
+                        SelectedItem="{x:Bind ViewModel.Editor.SouthMap, Mode=TwoWay}"
+                        ToolTipService.ToolTip="Walking off the bottom of the map goes to this map." />
+              <ComboBox Grid.Row="1"
+                        Header="West"
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{x:Bind ViewModel.Editor.ConnectionOptions, Mode=OneWay}"
+                        SelectedItem="{x:Bind ViewModel.Editor.WestMap, Mode=TwoWay}"
+                        ToolTipService.ToolTip="Walking off the left of the map goes to this map." />
+              <ComboBox Grid.Row="1"
+                        Grid.Column="1"
+                        Header="East"
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{x:Bind ViewModel.Editor.ConnectionOptions, Mode=OneWay}"
+                        SelectedItem="{x:Bind ViewModel.Editor.EastMap, Mode=TwoWay}"
+                        ToolTipService.ToolTip="Walking off the right of the map goes to this map." />
+            </Grid>
+          </StackPanel>
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+  </popup:PopupShell>
+</UserControl>

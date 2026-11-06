@@ -7,10 +7,14 @@
              xmlns:entityEditor="using:GameMaker.UX.ViewModels.Popups.EntityEditor"
              xmlns:conditions="using:GameLibrary.Models.Conditions"
              xmlns:popup="using:GameMaker.UX.Components.Popup"
+             xmlns:imageChooser="using:GameMaker.UX.Components.ImageChooser"
+             xmlns:hitboxPreview="using:GameMaker.UX.Components.HitboxPreview"
+             xmlns:markup="using:GameLibrary.MarkupExtensions"
+             xmlns:enums="using:GameLibrary.Enumerations"
              mc:Ignorable="d">
-  <popup:PopupShell Title="Projectile Editor"
+  <popup:PopupShell Title="{x:Bind ViewModel.Title}"
                     PrimaryButtonText="Done">
-    <Grid Width="1000"
+    <Grid Width="1320"
           Height="560"
           RowSpacing="10">
       <Grid.RowDefinitions>
@@ -18,14 +22,27 @@
         <RowDefinition Height="*" />
       </Grid.RowDefinitions>
 
-      <TextBox Grid.Row="0"
-               Header="Projectile Name"
-               Text="{x:Bind ViewModel.EntityName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+      <Grid Grid.Row="0"
+            ColumnSpacing="10">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="140" />
+        </Grid.ColumnDefinitions>
+        <TextBox Header="{x:Bind ViewModel.NameHeader}"
+                 Text="{x:Bind ViewModel.EntityName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <NumberBox Grid.Column="1"
+                   Header="Z"
+                   SmallChange="1"
+                   SpinButtonPlacementMode="Compact"
+                   Value="{x:Bind ViewModel.EntityZ, Mode=TwoWay}"
+                   ToolTipService.ToolTip="Draw order against the map layers and other entities. The layers button shows each layer's z." />
+      </Grid>
 
       <Grid Grid.Row="1"
             ColumnSpacing="10">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="240" />
+          <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
@@ -79,8 +96,60 @@
           </engineListView:EngineListView>
         </StackPanel>
 
+        <!-- Page look: works like the face, character and hitboxes on the actors page -->
+        <StackPanel Grid.Column="2"
+                    Width="300"
+                    Spacing="10"
+                    Visibility="{x:Bind ViewModel.SelectedPage, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+          <StackPanel Orientation="Horizontal" Spacing="12">
+            <StackPanel Spacing="5">
+              <TextBlock Text="Face Image" />
+              <imageChooser:ImageChooser FolderPath="{x:Bind ViewModel.FaceFolderPath}"
+                                         FileName="{x:Bind ViewModel.FaceName, Mode=TwoWay, FallbackValue=''}"
+                                         Index="{x:Bind ViewModel.FaceIndex, Mode=TwoWay, FallbackValue={x:Null}}"
+                                         ChooserWidth="144"
+                                         ChooserHeight="144" />
+            </StackPanel>
+            <StackPanel Spacing="5">
+              <TextBlock Text="Character Image" />
+              <imageChooser:ImageChooser FolderPath="{x:Bind ViewModel.CharacterFolderPath}"
+                                         FileName="{x:Bind ViewModel.CharacterName, Mode=TwoWay, FallbackValue=''}"
+                                         Index="{x:Bind ViewModel.CharacterIndex, Mode=TwoWay}"
+                                         OnImageChangedCommand="{x:Bind ViewModel.SelectCharacterCommand}"
+                                         ChooserWidth="144"
+                                         ChooserHeight="144" />
+            </StackPanel>
+          </StackPanel>
+
+          <TextBlock Text="Hitboxes" />
+          <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="144" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <hitboxPreview:HitboxPreview Hitboxes="{x:Bind ViewModel.Hitboxes.SelectedDirectionHitboxes, Mode=TwoWay}"
+                                         CharacterImage="{x:Bind ViewModel.Hitboxes.AnchorImage, Mode=OneWay}"
+                                         PreviewsHitboxes="{x:Bind ViewModel.Hitboxes.PreviewsHitboxes, Mode=OneWay}"
+                                         PreviewScale="{x:Bind ViewModel.Hitboxes.PreviewScale, Mode=OneWay}"
+                                         PreviewOffsetX="{x:Bind ViewModel.Hitboxes.PreviewOffsetX, Mode=OneWay}"
+                                         PreviewOffsetY="{x:Bind ViewModel.Hitboxes.PreviewOffsetY, Mode=OneWay}"
+                                         ToolTipService.ToolTip="Pick a character image first, the hitboxes are drawn against it." />
+            <StackPanel Grid.Column="1" Spacing="10">
+              <ComboBox Header="Direction"
+                        HorizontalAlignment="Stretch"
+                        ItemsSource="{markup:EnumValues EnumType=enums:Direction}"
+                        SelectedItem="{x:Bind ViewModel.Hitboxes.SelectedDirection, Mode=TwoWay}"
+                        ToolTipService.ToolTip="None hitboxes count for every direction, the others only while facing that way." />
+              <CheckBox Content="Solid"
+                        MinWidth="0"
+                        IsChecked="{x:Bind ViewModel.Collide, Mode=TwoWay}"
+                        ToolTipService.ToolTip="The player and other entities bump into this page's hitboxes." />
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+
         <!-- Action list -->
-        <Grid Grid.Column="2"
+        <Grid Grid.Column="3"
               RowSpacing="6"
               Visibility="{x:Bind ViewModel.SelectedPage, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
           <Grid.RowDefinitions>

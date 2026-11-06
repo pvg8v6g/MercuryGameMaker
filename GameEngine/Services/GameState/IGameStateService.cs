@@ -8,6 +8,9 @@ public interface IGameStateService
 {
     bool IsTransferring { get; set; }
 
+    // set when the player walks off a connected edge, the scene loads the map on its next update
+    EdgeTransfer? EdgeTransfer { get; set; }
+
     GameMap? ActiveMap { get; set; }
 
     MapEntity? Player { get; set; }

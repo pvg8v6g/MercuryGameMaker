@@ -1,39 +1,23 @@
-﻿using GameLibrary.Attributes;
+﻿using System.Text.Json.Serialization;
+using GameLibrary.Attributes;
 using GameLibrary.Enumerations;
-using MercuryLibrary.Enumerations;
 using MercuryLibrary.Extensions;
-using MercuryLibrary.WinUI3Components;
 
 namespace GameLibrary.Models.GameMaps;
 
 /// <summary>
-/// How a map image is drawn. The image itself is never stored, it is loaded from Graphics\Maps\{Type}\map{id}.png.
+/// One of a map's own images, loaded from Graphics\Maps\{Type}\map{id}.png (Graphics\Maps\Ground\map1.png).
 /// Everything here has a default and only needs changing when a map wants something different.
 /// </summary>
-public partial class MapLayer(MapLayerType type) : PropertyChangedUpdater
+public partial class MapLayer(MapLayerType type) : MapImageSettings
 {
     #region Properties
 
     public MapLayerType Type => type;
 
-    // draw order, everything on the map (layers and entities) is drawn lowest z first
-    public double Z
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public double Opacity
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public BlendMode? MapBlendMode
-    {
-        get;
-        set => SetField(ref field, value);
-    }
+    // ignored here as well, System.Text.Json reads attributes off the override and not the abstract property
+    [JsonIgnore]
+    public override MapLayerAttribute DefaultSettings => Defaults(type);
 
     #endregion
 
@@ -42,14 +26,6 @@ public partial class MapLayer(MapLayerType type) : PropertyChangedUpdater
     public string ImagePath(string graphicsDirectory, int mapId)
     {
         return Path.Combine(graphicsDirectory, "Maps", type.ToString(), $"map{mapId}.png");
-    }
-
-    public void Reset()
-    {
-        var defaults = Defaults(type);
-        Z = defaults.Z;
-        Opacity = defaults.Opacity;
-        MapBlendMode = defaults.MapBlendMode;
     }
 
     // the defaults come from the MapLayer attribute on each MapLayerType

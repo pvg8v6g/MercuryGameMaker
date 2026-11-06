@@ -28,6 +28,12 @@ public class JsonService : IJsonService
         File.WriteAllText(filePath, json);
     }
 
+    // the text a file would hold, so a save can build every file before it touches the disk
+    public string Serialize<T>(T data)
+    {
+        return JsonSerializer.Serialize(data, Options);
+    }
+
     #endregion
 
     #region Decrypt
@@ -50,7 +56,16 @@ public class JsonService : IJsonService
 
     public T? Clone<T>(T obj) where T : BaseModel
     {
-        obj.Guid = Guid.NewGuid();
+        // the copy gets the new guid, the original keeps its own (maps, parents and connections point at it)
+        var json = JsonSerializer.Serialize(obj, Options);
+        var clone = JsonSerializer.Deserialize<T>(json, Options);
+        clone?.Guid = Guid.NewGuid();
+        return clone;
+    }
+
+    // a deep copy that keeps every guid, the copy can change without touching the original
+    public T? Copy<T>(T obj)
+    {
         var json = JsonSerializer.Serialize(obj, Options);
         return JsonSerializer.Deserialize<T>(json, Options);
     }

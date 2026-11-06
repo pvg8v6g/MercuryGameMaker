@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using GameLibrary.Models;
+using GameLibrary.Models.GameData;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Json;
 using GameLibrary.Services.Location;
@@ -50,6 +51,9 @@ public class LoadDataTask(ILocationService locationService, IJsonService jsonSer
         DecryptData(Path.Combine("States"), gameDataService.States);
         DecryptData(Path.Combine("Animations"), gameDataService.Animations);
         DecryptData(Path.Combine("Maps"), gameDataService.GameMaps);
+
+        var gameStart = Path.Combine(locationService.GameDirectory!, "Settings", "GameStart.data");
+        if (File.Exists(gameStart) && jsonService.DecryptFile<GameStart>(gameStart) is { } start) gameDataService.GameStart = start;
     }
 
     private void DecryptData<T>(string path, ObservableCollection<T> collection) where T : BaseModel

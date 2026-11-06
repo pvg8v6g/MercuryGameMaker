@@ -1,6 +1,5 @@
 ﻿using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
-using GameLibrary.Enumerations;
 using GameLibrary.Models.Areas;
 using GameLibrary.Models.Media;
 
@@ -92,6 +91,13 @@ public partial class GameMap : BaseModel
         set => SetField(ref field, value);
     }
 
+    // where the player appears when this map is tested from the editor, a real game starts at the game start instead
+    public SpawnPoint? TestSpawn
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     // tree folder structure (this is for the game editor only to place maps in a tree structure)
     public Guid? ParentGuid
     {
@@ -103,18 +109,21 @@ public partial class GameMap : BaseModel
     public bool FolderOnly
     {
         get;
-        set => SetField(ref field, value);
+        init => SetField(ref field, value);
     }
 
-    // editor only, remembers if the map tree node was left open
+    // editor only remembers if the map tree node was left open
     public bool IsExpanded
     {
         get;
         set => SetField(ref field, value);
     }
 
-    // the map images are found by map id in the game engine, these only change a layer's default z, opacity or blend when a map needs to
+    // map id finds the map images in the game engine; these only change a layer's default z, opacity or blend when a map needs to
     public ObservableCollection<MapLayer> LayerOptions { get; init; } = [];
+
+    // the environments (water, lava, fog) drawn on this map and how each one is drawn
+    public ObservableCollection<MapEnvironment> Environments { get; init; } = [];
 
     public AudioFile? Bgm
     {

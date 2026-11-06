@@ -6,8 +6,9 @@ namespace GameLibrary.Enumerations;
 // the full map images, each one lives in Graphics\Maps\{type}\map{id}.png
 public enum MapLayerType
 {
-    [MapLayer(Z = -2, BlendMode = BlendMode.LinearDodge)]
-    Water,
+    // below the environments (z -2), what shows through them, like the ocean floor under the water
+    [MapLayer(Z = -3)]
+    Underlayment,
 
     [MapLayer(Z = -1)]
     Ground,

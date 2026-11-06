@@ -1,34 +1,19 @@
-using GameLibrary.Commands;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.GameMaps;
-using MercuryLibrary.Enumerations;
-using MercuryLibrary.WinUI3Components;
 
 namespace GameMaker.UX.Models.MainPage;
 
 /// <summary>
-/// One of the map's full images. The image is found by map id, the only settings are how it is drawn
-/// and they are only kept in the map's layer options while they differ from the defaults.
+/// One of the map's own images. The image is found by map id, its settings are only kept in the map's
+/// layer options while they differ from the defaults.
 /// </summary>
-public partial class MapLayerModel(GameMap map, MapLayerType type, string graphicsDirectory) : PropertyChangedUpdater
+public partial class MapLayerModel(GameMap map, MapLayerType type, string graphicsDirectory) : MapImageModel(FindOption(map, type))
 {
-    #region Constants
-
-    private const string None = "(None)";
-
-    #endregion
-
-    #region Fields
-
-    private readonly MapLayer _layer = FindOption(map, type);
-
-    #endregion
-
     #region Properties
 
-    public MapLayer Layer => _layer;
+    public MapLayer Layer => (MapLayer) Settings;
 
-    public string Name => _layer.Type.ToString();
+    public override string Name => type.ToString();
 
     public string ImagePath { get; } = new MapLayer(type).ImagePath(graphicsDirectory, map.Id);
 
@@ -36,80 +21,19 @@ public partial class MapLayerModel(GameMap map, MapLayerType type, string graphi
 
     public string ImageText => HasImage ? Path.GetFileName(ImagePath) : $"No {Path.GetFileName(ImagePath)} found";
 
-    public string ToolTip => $"Loaded from Graphics\\Maps\\{_layer.Type}\\{Path.GetFileName(ImagePath)}";
-
-    public string[] BlendOptions { get; } = [None, .. Enum.GetNames<BlendMode>()];
-
-    public double Z
-    {
-        get => _layer.Z;
-        set
-        {
-            if (double.IsNaN(value) || _layer.Z == value) return;
-            _layer.Z = value;
-            OnSettingsChanged();
-        }
-    }
-
-    public double Opacity
-    {
-        get => _layer.Opacity;
-        set
-        {
-            if (double.IsNaN(value) || _layer.Opacity == value) return;
-            _layer.Opacity = value;
-            OnSettingsChanged();
-        }
-    }
-
-    public string Blend
-    {
-        get => _layer.MapBlendMode?.ToString() ?? None;
-        set
-        {
-            // the combo box pushes null while it loads
-            if (value is null || value == Blend) return;
-            _layer.MapBlendMode = Enum.TryParse<BlendMode>(value, out var blend) ? blend : null;
-            OnSettingsChanged();
-        }
-    }
-
-    public bool IsDefault
-    {
-        get
-        {
-            var defaults = MapLayer.Defaults(type);
-            return _layer.Z == defaults.Z && _layer.Opacity == defaults.Opacity && _layer.MapBlendMode == defaults.MapBlendMode;
-        }
-    }
-
-    #endregion
-
-    #region Commands
-
-    public RelayCommand ResetCommand => field ??= new RelayCommand(Reset, () => !IsDefault);
+    public string ToolTip => $"Loaded from Graphics\\Maps\\{type}\\{Path.GetFileName(ImagePath)}";
 
     #endregion
 
     #region Methods
 
-    private void Reset()
-    {
-        _layer.Reset();
-        OnSettingsChanged();
-    }
-
-    private void OnSettingsChanged()
+    protected override void OnSettingsChanged()
     {
         // only a layer that differs from its defaults is kept as an option on the map
-        if (IsDefault) map.LayerOptions.Remove(_layer);
-        else if (!map.LayerOptions.Contains(_layer)) map.LayerOptions.Add(_layer);
+        if (IsDefault) map.LayerOptions.Remove(Layer);
+        else if (!map.LayerOptions.Contains(Layer)) map.LayerOptions.Add(Layer);
 
-        OnPropertyChanged(nameof(Z));
-        OnPropertyChanged(nameof(Opacity));
-        OnPropertyChanged(nameof(Blend));
-        OnPropertyChanged(nameof(IsDefault));
-        ResetCommand.RaiseCanExecuteChanged();
+        base.OnSettingsChanged();
     }
 
     // the map's option for this layer, or a new one at the defaults

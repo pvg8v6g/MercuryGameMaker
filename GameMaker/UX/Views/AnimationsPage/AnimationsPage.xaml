@@ -96,6 +96,7 @@
         </StackPanel>
         <mercury:GameCanvasView Grid.Column="1"
                                 Grid.Row="1"
+                                ImageDpi="96"
                                 Grid.ColumnSpan="2"
                                 UpdateRate="16.66666667"
                                 ClearColor="{StaticResource MediumGreyColor}"

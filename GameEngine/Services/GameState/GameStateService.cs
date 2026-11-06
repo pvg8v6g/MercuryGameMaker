@@ -13,6 +13,8 @@ public class GameStateService : IGameStateService
 
     public bool IsTransferring { get; set; }
 
+    public EdgeTransfer? EdgeTransfer { get; set; }
+
     public GameMap? ActiveMap { get; set; }
 
     public MapEntity? Player { get; set; }

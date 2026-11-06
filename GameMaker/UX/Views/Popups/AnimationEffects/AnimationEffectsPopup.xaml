@@ -24,6 +24,7 @@
             VerticalAlignment="Top"
             Background="{StaticResource MediumGreyBrush}">
       <mercury:GameCanvasView UpdateRate="16.66666667"
+                              ImageDpi="96"
                               Sprites="{x:Bind ViewModel.Sprites, Mode=OneWay}" />
     </Border>
 

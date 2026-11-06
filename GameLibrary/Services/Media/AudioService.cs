@@ -34,25 +34,33 @@ public class AudioService(IMediaService mediaService) : IAudioService
     private CancellationTokenSource? _bgsFade;
     private CancellationTokenSource? _meFade;
 
+    // goes up on every play and stop, a track that took a while to load only starts if nothing replaced it meanwhile
+    private int _bgmRequest;
+    private int _bgsRequest;
+
     #endregion
 
     #region BGM
 
-    public async void PlayBgm(string file, double volume = 1.0, double pitch = 1.0)
+    public async Task PlayBgm(string file, double volume = 1.0, double pitch = 1.0)
     {
         StopBgm();
-        _bgm = await CreateLoopingNode(mediaService.GetBgm(file), volume, pitch);
+        var request = _bgmRequest;
+        var node = await CreateLoopingNode(mediaService.GetBgm(file), volume, pitch);
+        if (request == _bgmRequest) _bgm = node;
+        else StopChannel(ref node);
     }
 
     public void StopBgm()
     {
+        _bgmRequest++;
         _bgmFade?.Cancel();
         StopChannel(ref _bgm);
     }
 
-    public void FadeInBgm(double seconds)
+    public void FadeInBgm(double seconds, double volume = 0.8)
     {
-        Fade(_bgm, 0.8, seconds, ref _bgmFade);
+        Fade(_bgm, volume, seconds, ref _bgmFade);
     }
 
     public void FadeOutBgm(double seconds)
@@ -69,21 +77,25 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     #region BGS
 
-    public async void PlayBgs(string file, double volume = 1.0, double pitch = 1.0)
+    public async Task PlayBgs(string file, double volume = 1.0, double pitch = 1.0)
     {
         StopBgs();
-        _bgs = await CreateLoopingNode(mediaService.GetBgs(file), volume, pitch);
+        var request = _bgsRequest;
+        var node = await CreateLoopingNode(mediaService.GetBgs(file), volume, pitch);
+        if (request == _bgsRequest) _bgs = node;
+        else StopChannel(ref node);
     }
 
     public void StopBgs()
     {
+        _bgsRequest++;
         _bgsFade?.Cancel();
         StopChannel(ref _bgs);
     }
 
-    public void FadeInBgs(double seconds)
+    public void FadeInBgs(double seconds, double volume = 0.8)
     {
-        Fade(_bgs, 0.8, seconds, ref _bgsFade);
+        Fade(_bgs, volume, seconds, ref _bgsFade);
     }
 
     public void FadeOutBgs(double seconds)

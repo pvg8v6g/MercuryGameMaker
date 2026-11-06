@@ -1,0 +1,63 @@
+﻿<UserControl x:Class="GameMaker.UX.Views.Popups.AreaEditor.AreaEditorPopup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mainPageModels="using:GameMaker.UX.Models.MainPage"
+             xmlns:behaviors="using:GameLibrary.Behaviors"
+             xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+             xmlns:popup="using:GameMaker.UX.Components.Popup"
+             mc:Ignorable="d">
+  <popup:PopupShell Title="Area"
+                    PrimaryButtonText="Done">
+    <StackPanel Width="380" Spacing="15">
+      <Grid ColumnSpacing="10">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <TextBox Header="Area Name"
+                 Text="{x:Bind ViewModel.SelectedArea.Name, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Grid.Column="1"
+                  Header="Type"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.AreaTypes}"
+                  SelectedItem="{x:Bind ViewModel.SelectedArea.AreaType, Mode=TwoWay}" />
+      </Grid>
+      <Grid ColumnSpacing="10">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <engineTextBox:EngineTextBox Header="X"
+                                     InputType="Integer"
+                                     Text="{x:Bind ViewModel.SelectedArea.CellX, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Grid.Column="1"
+                                     Header="Y"
+                                     InputType="Integer"
+                                     Text="{x:Bind ViewModel.SelectedArea.CellY, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Grid.Column="2"
+                                     Header="W"
+                                     InputType="Integer"
+                                     Text="{x:Bind ViewModel.SelectedArea.CellWidth, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Grid.Column="3"
+                                     Header="H"
+                                     InputType="Integer"
+                                     Text="{x:Bind ViewModel.SelectedArea.CellHeight, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}" />
+      </Grid>
+      <TextBlock Foreground="{StaticResource LightGreyBrush}"
+                 TextWrapping="Wrap">
+        <Run Text="X, Y, W and H count cells of" />
+        <Run Text="{x:Bind ViewModel.AreaGridSize, Mode=OneWay}" />
+        <Run Text="pixels, the area grid picked in the top bar." />
+      </TextBlock>
+      <ComboBox Header="Footstep Sound"
+                HorizontalAlignment="Stretch"
+                ItemsSource="{x:Bind ViewModel.FootstepFiles, Mode=OneWay}"
+                SelectedItem="{x:Bind ViewModel.SelectedFootstep, Mode=TwoWay}"
+                Visibility="{x:Bind ViewModel.SelectedArea.IsFootstep, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Collapsed}" />
+    </StackPanel>
+  </popup:PopupShell>
+</UserControl>

@@ -3,6 +3,7 @@ using GameLibrary.Models.Animations;
 using GameLibrary.Models.Artes;
 using GameLibrary.Models.Disciplines;
 using GameLibrary.Models.Fighter;
+using GameLibrary.Models.GameData;
 using GameLibrary.Models.GameMaps;
 using GameLibrary.Models.Growths;
 using GameLibrary.Models.Items;
@@ -57,7 +58,7 @@ public partial class GameDataService : PropertyChangedUpdater, IGameDataService
 
     public bool Paused { get; set; }
 
-    public string[] GameGraphicsMapFolders { get; set; } = ["Parallax", "Light", "Ground"];
+    public string[] GameGraphicsMapFolders { get; set; } = ["Parallax", "Light", "Ground", "Underlayment"];
 
     public int LevelCap { get; set; } = 99;
 
@@ -70,6 +71,8 @@ public partial class GameDataService : PropertyChangedUpdater, IGameDataService
     #region Game Objects
 
     public ObservableCollection<GameMap> GameMaps { get; } = [];
+
+    public GameStart GameStart { get; set; } = new();
 
     public ObservableCollection<Fighter> Actors { get; } = [];
 

@@ -13,6 +13,9 @@ public partial class MapTreeNode(GameMap map) : PropertyChangedUpdater
 
     public Symbol Symbol => map.FolderOnly ? Symbol.Folder : Symbol.Map;
 
+    // padded like the map pickers (001), the tree is rebuilt whenever an id changes so this never goes stale
+    public string IdText => $"{map.Id:000}";
+
     public ObservableCollection<MapTreeNode> Children { get; } = [];
 
     public bool IsExpanded

@@ -5,6 +5,8 @@ using GameLibrary.Models;
 using GameLibrary.Models.Areas;
 using GameLibrary.Models.Artes;
 using GameLibrary.Services.GameData;
+using GameLibrary.Services.Graphics;
+using GameLibrary.Services.Location;
 using GameLibrary.Services.Json;
 using GameLibrary.Utilities.Calculations;
 using GameLibrary.Utilities.ComponentModels;
@@ -14,7 +16,12 @@ using GameMaker.UX.ViewModels.Popups.EntityEditor;
 
 namespace GameMaker.UX.ViewModels.ArtesPage;
 
-public class ArtesPageViewModel(IGameDataService gameDataService, IJsonService jsonService, INavigationService navigationService)
+public class ArtesPageViewModel(
+    IGameDataService gameDataService,
+    IJsonService jsonService,
+    IGraphicsService graphicsService,
+    ILocationService locationService,
+    INavigationService navigationService)
     : BaseViewModel<Arte>(jsonService)
 {
     #region Properties
@@ -160,7 +167,7 @@ public class ArtesPageViewModel(IGameDataService gameDataService, IJsonService j
         if (SelectedProjectileIndex < 0 || SelectedProjectileIndex >= SelectedEntity.Projectiles.Count) return;
 
         var projectile = SelectedEntity.Projectiles[SelectedProjectileIndex];
-        var popupViewModel = new EntityEditorViewModel(projectile, gameDataService, JsonService, navigationService);
+        var popupViewModel = new EntityEditorViewModel(projectile, gameDataService, JsonService, graphicsService, locationService, navigationService, "Projectile");
         await navigationService.ShowEntityEditorPopup(popupViewModel);
     }
 

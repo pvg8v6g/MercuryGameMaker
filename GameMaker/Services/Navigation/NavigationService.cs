@@ -5,18 +5,27 @@ using GameMaker.UX.ViewModels.Popups.BranchActionEditor;
 using GameMaker.UX.ViewModels.Popups.AnimationEffects;
 using GameMaker.UX.ViewModels.Popups.ConditionEditor;
 using GameMaker.UX.ViewModels.Popups.EnemyArteEditor;
+using GameMaker.UX.ViewModels.MainPage;
 using GameMaker.UX.ViewModels.Popups.EntityEditor;
+using GameMaker.UX.ViewModels.Popups.GameStart;
+using GameMaker.UX.ViewModels.Popups.MapIdConflict;
+using GameMaker.UX.ViewModels.Popups.MapSettings;
 using GameMaker.UX.ViewModels.Popups.FrameSpanning;
 using GameMaker.UX.ViewModels.Popups.MovementEditor;
 using GameMaker.UX.ViewModels.Popups.MovementRouteEditor;
 using GameMaker.UX.Views.MainWindow;
 using GameMaker.UX.Views.Popups.ActionEditor;
+using GameMaker.UX.Views.Popups.AreaEditor;
 using GameMaker.UX.Views.Popups.BranchActionEditor;
 using GameMaker.UX.Views.Popups.AnimationEffects;
 using GameMaker.UX.Views.Popups.ConditionEditor;
 using GameMaker.UX.Views.Popups.EnemyArteEditor;
 using GameMaker.UX.Views.Popups.EntityEditor;
 using GameMaker.UX.Views.Popups.FrameSpanning;
+using GameMaker.UX.Views.Popups.GameStart;
+using GameMaker.UX.Views.Popups.MapIdConflict;
+using GameMaker.UX.Views.Popups.MapLayers;
+using GameMaker.UX.Views.Popups.MapSettings;
 using GameMaker.UX.Views.Popups.MovementEditor;
 using GameMaker.UX.Views.Popups.MovementRouteEditor;
 using GameMaker.UX.Views.Popups.Progress;
@@ -125,6 +134,36 @@ public partial class NavigationService(Func<Type, EngineTask> engineTaskFactory)
     {
         if (PopupHost.Current is null) return ContentDialogResult.None;
         return await PopupHost.Current.ShowAsync(new EnemyArteEditorPopup(viewModel));
+    }
+
+    public async Task<ContentDialogResult> ShowMapSettingsPopup(MapSettingsViewModel viewModel)
+    {
+        if (PopupHost.Current is null) return ContentDialogResult.None;
+        return await PopupHost.Current.ShowAsync(new MapSettingsPopup(viewModel));
+    }
+
+    public async Task ShowMapLayersPopup(MainPageViewModel viewModel)
+    {
+        if (PopupHost.Current is null) return;
+        await PopupHost.Current.ShowAsync(new MapLayersPopup(viewModel));
+    }
+
+    public async Task ShowAreaEditorPopup(MainPageViewModel viewModel)
+    {
+        if (PopupHost.Current is null) return;
+        await PopupHost.Current.ShowAsync(new AreaEditorPopup(viewModel));
+    }
+
+    public async Task<ContentDialogResult> ShowMapIdConflictPopup(MapIdConflictViewModel viewModel)
+    {
+        if (PopupHost.Current is null) return ContentDialogResult.None;
+        return await PopupHost.Current.ShowAsync(new MapIdConflictPopup(viewModel));
+    }
+
+    public async Task ShowGameStartPopup(GameStartViewModel viewModel)
+    {
+        if (PopupHost.Current is null) return;
+        await PopupHost.Current.ShowAsync(new GameStartPopup(viewModel));
     }
 
     #endregion

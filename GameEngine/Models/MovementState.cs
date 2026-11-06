@@ -1,8 +1,8 @@
-namespace GameEngine.Models;
+﻿namespace GameEngine.Models;
 
 /// <summary>
-/// The step an entity is taking right now. The movement module holds the settings (speed, dashing, stepping),
-/// this holds the distance left to walk and the timers that animate it.
+/// The step an entity is taking right now. The movement module holds the settings (speed, dashing),
+/// this holds how far is left to walk.
 /// </summary>
 public class MovementState
 {
@@ -22,11 +22,10 @@ public class MovementState
 
     public double IncrementY { get; set; }
 
-    public int SteppingTimer { get; set; }
-
-    public int NotMovingTimer { get; set; }
-
     public bool IsMoving => DistanceX > 0 || DistanceY > 0;
+
+    // walked this update, a step can finish in the same update it moves so IsMoving alone would look idle
+    public bool Stepped { get; set; }
 
     #endregion
 }

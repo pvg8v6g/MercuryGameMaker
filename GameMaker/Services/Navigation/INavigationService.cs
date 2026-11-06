@@ -4,7 +4,11 @@ using GameMaker.UX.ViewModels.Popups.BranchActionEditor;
 using GameMaker.UX.ViewModels.Popups.AnimationEffects;
 using GameMaker.UX.ViewModels.Popups.ConditionEditor;
 using GameMaker.UX.ViewModels.Popups.EnemyArteEditor;
+using GameMaker.UX.ViewModels.MainPage;
 using GameMaker.UX.ViewModels.Popups.EntityEditor;
+using GameMaker.UX.ViewModels.Popups.GameStart;
+using GameMaker.UX.ViewModels.Popups.MapIdConflict;
+using GameMaker.UX.ViewModels.Popups.MapSettings;
 using GameMaker.UX.ViewModels.Popups.FrameSpanning;
 using GameMaker.UX.ViewModels.Popups.MovementEditor;
 using GameMaker.UX.ViewModels.Popups.MovementRouteEditor;
@@ -41,4 +45,14 @@ public interface INavigationService
     Task<ContentDialogResult> ShowBranchActionEditorPopup(BranchActionEditorViewModel viewModel);
 
     Task<ContentDialogResult> ShowEnemyArteEditorPopup(EnemyArteEditorViewModel viewModel);
+
+    Task<ContentDialogResult> ShowMapSettingsPopup(MapSettingsViewModel viewModel);
+
+    Task ShowMapLayersPopup(MainPageViewModel viewModel);
+
+    Task ShowAreaEditorPopup(MainPageViewModel viewModel);
+
+    Task<ContentDialogResult> ShowMapIdConflictPopup(MapIdConflictViewModel viewModel);
+
+    Task ShowGameStartPopup(GameStartViewModel viewModel);
 }

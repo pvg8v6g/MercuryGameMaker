@@ -1,4 +1,4 @@
-using GameLibrary.Enumerations;
+﻿using GameLibrary.Enumerations;
 using GameLibrary.Models.Areas;
 using MercuryLibrary.WinUI3Components;
 using Microsoft.UI;
@@ -7,9 +7,10 @@ using Microsoft.UI.Xaml.Media;
 namespace GameMaker.UX.Models.MainPage;
 
 /// <summary>
-/// An area drawn on the map. The area stores pixels, the editor works in tiles.
+/// An area drawn on the map. The area stores pixels, the editor works in cells of the area grid
+/// (48 pixels is a tile, smaller cells make finer collisions).
 /// </summary>
-public partial class MapAreaModel(MapArea area, int tileSize) : PropertyChangedUpdater
+public partial class MapAreaModel(MapArea area, int cellSize) : PropertyChangedUpdater
 {
     #region Brushes
 
@@ -70,42 +71,55 @@ public partial class MapAreaModel(MapArea area, int tileSize) : PropertyChangedU
         _ => AreaBrush
     };
 
-    public int TileX
+    // the size of one cell in pixels, follows the area grid picked in the editor
+    public int CellSize
     {
-        get => area.OffsetX / tileSize;
+        get => cellSize;
         set
         {
-            area.OffsetX = Math.Max(0, value) * tileSize;
+            if (value <= 0 || value == cellSize) return;
+            cellSize = value;
+            OnPropertyChanged();
             OnBoundsChanged();
         }
     }
 
-    public int TileY
+    public int CellX
     {
-        get => area.OffsetY / tileSize;
+        get => area.OffsetX / cellSize;
         set
         {
-            area.OffsetY = Math.Max(0, value) * tileSize;
+            area.OffsetX = Math.Max(0, value) * cellSize;
             OnBoundsChanged();
         }
     }
 
-    public int TileWidth
+    public int CellY
     {
-        get => area.Width / tileSize;
+        get => area.OffsetY / cellSize;
         set
         {
-            area.Width = Math.Max(1, value) * tileSize;
+            area.OffsetY = Math.Max(0, value) * cellSize;
             OnBoundsChanged();
         }
     }
 
-    public int TileHeight
+    public int CellWidth
     {
-        get => area.Height / tileSize;
+        get => area.Width / cellSize;
         set
         {
-            area.Height = Math.Max(1, value) * tileSize;
+            area.Width = Math.Max(1, value) * cellSize;
+            OnBoundsChanged();
+        }
+    }
+
+    public int CellHeight
+    {
+        get => area.Height / cellSize;
+        set
+        {
+            area.Height = Math.Max(1, value) * cellSize;
             OnBoundsChanged();
         }
     }
@@ -142,10 +156,10 @@ public partial class MapAreaModel(MapArea area, int tileSize) : PropertyChangedU
         OnPropertyChanged(nameof(Y));
         OnPropertyChanged(nameof(Width));
         OnPropertyChanged(nameof(Height));
-        OnPropertyChanged(nameof(TileX));
-        OnPropertyChanged(nameof(TileY));
-        OnPropertyChanged(nameof(TileWidth));
-        OnPropertyChanged(nameof(TileHeight));
+        OnPropertyChanged(nameof(CellX));
+        OnPropertyChanged(nameof(CellY));
+        OnPropertyChanged(nameof(CellWidth));
+        OnPropertyChanged(nameof(CellHeight));
     }
 
     #endregion

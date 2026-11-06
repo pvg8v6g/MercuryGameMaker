@@ -36,10 +36,10 @@ public sealed class MapScene
     }
 
     // full map images are optional, a map without one simply doesn't draw that layer
-    public PictureBox? AddLayer(MapLayer layer, string imagePath)
+    public PictureBox? AddImage(MapImageSettings settings, string imagePath, double worldX = 0, double worldY = 0)
     {
         if (!File.Exists(imagePath)) return null;
-        return Add(imagePath, 0, 0, layer.Z, null, (float) layer.Opacity, layer.MapBlendMode);
+        return Add(imagePath, worldX, worldY, settings.Z, null, (float) settings.Opacity, settings.MapBlendMode);
     }
 
     public PictureBox Add(string imagePath, double worldX, double worldY, double z, Rect? viewport = null, float opacity = 1.0f, BlendMode? blendMode = null)

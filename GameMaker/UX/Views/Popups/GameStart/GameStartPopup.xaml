@@ -1,0 +1,55 @@
+﻿<UserControl x:Class="GameMaker.UX.Views.Popups.GameStart.GameStartPopup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:mainPageModels="using:GameMaker.UX.Models.MainPage"
+             xmlns:behaviors="using:GameLibrary.Behaviors"
+             xmlns:popup="using:GameMaker.UX.Components.Popup"
+             mc:Ignorable="d">
+  <popup:PopupShell Title="Game Start"
+                    PrimaryButtonText="Done">
+    <StackPanel Width="380" Spacing="15">
+      <TextBlock Foreground="{StaticResource LightGreyBrush}"
+                 TextWrapping="Wrap">
+        <Run Text="A new game begins on" />
+        <Run Text="{x:Bind ViewModel.Location}" FontWeight="Bold" />
+      </TextBlock>
+
+      <ComboBox Header="Facing"
+                HorizontalAlignment="Stretch"
+                ItemsSource="{x:Bind ViewModel.Directions}"
+                SelectedItem="{x:Bind ViewModel.Direction, Mode=TwoWay}" />
+
+      <TextBlock Foreground="{StaticResource LightGreyBrush}"
+                 TextWrapping="Wrap"
+                 Text="Add actors on the Actors page to choose a party."
+                 Visibility="{x:Bind ViewModel.HasNoActors, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+      <StackPanel Spacing="15"
+                  Visibility="{x:Bind ViewModel.HasActors, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <ComboBox Header="Leader"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors}"
+                  DisplayMemberPath="Name"
+                  SelectedItem="{x:Bind ViewModel.Leader, Mode=TwoWay}"
+                  ToolTipService.ToolTip="The actor walking around the map, it is also the player when testing maps." />
+
+        <TextBlock Text="Party" FontWeight="Bold" />
+        <ScrollViewer MaxHeight="240">
+          <ItemsControl ItemsSource="{x:Bind ViewModel.Members}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="mainPageModels:PartyMemberModel">
+                <CheckBox MinWidth="0"
+                          Content="{x:Bind Name}"
+                          behaviors:PointerCursorBehavior.CursorType="Hand"
+                          IsChecked="{x:Bind IsInParty, Mode=TwoWay}"
+                          IsEnabled="{x:Bind CanToggle, Mode=OneWay}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </StackPanel>
+    </StackPanel>
+  </popup:PopupShell>
+</UserControl>

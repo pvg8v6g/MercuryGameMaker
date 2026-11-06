@@ -10,6 +10,8 @@ public class LocationService(IJsonService jsonService) : ILocationService
 {
     #region Properties
 
+    public MercuryGameMakerConfiguration? Configuration { get; private set; }
+
     public string? GameDirectory { get; private set; }
 
     public string? GraphicsDirectory { get; private set; }
@@ -17,6 +19,16 @@ public class LocationService(IJsonService jsonService) : ILocationService
     public string? GameMakerGraphicsDirectory { get; private set; }
 
     public string? MercuryGameMakerDirectory { get; private set; }
+
+    #endregion
+
+    #region Configuration
+
+    public void SaveConfiguration()
+    {
+        if (Configuration is null || MercuryGameMakerDirectory is null) return;
+        jsonService.EncryptFile(Configuration, Path.Combine(MercuryGameMakerDirectory, "config.json"));
+    }
 
     #endregion
 
@@ -43,6 +55,7 @@ public class LocationService(IJsonService jsonService) : ILocationService
             return;
         }
 
+        Configuration = config;
         if (config.GameDirectory.IsNullOrEmpty())
         {
             var picker = new FolderPicker();

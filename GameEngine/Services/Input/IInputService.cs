@@ -1,4 +1,5 @@
 ﻿using Windows.System;
+using GameLibrary.Enumerations;
 
 namespace GameEngine.Services.Input;
 
@@ -14,7 +15,7 @@ public interface IInputService
 
     bool Directional { get; }
 
-    VirtualKey? Direction { get; }
+    Direction? Direction { get; }
 
     VirtualKey? Key { get; }
 

@@ -4,6 +4,7 @@ using GameLibrary.Models.Artes;
 using GameLibrary.Models.Disciplines;
 using GameLibrary.Models.Fighter;
 using GameLibrary.Models.GameMaps;
+using GameLibrary.Models.GameData;
 using GameLibrary.Models.Growths;
 using GameLibrary.Models.Items;
 using GameLibrary.Models.States;
@@ -47,6 +48,9 @@ public interface IGameDataService
     public Guid ManaAttributeGuid { get; }
 
     ObservableCollection<GameMap> GameMaps { get; }
+
+    // where a new game begins and who is in the party
+    GameStart GameStart { get; set; }
 
     ObservableCollection<Fighter> Actors { get; }
 

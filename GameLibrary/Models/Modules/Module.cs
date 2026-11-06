@@ -5,6 +5,7 @@ namespace GameLibrary.Models.Modules;
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "@type")]
 [JsonDerivedType(typeof(CharacterImageModule), "characterImage")]
 [JsonDerivedType(typeof(EntityHitboxModule), "entityHitbox")]
+[JsonDerivedType(typeof(FaceModule), "face")]
 [JsonDerivedType(typeof(InputModule), "input")]
 [JsonDerivedType(typeof(MovementModule), "movement")]
 [JsonDerivedType(typeof(PositionModule), "position")]

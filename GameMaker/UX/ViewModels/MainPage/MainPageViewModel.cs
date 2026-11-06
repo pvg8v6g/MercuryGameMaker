@@ -1,5 +1,6 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using Windows.Foundation;
 using Windows.System;
 using GameLibrary.Behaviors;
@@ -17,14 +18,18 @@ using GameLibrary.Services.Location;
 using GameLibrary.Services.Media;
 using GameLibrary.Utilities.Calculations;
 using GameMaker.Services.Navigation;
+using GameMaker.Tasks;
 using GameMaker.UX.Components.GridArea;
 using GameMaker.UX.Models.MainPage;
 using GameMaker.UX.Utilities;
 using GameMaker.UX.ViewModels.Popups.EntityEditor;
-using MercuryLibrary.Enumerations;
-using MercuryLibrary.ImageComponents;
+using GameMaker.UX.ViewModels.Popups.GameStart;
+using GameMaker.UX.ViewModels.Popups.MapIdConflict;
+using GameMaker.UX.ViewModels.Popups.MapSettings;
 using MercuryLibrary.Extensions;
+using MercuryLibrary.ImageComponents;
 using Page = GameLibrary.Models.Page;
+using ContentDialogResult = Microsoft.UI.Xaml.Controls.ContentDialogResult;
 
 namespace GameMaker.UX.ViewModels.MainPage;
 
@@ -105,6 +110,13 @@ public partial class MainPageViewModel(
 
     #region Map Settings Properties
 
+    // the selected map's id, its images are found by id so a clash opens the conflict popup
+    public MapIdModel? SelectedMapId
+    {
+        get;
+        private set => SetField(ref field, value);
+    }
+
     public int MapWidth
     {
         get => SelectedMap?.Width ?? 0;
@@ -179,8 +191,15 @@ public partial class MainPageViewModel(
 
     #region Layer Properties
 
-    // ground, parallax and light for the selected map, in draw order
+    // the selected map's own images, in draw order
     public MapLayerModel[] Layers
+    {
+        get;
+        private set => SetField(ref field, value);
+    } = [];
+
+    // everything in Graphics\Maps\Environment, each one turned on or off for the selected map
+    public MapEnvironmentModel[] Environments
     {
         get;
         private set => SetField(ref field, value);
@@ -272,7 +291,9 @@ public partial class MainPageViewModel(
             SetField(ref field, value);
             OnPropertyChanged(nameof(IsEntityMode));
             OnPropertyChanged(nameof(IsAreaMode));
+            OnPropertyChanged(nameof(SnapSize));
             Select(null);
+            RebuildGrid();
         }
     } = MapEditMode.Entities;
 
@@ -295,6 +316,25 @@ public partial class MainPageViewModel(
     }
 
     public MapAreaType[] AreaTypes { get; } = Enum.GetValues<MapAreaType>();
+
+    // areas snap to this grid, smaller than a tile for finer collisions (every size divides the 48 pixel tile)
+    public int[] AreaGridSizes { get; } = [48, 24, 16, 12, 8, 6, 4];
+
+    public int AreaGridSize
+    {
+        get;
+        set
+        {
+            if (value <= 0 || field == value) return;
+            SetField(ref field, value);
+            foreach (var area in Areas) area.CellSize = value;
+            OnPropertyChanged(nameof(SnapSize));
+            RebuildGrid();
+        }
+    } = 48;
+
+    // what the cursor snaps to: areas use the area grid, everything else the tile
+    public int SnapSize => IsAreaMode ? AreaGridSize : TileSize;
 
     // the type given to newly drawn areas
     public MapAreaType NewAreaType
@@ -326,6 +366,60 @@ public partial class MainPageViewModel(
     } = true;
 
     public bool ShowLight
+    {
+        get;
+        set
+        {
+            SetField(ref field, value);
+            RebuildScene();
+        }
+    } = true;
+
+    // tests in a window instead of full screen (full screen tears on some graphics drivers)
+    public bool TestWindowed
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    // what a test draws over the game: global settings kept in config.json, the engine reads them from there
+    public bool TestShowHitboxes
+    {
+        get => locationService.Configuration?.ShowEntityHitboxes ?? false;
+        set
+        {
+            if (value == TestShowHitboxes || locationService.Configuration is not { } configuration) return;
+            configuration.ShowEntityHitboxes = value;
+            locationService.SaveConfiguration();
+            OnPropertyChanged();
+        }
+    }
+
+    public bool TestShowAreas
+    {
+        get => locationService.Configuration?.ShowAreas ?? false;
+        set
+        {
+            if (value == TestShowAreas || locationService.Configuration is not { } configuration) return;
+            configuration.ShowAreas = value;
+            locationService.SaveConfiguration();
+            OnPropertyChanged();
+        }
+    }
+
+    public bool TestShowCollisions
+    {
+        get => locationService.Configuration?.ShowCollisions ?? false;
+        set
+        {
+            if (value == TestShowCollisions || locationService.Configuration is not { } configuration) return;
+            configuration.ShowCollisions = value;
+            locationService.SaveConfiguration();
+            OnPropertyChanged();
+        }
+    }
+
+    public bool ShowEnvironments
     {
         get;
         set
@@ -373,6 +467,23 @@ public partial class MainPageViewModel(
 
     #endregion
 
+    #region Spawn Properties
+
+    // the game start and the test spawn are drawn on the map they belong to
+    public bool IsGameStartShown => SelectedMap is { } map && gameDataService.GameStart.MapGuid == map.Guid;
+
+    public double GameStartX => gameDataService.GameStart.Spawn.TileX * TileSize;
+
+    public double GameStartY => gameDataService.GameStart.Spawn.TileY * TileSize;
+
+    public bool IsTestSpawnShown => SelectedMap?.TestSpawn is not null;
+
+    public double TestSpawnX => (SelectedMap?.TestSpawn?.TileX ?? 0) * TileSize;
+
+    public double TestSpawnY => (SelectedMap?.TestSpawn?.TileY ?? 0) * TileSize;
+
+    #endregion
+
     #region Selection Properties
 
     public MapEntityModel? SelectedEntity
@@ -383,8 +494,6 @@ public partial class MainPageViewModel(
             field?.IsSelected = false;
             SetField(ref field, value);
             field?.IsSelected = true;
-            OnPropertyChanged(nameof(EntityName));
-            OnPropertyChanged(nameof(EntityZ));
             OnSelectionChanged();
         }
     }
@@ -404,41 +513,21 @@ public partial class MainPageViewModel(
 
     public bool HasNoSelection => SelectedEntity is null && SelectedArea is null;
 
-    public string EntityName
-    {
-        get => SelectedEntity?.Name ?? string.Empty;
-        set
-        {
-            if (SelectedEntity is null || SelectedEntity.Entity.Name == value) return;
-            SelectedEntity.Entity.Name = value;
-            SelectedEntity.Refresh();
-            OnPropertyChanged();
-        }
-    }
-
-    public double EntityZ
-    {
-        get => SelectedEntity?.Z ?? 0;
-        set
-        {
-            if (SelectedEntity is null || double.IsNaN(value) || SelectedEntity.Z == value) return;
-            SelectedEntity.Z = value;
-            OnPropertyChanged();
-            RebuildScene();
-        }
-    }
-
     #endregion
 
     #region Commands
 
-    public RelayCommand NewMapCommand => field ??= new RelayCommand(() => NewMap(false));
+    public AsyncRelayCommand NewMapCommand => field ??= new AsyncRelayCommand(() => NewMap(false));
 
-    public RelayCommand NewFolderCommand => field ??= new RelayCommand(() => NewMap(true));
+    public AsyncRelayCommand NewFolderCommand => field ??= new AsyncRelayCommand(() => NewMap(true));
+
+    public AsyncRelayCommand EditMapCommand => field ??= new AsyncRelayCommand(EditMap, () => SelectedMap is not null);
+
+    public AsyncRelayCommand LayersCommand => field ??= new AsyncRelayCommand(() => navigationService.ShowMapLayersPopup(this), () => IsMapSelected);
 
     public RelayCommand CopyMapCommand => field ??= new RelayCommand(CopyMap, () => SelectedMap is not null);
 
-    public RelayCommand PasteMapCommand => field ??= new RelayCommand(PasteMap);
+    public AsyncRelayCommand PasteMapCommand => field ??= new AsyncRelayCommand(PasteMap);
 
     public RelayCommand DeleteMapCommand => field ??= new RelayCommand(DeleteMap, () => SelectedMap is not null);
 
@@ -458,11 +547,18 @@ public partial class MainPageViewModel(
 
     public AsyncRelayCommand NewEntityCommand => field ??= new AsyncRelayCommand(() => NewEntity(_contextTile), () => IsMapSelected && IsEntityMode);
 
-    public AsyncRelayCommand EditEntityCommand => field ??= new AsyncRelayCommand(EditEntity, () => SelectedEntity is not null);
+    public AsyncRelayCommand SetGameStartCommand => field ??= new AsyncRelayCommand(SetGameStart, () => IsMapSelected);
+
+    public RelayCommand SetTestSpawnCommand => field ??= new RelayCommand(SetTestSpawn, () => IsMapSelected);
+
+    public AsyncRelayCommand TestMapCommand => field ??= new AsyncRelayCommand(TestMap, () => IsMapSelected && File.Exists(EnginePath));
+
+    public AsyncRelayCommand EditSelectionCommand => field ??= new AsyncRelayCommand(EditSelection, () => !HasNoSelection);
 
     public RelayCommand CopySelectionCommand => field ??= new RelayCommand(CopySelection, () => SelectedEntity is not null);
 
-    public RelayCommand PasteSelectionCommand => field ??= new RelayCommand(PasteSelection, () => _copiedEntity is not null && IsMapSelected && IsEntityMode);
+    public RelayCommand PasteSelectionCommand =>
+        field ??= new RelayCommand(PasteSelection, () => _copiedEntity is not null && IsMapSelected && IsEntityMode);
 
     public RelayCommand DeleteSelectionCommand => field ??= new RelayCommand(DeleteSelection, () => !HasNoSelection);
 
@@ -487,7 +583,7 @@ public partial class MainPageViewModel(
 
         var selected = SelectedMap?.Guid ?? gameDataService.GameMaps.OrderBy(x => x.Id).FirstOrDefault(x => !x.FolderOnly)?.Guid;
         RebuildTree(selected);
-        RefreshMapSettings();
+        await RefreshMapSettings();
 
         // entities may have been edited elsewhere (e.g. the character image of a page)
         await RefreshEntitySprites();
@@ -496,7 +592,7 @@ public partial class MainPageViewModel(
     private async Task OnSelectedMapChanged()
     {
         Select(null);
-        RefreshMapSettings();
+        await RefreshMapSettings();
         RebuildGrid();
         RebuildModels();
 
@@ -511,7 +607,7 @@ public partial class MainPageViewModel(
 
     #region Map Tree
 
-    private void NewMap(bool folder)
+    private async Task NewMap(bool folder)
     {
         var parent = SelectedMap;
         var map = new GameMap
@@ -525,6 +621,17 @@ public partial class MainPageViewModel(
         parent?.IsExpanded = true;
         gameDataService.GameMaps.Add(map);
         RebuildTree(map.Guid);
+
+        var result = await navigationService.ShowMapSettingsPopup(new MapSettingsViewModel(this, true));
+        StopAudio();
+        if (result != ContentDialogResult.Primary && Equals(SelectedMap, map)) DeleteMap();
+    }
+
+    private async Task EditMap()
+    {
+        if (SelectedMap is null) return;
+        await navigationService.ShowMapSettingsPopup(new MapSettingsViewModel(this, false));
+        StopAudio();
     }
 
     private void CopyMap()
@@ -532,18 +639,24 @@ public partial class MainPageViewModel(
         CopiedMap = SelectedMap;
     }
 
-    private void PasteMap()
+    // the copy takes the id after the original (40 pastes as 41), a map already on that id asks which one moves
+    private async Task PasteMap()
     {
         if (CopiedMap is null || jsonService.Clone(CopiedMap) is not { } clone) return;
 
         clone.Guid = Guid.NewGuid();
-        clone.Id = Calculations.GetNextId([.. gameDataService.GameMaps.Select(x => x.Id)]);
+        clone.Id = CopiedMap.Id + 1;
         clone.IsExpanded = false;
         foreach (var entity in clone.Entities) ReassignGuids(entity, clone.Guid);
         foreach (var area in clone.Areas) area.Guid = Guid.NewGuid();
 
         gameDataService.GameMaps.Add(clone);
         RebuildTree(clone.Guid);
+
+        // cancelling the conflict cancels the paste
+        if (await ResolveIdConflict(clone)) return;
+        gameDataService.GameMaps.Remove(clone);
+        RebuildTree(CopiedMap.Guid);
     }
 
     // children move up to the deleted map's parent so deleting a folder never deletes the maps inside it
@@ -561,7 +674,7 @@ public partial class MainPageViewModel(
         }
 
         gameDataService.GameMaps.Remove(map);
-        if (CopiedMap == map) CopiedMap = null;
+        if (Equals(CopiedMap, map)) CopiedMap = null;
 
         RebuildTree(map.ParentGuid ?? gameDataService.GameMaps.OrderBy(x => x.Id).FirstOrDefault()?.Guid);
     }
@@ -596,6 +709,7 @@ public partial class MainPageViewModel(
         SelectedNode = selected;
         RefreshMapOptions();
         CopyMapCommand.RaiseCanExecuteChanged();
+        EditMapCommand.RaiseCanExecuteChanged();
         DeleteMapCommand.RaiseCanExecuteChanged();
     }
 
@@ -630,22 +744,36 @@ public partial class MainPageViewModel(
         OnPropertyChanged(nameof(WestMap));
     }
 
-    private void RefreshMapSettings()
+    private Task RefreshMapSettings()
     {
-        RefreshMapOptions();
-        OnPropertyChanged(nameof(IsMapSelected));
-        OnPropertyChanged(nameof(IsFolderSelected));
-        OnPropertyChanged(nameof(MapWidth));
-        OnPropertyChanged(nameof(MapHeight));
-        OnPropertyChanged(nameof(MapPixelWidth));
-        OnPropertyChanged(nameof(MapPixelHeight));
-        RefreshLayers();
-        OnPropertyChanged(nameof(SelectedBgm));
-        OnPropertyChanged(nameof(SelectedBgs));
-        PlayBgmCommand.RaiseCanExecuteChanged();
-        PlayBgsCommand.RaiseCanExecuteChanged();
-        NewEntityCommand.RaiseCanExecuteChanged();
-        PasteSelectionCommand.RaiseCanExecuteChanged();
+        try
+        {
+            SelectedMapId = SelectedMap is { } selected ? new MapIdModel(selected, gameDataService.GameMaps, OnMapIdChanged) : null;
+            RefreshMapOptions();
+            OnPropertyChanged(nameof(IsMapSelected));
+            OnPropertyChanged(nameof(IsFolderSelected));
+            OnPropertyChanged(nameof(MapWidth));
+            OnPropertyChanged(nameof(MapHeight));
+            OnPropertyChanged(nameof(MapPixelWidth));
+            OnPropertyChanged(nameof(MapPixelHeight));
+            RefreshLayers();
+            OnPropertyChanged(nameof(SelectedBgm));
+            OnPropertyChanged(nameof(SelectedBgs));
+            PlayBgmCommand.RaiseCanExecuteChanged();
+            PlayBgsCommand.RaiseCanExecuteChanged();
+            NewEntityCommand.RaiseCanExecuteChanged();
+            PasteSelectionCommand.RaiseCanExecuteChanged();
+            LayersCommand.RaiseCanExecuteChanged();
+            SetGameStartCommand.RaiseCanExecuteChanged();
+            SetTestSpawnCommand.RaiseCanExecuteChanged();
+            TestMapCommand.RaiseCanExecuteChanged();
+            RefreshSpawns();
+            return Task.CompletedTask;
+        }
+        catch (Exception exception)
+        {
+            return Task.FromException(exception);
+        }
     }
 
     private void OnMapSizeChanged()
@@ -655,6 +783,7 @@ public partial class MainPageViewModel(
         OnPropertyChanged(nameof(MapPixelWidth));
         OnPropertyChanged(nameof(MapPixelHeight));
         RebuildGrid();
+        RebuildScene(); // environments are tiled to the map size
         OnCameraChanged();
     }
 
@@ -666,6 +795,40 @@ public partial class MainPageViewModel(
         SelectedMap.Width = Math.Max(1, (int) Math.Ceiling(width / TileSize));
         SelectedMap.Height = Math.Max(1, (int) Math.Ceiling(height / TileSize));
         OnMapSizeChanged();
+    }
+
+    private async Task OnMapIdChanged(MapIdModel changed, int previousId)
+    {
+        var map = changed.Map;
+        if (!await ResolveIdConflict(map)) map.Id = previousId;
+
+        // the tree and the map options are sorted and labeled by id, and the images are found by it
+        RebuildTree(SelectedMap?.Guid);
+        await RefreshMapSettings();
+    }
+
+    // when another map has the same id, the conflict popup stays up until every map has its own id again,
+    // false when it was canceled (the other map's id is put back, the caller decides what happens to this one)
+    private async Task<bool> ResolveIdConflict(GameMap map)
+    {
+        if (gameDataService.GameMaps.FirstOrDefault(x => !Equals(x, map) && x.Id == map.Id) is not { } other) return true;
+
+        var otherId = other.Id;
+        var viewModel = new MapIdConflictViewModel(new MapIdModel(map, gameDataService.GameMaps), new MapIdModel(other, gameDataService.GameMaps));
+        while (true)
+        {
+            var result = await navigationService.ShowMapIdConflictPopup(viewModel);
+            if (result != ContentDialogResult.Primary)
+            {
+                other.Id = otherId;
+                return false;
+            }
+
+            if (viewModel.HasConflict) continue;
+            RebuildTree(SelectedMap?.Guid);
+            await RefreshMapSettings();
+            return true;
+        }
     }
 
     private MapOption? FindConnection(Guid? guid)
@@ -710,12 +873,39 @@ public partial class MainPageViewModel(
             : [];
 
         foreach (var layer in Layers) layer.PropertyChanged += OnLayerChanged;
+
+        RefreshEnvironments();
+    }
+
+    private void RefreshEnvironments()
+    {
+        foreach (var environment in Environments) environment.PropertyChanged -= OnLayerChanged;
+
+        var graphicsDirectory = locationService.GraphicsDirectory!;
+        Environments = SelectedMap is { FolderOnly: false } map
+            ? [.. MapEnvironment.Names(graphicsDirectory).Select(name => new MapEnvironmentModel(map, name, graphicsDirectory))]
+            : [];
+
+        foreach (var environment in Environments) environment.PropertyChanged += OnLayerChanged;
+        _ = LoadEnvironmentSizes(Environments);
+    }
+
+    // the frames are tiled over the map, so their size is needed before they can be drawn
+    private async Task LoadEnvironmentSizes(MapEnvironmentModel[] environments)
+    {
+        foreach (var environment in environments.Where(x => x.FramePaths.Length > 0))
+        {
+            var (width, height) = await graphicsService.GetImageDimensions(environment.FramePaths[0]);
+            environment.FrameSize = (width, height);
+        }
+
+        if (environments == Environments) RebuildScene();
     }
 
     private void OnLayerChanged(object? sender, PropertyChangedEventArgs e)
     {
-        // raised once for every change to a layer's z, opacity or blend
-        if (e.PropertyName == nameof(MapLayerModel.IsDefault)) RebuildScene();
+        // raised once for every change to an image's z, opacity or blend, and when an environment is turned on or off
+        if (e.PropertyName is nameof(MapImageModel.IsDefault) or nameof(MapEnvironmentModel.IsOn)) RebuildScene();
     }
 
     private bool IsLayerShown(MapLayer layer) => layer.Type switch
@@ -735,7 +925,11 @@ public partial class MainPageViewModel(
         Scene.Clear();
         if (!IsMapSelected) return;
 
-        foreach (var layer in Layers.Where(x => IsLayerShown(x.Layer))) Scene.AddLayer(layer.Layer, layer.ImagePath);
+        foreach (var layer in Layers.Where(x => IsLayerShown(x.Layer))) Scene.AddImage(layer.Layer, layer.ImagePath);
+        if (ShowEnvironments)
+        {
+            foreach (var environment in Environments.Where(x => x.IsOn)) AddEnvironment(environment);
+        }
 
         foreach (var entity in Entities)
         {
@@ -746,6 +940,18 @@ public partial class MainPageViewModel(
         }
 
         Scene.ApplyCamera(Camera);
+    }
+
+    // the first frame repeated until it covers the whole map
+    private void AddEnvironment(MapEnvironmentModel environment)
+    {
+        var (width, height) = environment.FrameSize;
+        if (environment.FramePaths.Length == 0 || width <= 0 || height <= 0) return;
+
+        for (var y = 0.0; y < MapPixelHeight; y += height)
+        {
+            for (var x = 0.0; x < MapPixelWidth; x += width) Scene.AddImage(environment.Environment, environment.FramePaths[0], x, y);
+        }
     }
 
     // sprites stand on the bottom center of their tile so tall characters overlap the tile above
@@ -761,7 +967,7 @@ public partial class MainPageViewModel(
         if (!IsMapSelected || SelectedMap is not { } map) return;
 
         foreach (var entity in map.Entities) Entities.Add(new MapEntityModel(entity, TileSize));
-        foreach (var area in map.Areas) Areas.Add(new MapAreaModel(area, TileSize));
+        foreach (var area in map.Areas) Areas.Add(new MapAreaModel(area, AreaGridSize));
     }
 
     private async Task RefreshEntitySprites()
@@ -770,7 +976,7 @@ public partial class MainPageViewModel(
         await Task.WhenAll(Entities.ToArray().Select(LoadSprite));
 
         // the user may have picked another map while the sprites loaded
-        if (map == SelectedMap) RebuildScene();
+        if (Equals(map, SelectedMap)) RebuildScene();
     }
 
     private async Task LoadSprite(MapEntityModel entity)
@@ -797,8 +1003,9 @@ public partial class MainPageViewModel(
         GridLines.Clear();
         if (!IsMapSelected) return;
 
-        for (var x = 0; x <= MapPixelWidth; x += TileSize) GridLines.Add(new GridLine(x, 0, x, MapPixelHeight));
-        for (var y = 0; y <= MapPixelHeight; y += TileSize) GridLines.Add(new GridLine(0, y, MapPixelWidth, y));
+        // the grid shows what the cursor snaps to
+        for (var x = 0; x <= MapPixelWidth; x += SnapSize) GridLines.Add(new GridLine(x, 0, x, MapPixelHeight));
+        for (var y = 0; y <= MapPixelHeight; y += SnapSize) GridLines.Add(new GridLine(0, y, MapPixelWidth, y));
     }
 
     private void OnCameraChanged()
@@ -841,6 +1048,7 @@ public partial class MainPageViewModel(
         }
 
         var tile = ToTile(world);
+        var cell = ToCell(world, AreaGridSize);
         _contextTile = tile;
         var canDrag = properties.IsLeftButtonPressed;
 
@@ -859,12 +1067,12 @@ public partial class MainPageViewModel(
         if (area is not null)
         {
             _dragArea = area;
-            _dragAreaOffset = new Point(tile.X - area.X, tile.Y - area.Y);
+            _dragAreaOffset = new Point(cell.X - area.X, cell.Y - area.Y);
             return;
         }
 
-        _drawStart = tile;
-        UpdateDrawPreview(tile);
+        _drawStart = cell;
+        UpdateDrawPreview(cell);
     }
 
     private void OnCanvasMoved(PointerEventInfo info)
@@ -882,32 +1090,35 @@ public partial class MainPageViewModel(
         var world = ToWorld(info.Position);
         IsHovering = IsInsideMap(world);
         var tile = ToTile(world);
+        var cell = ToCell(world, AreaGridSize);
         if (IsHovering)
         {
-            HoverX = tile.X;
-            HoverY = tile.Y;
-            CursorText = $"Tile {(int) (tile.X / TileSize)}, {(int) (tile.Y / TileSize)}";
+            var snapped = IsAreaMode ? cell : tile;
+            HoverX = snapped.X;
+            HoverY = snapped.Y;
+            CursorText = IsAreaMode
+                ? $"Cell {(int) (cell.X / AreaGridSize)}, {(int) (cell.Y / AreaGridSize)}"
+                : $"Tile {(int) (tile.X / TileSize)}, {(int) (tile.Y / TileSize)}";
             _contextTile = tile;
         }
 
-        if (_dragEntity is not null && (_dragEntity.X != tile.X || _dragEntity.Y != tile.Y))
+        // both are whole map pixels on the tile grid, compared as ints, so the check is exact
+        if (_dragEntity is not null && ((int) _dragEntity.X != (int) tile.X || (int) _dragEntity.Y != (int) tile.Y))
         {
             _dragEntity.MoveTo(tile.X, tile.Y);
-            if (_dragEntity.Picture is { } picture && _dragEntity.Sprite?.Rect is { } rect)
-            {
-                var (x, y) = SpritePosition(_dragEntity, rect);
-                Scene.Move(picture, x, y, Camera);
-            }
+            if (_dragEntity.Picture is not { } picture || _dragEntity.Sprite?.Rect is not { } rect) return;
+            var (x, y) = SpritePosition(_dragEntity, rect);
+            Scene.Move(picture, x, y, Camera);
         }
         else if (_dragArea is not null)
         {
-            var x = Math.Clamp(tile.X - _dragAreaOffset.X, 0, Math.Max(0, MapPixelWidth - _dragArea.Width));
-            var y = Math.Clamp(tile.Y - _dragAreaOffset.Y, 0, Math.Max(0, MapPixelHeight - _dragArea.Height));
+            var x = Math.Clamp(cell.X - _dragAreaOffset.X, 0, Math.Max(0, MapPixelWidth - _dragArea.Width));
+            var y = Math.Clamp(cell.Y - _dragAreaOffset.Y, 0, Math.Max(0, MapPixelHeight - _dragArea.Height));
             _dragArea.MoveTo((int) x, (int) y);
         }
         else if (_drawStart is not null)
         {
-            UpdateDrawPreview(tile);
+            UpdateDrawPreview(cell);
         }
     }
 
@@ -958,29 +1169,32 @@ public partial class MainPageViewModel(
         await EditEntity();
     }
 
-    private void UpdateDrawPreview(Point tile)
+    private void UpdateDrawPreview(Point cell)
     {
         if (_drawStart is not { } start) return;
 
-        // inclusive of both tiles so a single click draws a one tile area
-        var left = Math.Min(start.X, tile.X);
-        var top = Math.Min(start.Y, tile.Y);
-        var right = Math.Max(start.X, tile.X) + TileSize;
-        var bottom = Math.Max(start.Y, tile.Y) + TileSize;
+        // inclusive of both cells so a single click draws a one cell area
+        var left = Math.Min(start.X, cell.X);
+        var top = Math.Min(start.Y, cell.Y);
+        var right = Math.Max(start.X, cell.X) + AreaGridSize;
+        var bottom = Math.Max(start.Y, cell.Y) + AreaGridSize;
         DrawPreview = new Rect(left, top, right - left, bottom - top);
         IsDrawing = true;
     }
 
     private Point ToWorld(Point screen) => new(screen.X + Camera.X, screen.Y + Camera.Y);
 
-    private Point ToTile(Point world)
+    private Point ToTile(Point world) => ToCell(world, TileSize);
+
+    // the top left of the cell the point is in, kept inside the map
+    private Point ToCell(Point world, int size)
     {
-        var x = Math.Clamp(Calculations.RoundToMultiple(world.X, TileSize, Rounding.Down), 0, Math.Max(0, MapPixelWidth - TileSize));
-        var y = Math.Clamp(Calculations.RoundToMultiple(world.Y, TileSize, Rounding.Down), 0, Math.Max(0, MapPixelHeight - TileSize));
+        var x = Math.Clamp(Calculations.RoundToMultiple(world.X, size, Rounding.Down), 0, Math.Max(0, MapPixelWidth - size));
+        var y = Math.Clamp(Calculations.RoundToMultiple(world.Y, size, Rounding.Down), 0, Math.Max(0, MapPixelHeight - size));
         return new Point(x, y);
     }
 
-    private bool IsInsideMap(Point world) => world.X >= 0 && world.Y >= 0 && world.X < MapPixelWidth && world.Y < MapPixelHeight;
+    private bool IsInsideMap(Point world) => world is { X: >= 0, Y: >= 0 } && world.X < MapPixelWidth && world.Y < MapPixelHeight;
 
     #endregion
 
@@ -1003,16 +1217,20 @@ public partial class MainPageViewModel(
         await EditEntity();
     }
 
+    private async Task EditSelection()
+    {
+        if (SelectedEntity is not null) await EditEntity();
+        else if (SelectedArea is not null) await navigationService.ShowAreaEditorPopup(this);
+    }
+
     private async Task EditEntity()
     {
         if (SelectedEntity is not { } model) return;
 
-        var viewModel = new EntityEditorViewModel(model.Entity, gameDataService, jsonService, navigationService);
+        var viewModel = new EntityEditorViewModel(model.Entity, gameDataService, jsonService, graphicsService, locationService, navigationService);
         await navigationService.ShowEntityEditorPopup(viewModel);
 
         model.Refresh();
-        OnPropertyChanged(nameof(EntityName));
-        OnPropertyChanged(nameof(EntityZ));
         await LoadSprite(model);
         RebuildScene();
     }
@@ -1092,9 +1310,71 @@ public partial class MainPageViewModel(
         };
 
         map.Areas.Add(area);
-        var model = new MapAreaModel(area, TileSize);
+        var model = new MapAreaModel(area, AreaGridSize);
         Areas.Add(model);
         Select(model);
+    }
+
+    #endregion
+
+    #region Spawns
+
+    // the engine is copied next to the editor when it builds (see BundleGameEngine in the project file)
+    private static string EnginePath => Path.Combine(AppContext.BaseDirectory, "Engine", "GameEngine.exe");
+
+    private async Task SetGameStart()
+    {
+        if (SelectedMap is not { } map) return;
+
+        var start = gameDataService.GameStart;
+        start.MapGuid = map.Guid;
+        start.Spawn.TileX = (int) (_contextTile.X / TileSize);
+        start.Spawn.TileY = (int) (_contextTile.Y / TileSize);
+        RefreshSpawns();
+
+        await navigationService.ShowGameStartPopup(new GameStartViewModel(start, gameDataService.Actors, map.Name));
+    }
+
+    private void SetTestSpawn()
+    {
+        if (SelectedMap is not { } map) return;
+
+        map.TestSpawn ??= new SpawnPoint();
+        map.TestSpawn.TileX = (int) (_contextTile.X / TileSize);
+        map.TestSpawn.TileY = (int) (_contextTile.Y / TileSize);
+        RefreshSpawns();
+    }
+
+    // the engine plays the saved game, so the game is saved before the map is opened in it
+    private async Task TestMap()
+    {
+        if (SelectedMap is not { } map || !File.Exists(EnginePath)) return;
+
+        // the game plays the map's audio itself, a preview left on here would play over it
+        StopAudio();
+        await navigationService.ShowProgressPopup<SaveDataTask>("Saving Game Files");
+
+        var startInfo = new ProcessStartInfo(EnginePath)
+        {
+            WorkingDirectory = Path.GetDirectoryName(EnginePath),
+            UseShellExecute = false
+        };
+
+        // the engine's StartService reads this, it opens the map at its test spawn
+        startInfo.ArgumentList.Add("--test");
+        startInfo.ArgumentList.Add(map.Guid.ToString());
+        if (TestWindowed) startInfo.ArgumentList.Add("--windowed");
+        Process.Start(startInfo);
+    }
+
+    private void RefreshSpawns()
+    {
+        OnPropertyChanged(nameof(IsGameStartShown));
+        OnPropertyChanged(nameof(GameStartX));
+        OnPropertyChanged(nameof(GameStartY));
+        OnPropertyChanged(nameof(IsTestSpawnShown));
+        OnPropertyChanged(nameof(TestSpawnX));
+        OnPropertyChanged(nameof(TestSpawnY));
     }
 
     #endregion
@@ -1110,7 +1390,7 @@ public partial class MainPageViewModel(
     private void OnSelectionChanged()
     {
         OnPropertyChanged(nameof(HasNoSelection));
-        EditEntityCommand.RaiseCanExecuteChanged();
+        EditSelectionCommand.RaiseCanExecuteChanged();
         CopySelectionCommand.RaiseCanExecuteChanged();
         DeleteSelectionCommand.RaiseCanExecuteChanged();
         NewEntityCommand.RaiseCanExecuteChanged();

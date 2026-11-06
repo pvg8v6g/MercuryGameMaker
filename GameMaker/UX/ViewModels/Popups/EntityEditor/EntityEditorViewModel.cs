@@ -5,13 +5,17 @@ using GameLibrary.Enumerations;
 using GameLibrary.Models;
 using GameLibrary.Models.Actions;
 using GameLibrary.Models.Conditions;
+using GameLibrary.Models.Modules;
 using GameLibrary.Services.GameData;
+using GameLibrary.Services.Graphics;
+using GameLibrary.Services.Location;
 using GameLibrary.Services.Json;
 using GameLibrary.Utilities;
 using GameLibrary.Utilities.Calculations;
 using GameLibrary.Utilities.ComponentModels;
 using GameMaker.Services.Navigation;
 using GameMaker.UX.Components.EngineListView;
+using GameMaker.UX.Models.Hitboxes;
 using GameMaker.UX.ViewModels.Popups.ActionEditor;
 using GameMaker.UX.ViewModels.Popups.BranchActionEditor;
 using GameMaker.UX.ViewModels.Popups.ConditionEditor;
@@ -61,6 +65,7 @@ public class EntityEditorViewModel : BaseViewModel<Page>
     public static Brush? BrushForAction(PageAction action) => ColorForAction(action)?.ToBrush();
 
     private readonly IGameDataService _gameDataService;
+    private readonly IGraphicsService _graphicsService;
     private readonly INavigationService _navigationService;
     private bool _insertAbove;
 
@@ -68,9 +73,17 @@ public class EntityEditorViewModel : BaseViewModel<Page>
         Entity entity,
         IGameDataService gameDataService,
         IJsonService jsonService,
-        INavigationService navigationService) : base(jsonService)
+        IGraphicsService graphicsService,
+        ILocationService locationService,
+        INavigationService navigationService,
+        string kind = "Entity") : base(jsonService)
     {
         Entity = entity;
+        FaceFolderPath = Path.Combine(locationService.GraphicsDirectory!, "Faces");
+        Hitboxes = new HitboxEditorModel(graphicsService);
+        _graphicsService = graphicsService;
+        Title = $"{kind} Editor";
+        NameHeader = $"{kind} Name";
         _gameDataService = gameDataService;
         _navigationService = navigationService;
 
@@ -90,6 +103,11 @@ public class EntityEditorViewModel : BaseViewModel<Page>
 
     public Entity Entity { get; }
 
+    // the same editor edits map entities and arte projectiles
+    public string Title { get; }
+
+    public string NameHeader { get; }
+
     public string EntityName
     {
         get => Entity.Name;
@@ -101,7 +119,80 @@ public class EntityEditorViewModel : BaseViewModel<Page>
         }
     }
 
+    // every page shares one z so the entity doesn't jump layers when its page changes
+    public double EntityZ
+    {
+        get => Positions.FirstOrDefault()?.Z ?? 0;
+        set
+        {
+            if (double.IsNaN(value) || EntityZ == value) return;
+            foreach (var position in Positions) position.Z = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private IEnumerable<PositionModule> Positions => Entity.Pages.SelectMany(x => x.Modules).OfType<PositionModule>();
+
     public PageTrigger[] Triggers { get; } = Enum.GetValues<PageTrigger>();
+
+    #endregion
+
+    #region Page Image Properties
+
+    // works like the face and character choosers on the actors page, the images belong to the selected page
+
+    public string CharacterFolderPath => _graphicsService.GetCharacterPath();
+
+    public string FaceFolderPath { get; }
+
+    public string? CharacterName
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    // the cell on the whole sheet (direction row included), the page keeps the column and the direction apart
+    public int CharacterIndex
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    public HitboxEditorModel Hitboxes { get; }
+
+    // whether other entities and the player bump into this page's hitboxes
+    public bool Collide
+    {
+        get => PageHitbox?.Collide ?? false;
+        set
+        {
+            if (SelectedPage is null || value == Collide) return;
+            PageHitboxes().Collide = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public string? FaceName
+    {
+        get => PageFace?.FaceName ?? string.Empty;
+        set
+        {
+            if (SelectedPage is null || value == FaceName) return;
+            PageModule<FaceModule>().FaceName = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public int? FaceIndex
+    {
+        get => PageFace?.FaceIndex;
+        set
+        {
+            if (SelectedPage is null || value == FaceIndex) return;
+            PageModule<FaceModule>().FaceIndex = value;
+            OnPropertyChanged();
+        }
+    }
 
     public Page? SelectedPage => SelectedEntity;
 
@@ -257,6 +348,8 @@ public class EntityEditorViewModel : BaseViewModel<Page>
 
     #region Relays
 
+    public RelayCommand<SpriteSelectedArgs> SelectCharacterCommand => field ??= new RelayCommand<SpriteSelectedArgs>(SelectCharacter);
+
     public AsyncRelayCommand<string> AddConditionCommand => new(AddCondition);
 
     public AsyncRelayCommand EditConditionCommand => new(EditCondition);
@@ -302,12 +395,81 @@ public class EntityEditorViewModel : BaseViewModel<Page>
     protected override Task OnSelectedIndexChanged(int index)
     {
         OnPropertyChanged(nameof(SelectedPage));
+        RefreshPageImages();
         OnPropertyChanged(nameof(SelectedConditions));
         OnPropertyChanged(nameof(SelectedActions));
         SelectedConditionIndex = -1;
         SelectedActionIndex = -1;
         RebuildActionRows();
         return Task.CompletedTask;
+    }
+
+    // the picked cell gives the sheet, the column and the direction the entity faces
+    private void SelectCharacter(SpriteSelectedArgs args)
+    {
+        if (SelectedPage is null) return;
+
+        var image = PageModule<CharacterImageModule>();
+        image.ImageName = args.FileName;
+        image.Index = args.Index;
+        PagePosition().Direction = args.Direction;
+        RefreshPageImages();
+    }
+
+    private void RefreshPageImages()
+    {
+        var image = SelectedPage?.Modules.OfType<CharacterImageModule>().FirstOrDefault();
+        CharacterName = image?.ImageName;
+        CharacterIndex = image?.ImageName is { Length: > 0 } name
+            ? _graphicsService.GetCharacterIndexFromDirection(name, image.Index, PageDirection)
+            : 0;
+
+        OnPropertyChanged(nameof(FaceName));
+        OnPropertyChanged(nameof(FaceIndex));
+
+        // hitboxes are drawn against the character, so a page only gets them once it has one
+        var hitboxes = CharacterName is { Length: > 0 } ? PageHitboxes() : PageHitbox;
+        _ = Hitboxes.Show(hitboxes?.Hitboxes, CharacterName, image?.Index ?? 0);
+        OnPropertyChanged(nameof(Collide));
+    }
+
+    private Direction PageDirection => SelectedPage?.Modules.OfType<PositionModule>().FirstOrDefault()?.Direction is { } direction and not Direction.None
+        ? direction
+        : Direction.Down;
+
+    private EntityHitboxModule? PageHitbox => SelectedPage?.Modules.OfType<EntityHitboxModule>().FirstOrDefault();
+
+    // a page's first hitboxes are solid, that is what they are usually added for
+    private EntityHitboxModule PageHitboxes()
+    {
+        if (PageHitbox is { } hitbox) return hitbox;
+
+        var created = new EntityHitboxModule { Collide = true };
+        SelectedPage!.Modules.Add(created);
+        return created;
+    }
+
+    private FaceModule? PageFace => SelectedPage?.Modules.OfType<FaceModule>().FirstOrDefault();
+
+    // the page's module of this type, added when the page doesn't have one yet
+    private T PageModule<T>() where T : Module, new()
+    {
+        if (SelectedPage!.Modules.OfType<T>().FirstOrDefault() is { } module) return module;
+
+        var created = new T();
+        SelectedPage.Modules.Add(created);
+        return created;
+    }
+
+    // a page without a position takes the entity's, so facing a new way never moves the entity
+    private PositionModule PagePosition()
+    {
+        if (SelectedPage!.Modules.OfType<PositionModule>().FirstOrDefault() is { } position) return position;
+
+        var source = Positions.FirstOrDefault();
+        var created = new PositionModule { X = source?.X ?? 0, Y = source?.Y ?? 0, Z = source?.Z ?? 0, SortZ = source?.SortZ ?? 0 };
+        SelectedPage.Modules.Add(created);
+        return created;
     }
 
     private async Task AddCondition(string key)

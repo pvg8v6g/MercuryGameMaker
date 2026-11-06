@@ -1,4 +1,4 @@
-<Page x:Class="GameEngine.UX.Views.MainGame.MainGameView"
+﻿<Page x:Class="GameEngine.UX.Views.MainGame.MainGameView"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,21 +6,74 @@
       xmlns:mainGame="using:GameEngine.UX.ViewModels.MainGame"
       xmlns:behaviors="using:GameLibrary.Behaviors"
       xmlns:mercury="using:MercuryLibrary.CanvasComponents"
+      xmlns:models="using:GameEngine.Models"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance mainGame:MainGameViewModel}"
       Background="Black"
       behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
 
+  <Page.Resources>
+    <ItemsPanelTemplate x:Key="DebugBoxPanel">
+      <Canvas />
+    </ItemsPanelTemplate>
+
+    <!-- the canvas keeps the box where it says: an items control's item can't be moved with Canvas.Left itself -->
+    <DataTemplate x:Key="DebugBoxTemplate"
+                  x:DataType="models:DebugBox">
+      <Canvas>
+        <Rectangle Canvas.Left="{x:Bind X, Mode=OneWay}"
+                   Canvas.Top="{x:Bind Y, Mode=OneWay}"
+                   Width="{x:Bind Width, Mode=OneWay}"
+                   Height="{x:Bind Height, Mode=OneWay}"
+                   Fill="{x:Bind Fill}"
+                   Stroke="{x:Bind Stroke}"
+                   StrokeThickness="1" />
+      </Canvas>
+    </DataTemplate>
+  </Page.Resources>
+
   <!-- the game: screen height tall, six tiles narrower than the screen, centered -->
-  <mercury:GameCanvasView Width="{x:Bind ViewModel.GameWidth, Mode=OneWay}"
-                          Height="{x:Bind ViewModel.GameHeight, Mode=OneWay}"
-                          HorizontalAlignment="Center"
-                          VerticalAlignment="Top"
-                          IsTabStop="True"
-                          UpdateRate="{x:Bind ViewModel.FrameRate}"
-                          UpdateCallback="{x:Bind ViewModel.UpdateCallback}"
-                          Sprites="{x:Bind ViewModel.Nodes}"
-                          behaviors:KeyCommandBehavior.FocusOnLoaded="True"
-                          behaviors:KeyCommandBehavior.KeyDownCommand="{x:Bind ViewModel.KeyDownCommand}"
-                          behaviors:KeyCommandBehavior.KeyUpCommand="{x:Bind ViewModel.KeyUpCommand}" />
+  <Grid Width="{x:Bind ViewModel.GameWidth, Mode=OneWay}"
+        Height="{x:Bind ViewModel.GameHeight, Mode=OneWay}"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Top">
+    <!-- 96 draws every image at its pixel size, art saved at 72 dpi would otherwise be drawn 1.33x too big and shimmer as the camera moves -->
+    <!-- a clear color that isn't fully opaque gives the canvas a swap chain with alpha, windows hands an opaque one to a display overlay, which shows a bar across the screen on some graphics drivers. Almost opaque, not transparent, so blend mode sprites still have a background to blend against -->
+    <mercury:GameCanvasView IsTabStop="True"
+                            ClearColor="#FE000000"
+                            ImageDpi="96"
+                            UpdateRate="{x:Bind ViewModel.FrameRate}"
+                            UpdateCallback="{x:Bind ViewModel.UpdateCallback}"
+                            Sprites="{x:Bind ViewModel.Renderer.Nodes, Mode=OneWay}"
+                            behaviors:KeyCommandBehavior.FocusOnLoaded="True"
+                            behaviors:KeyCommandBehavior.KeyDownCommand="{x:Bind ViewModel.KeyDownCommand}"
+                            behaviors:KeyCommandBehavior.KeyUpCommand="{x:Bind ViewModel.KeyUpCommand}" />
+
+    <!-- the debug boxes: in map pixels on a layer that moves with the camera, cut off at the edge of the game -->
+    <Grid IsHitTestVisible="False">
+      <Grid.Clip>
+        <RectangleGeometry Rect="{x:Bind ViewModel.GameBounds, Mode=OneWay}" />
+      </Grid.Clip>
+      <Canvas>
+        <Canvas.RenderTransform>
+          <TranslateTransform X="{x:Bind ViewModel.DebugOverlay.OffsetX, Mode=OneWay}"
+                              Y="{x:Bind ViewModel.DebugOverlay.OffsetY, Mode=OneWay}" />
+        </Canvas.RenderTransform>
+        <ItemsControl ItemsPanel="{StaticResource DebugBoxPanel}"
+                      ItemTemplate="{StaticResource DebugBoxTemplate}"
+                      ItemsSource="{x:Bind ViewModel.DebugOverlay.Collisions, Mode=OneWay}" />
+        <ItemsControl ItemsPanel="{StaticResource DebugBoxPanel}"
+                      ItemTemplate="{StaticResource DebugBoxTemplate}"
+                      ItemsSource="{x:Bind ViewModel.DebugOverlay.Areas, Mode=OneWay}" />
+        <ItemsControl ItemsPanel="{StaticResource DebugBoxPanel}"
+                      ItemTemplate="{StaticResource DebugBoxTemplate}"
+                      ItemsSource="{x:Bind ViewModel.DebugOverlay.EntityHitboxes, Mode=OneWay}" />
+      </Canvas>
+    </Grid>
+
+    <!-- fades the screen to black and back while changing maps -->
+    <Rectangle Fill="Black"
+               IsHitTestVisible="False"
+               Opacity="{x:Bind ViewModel.Renderer.Fade, Mode=OneWay}" />
+  </Grid>
 </Page>

@@ -4,11 +4,12 @@ public interface IAudioService
 {
     #region BGM
 
-    void PlayBgm(string file, double volume = 1.0, double pitch = 1.0);
+    // finishes once the track has started
+    Task PlayBgm(string file, double volume = 1.0, double pitch = 1.0);
 
     void StopBgm();
 
-    void FadeInBgm(double seconds);
+    void FadeInBgm(double seconds, double volume = 0.8);
 
     void FadeOutBgm(double seconds);
 
@@ -18,11 +19,12 @@ public interface IAudioService
 
     #region BGS
 
-    void PlayBgs(string file, double volume = 1.0, double pitch = 1.0);
+    // finishes once the track has started
+    Task PlayBgs(string file, double volume = 1.0, double pitch = 1.0);
 
     void StopBgs();
 
-    void FadeInBgs(double seconds);
+    void FadeInBgs(double seconds, double volume = 0.8);
 
     void FadeOutBgs(double seconds);
 
