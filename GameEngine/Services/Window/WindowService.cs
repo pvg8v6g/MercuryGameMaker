@@ -40,11 +40,12 @@ public partial class WindowService(
 
     #region Private Methods
 
-    // what the map scene needs: the maps, the actors the party leader comes from and the game start
+    // what the map scene needs: the maps, the props placed on them, the actors the party leader comes from and the game start
     private void LoadGame()
     {
         Load(Path.Combine(locationService.GameDirectory!, "Maps"), gameDataService.GameMaps);
         Load(Path.Combine(locationService.GameDirectory!, "Fighters", "Actors"), gameDataService.Actors);
+        Load(Path.Combine(locationService.GameDirectory!, "Props"), gameDataService.Props);
 
         var gameStart = Path.Combine(locationService.GameDirectory!, "Settings", "GameStart.data");
         if (File.Exists(gameStart) && jsonService.DecryptFile<GameStart>(gameStart) is { } start) gameDataService.GameStart = start;

@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using GameLibrary.Models.Props;
+using System.Collections.ObjectModel;
 using GameLibrary.Models.Animations;
 using GameLibrary.Models.Artes;
 using GameLibrary.Models.Disciplines;
@@ -32,6 +33,8 @@ public interface IGameDataService
     int GridSize { get; set; }
 
     int Division { get; set; }
+
+    int StepSize { get; }
 
     double FrameRate { get; set; }
 
@@ -69,6 +72,10 @@ public interface IGameDataService
     ObservableCollection<State> States { get; }
 
     ObservableCollection<Animation> Animations { get; }
+
+    ObservableCollection<Prop> Props { get; }
+
+    ObservableCollection<FillSet> FillSets { get; }
 
     ObservableCollection<Attribute> Attributes { get; }
 

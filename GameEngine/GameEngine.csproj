@@ -22,14 +22,21 @@
         <WindowsPackageType>None</WindowsPackageType>
         <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
         <ApplicationIcon>Graphics\ico\app.ico</ApplicationIcon>
-        <DISABLE_XAML_GENERATED_MAIN>true</DISABLE_XAML_GENERATED_MAIN>
+        <!-- our own Program.Main (AppMain\Program.cs) runs PriPathGuard before WinUI starts -->
+        <DefineConstants>$(DefineConstants);DISABLE_XAML_GENERATED_MAIN</DefineConstants>
+        <!-- picks our Main even if an IDE build drops the define above (otherwise: CS0017 more than one entry point) -->
+        <StartupObject>GameEngine.AppMain.Program</StartupObject>
         <EnableDefaultPageItems>false</EnableDefaultPageItems>
         <EnableDefaultApplicationDefinitionItems>false</EnableDefaultApplicationDefinitionItems>
+        <!-- keeps the output path short: the Windows App SDK resource loader (MRM, GetDefaultPriFile) overruns its
+             buffer when the .pri path is longer than about 128 characters and the app crashes at random on start -->
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.2"/>
-        <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.241114003"/>
+        <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.6.250602001"/>
         <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742"/>
         <PackageReference Include="Microsoft.Xaml.Behaviors.WinUI.Managed" Version="2.0.9"/>
         <PackageReference Include="MercuryLibrary" Version="1.0.16"/>
@@ -60,5 +67,23 @@
     <ItemGroup>
         <Folder Include="UX\Views\GameScene\" />
     </ItemGroup>
+
+    <!-- the .pri path must stay short (see PriPathGuard in GameLibrary): when this project sits so deep that its output
+         would be too long, the build goes to %LOCALAPPDATA%\MercuryGameMaker\bin instead -->
+    <PropertyGroup>
+        <MaxPriPathLength>120</MaxPriPathLength>
+        <DefaultPriPath>$(MSBuildProjectDirectory)\bin\$(Configuration)\GameEngine.pri</DefaultPriPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="$(DefaultPriPath.Length) &gt; $(MaxPriPathLength)">
+        <OutputPath>$(LOCALAPPDATA)\MercuryGameMaker\bin\$(MSBuildProjectName)\$(Configuration)\</OutputPath>
+        <ShortenedOutput>true</ShortenedOutput>
+    </PropertyGroup>
+    <Target Name="CheckPriPathLength" BeforeTargets="Build" Condition="'$(DesignTimeBuild)' != 'true'">
+        <PropertyGroup>
+            <FinalPriPath>$([System.IO.Path]::GetFullPath('$(OutDir)GameEngine.pri'))</FinalPriPath>
+        </PropertyGroup>
+        <Warning Condition="'$(ShortenedOutput)' == 'true'" Text="$(MSBuildProjectName): the project folder is too deep for the Windows App SDK (.pri path would be $(DefaultPriPath.Length) characters), so it builds to $(OutDir) instead."/>
+        <Error Condition="$(FinalPriPath.Length) &gt; $(MaxPriPathLength)" Text="$(MSBuildProjectName): $(FinalPriPath) is $(FinalPriPath.Length) characters, the limit is $(MaxPriPathLength). The Windows App SDK crashes at random on start with paths this long. Move the project to a shorter folder."/>
+    </Target>
 
 </Project>

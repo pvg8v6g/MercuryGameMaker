@@ -1,4 +1,6 @@
-﻿using GameLibrary.Tasks;
+﻿using GameMaker.UX.ViewModels.Popups.FillProps;
+using GameMaker.UX.Views.Popups.FillProps;
+using GameLibrary.Tasks;
 using GameMaker.UX.Components.Popup;
 using GameMaker.UX.ViewModels.Popups.ActionEditor;
 using GameMaker.UX.ViewModels.Popups.BranchActionEditor;
@@ -164,6 +166,52 @@ public partial class NavigationService(Func<Type, EngineTask> engineTaskFactory)
     {
         if (PopupHost.Current is null) return;
         await PopupHost.Current.ShowAsync(new GameStartPopup(viewModel));
+    }
+
+    public async Task<string?> PickFile(params string[] extensions)
+    {
+        var picker = new Windows.Storage.Pickers.FileOpenPicker();
+        foreach (var extension in extensions) picker.FileTypeFilter.Add(extension);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, WinRT.Interop.WindowNative.GetWindowHandle(MainWindow.Window));
+
+        var file = await picker.PickSingleFileAsync();
+        return file?.Path;
+    }
+
+    public async Task<ContentDialogResult> ShowFillPropsPopup(FillPropsViewModel viewModel)
+    {
+        if (PopupHost.Current is null) return ContentDialogResult.None;
+        return await PopupHost.Current.ShowAsync(new FillPropsPopup(viewModel));
+    }
+
+    public async Task<bool> Confirm(string title, string message, string yes)
+    {
+        if (MainWindow.Window.Content?.XamlRoot is not { } root) return false;
+
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            Content = new TextBlock { Text = message, TextWrapping = Microsoft.UI.Xaml.TextWrapping.Wrap },
+            PrimaryButtonText = yes,
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close,
+            XamlRoot = root
+        };
+        return await dialog.ShowAsync() == ContentDialogResult.Primary;
+    }
+
+    public async Task ShowMessage(string title, string message)
+    {
+        if (MainWindow.Window.Content?.XamlRoot is not { } root) return;
+
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            Content = new TextBlock { Text = message, TextWrapping = Microsoft.UI.Xaml.TextWrapping.Wrap },
+            CloseButtonText = "OK",
+            XamlRoot = root
+        };
+        await dialog.ShowAsync();
     }
 
     #endregion

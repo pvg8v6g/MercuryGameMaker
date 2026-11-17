@@ -108,6 +108,11 @@ public class LocationService(IJsonService jsonService) : ILocationService
         Directory.CreateDirectory(Path.Combine(GameDirectory, Path.Combine("Media", "ME")));
         Directory.CreateDirectory(Path.Combine(GameDirectory, Path.Combine("Media", "SFX")));
 
+        // the props catalogue: one file per prop image with its footprint (what blocks movement) and how it sorts
+        Directory.CreateDirectory(Path.Combine(GameDirectory, "Props"));
+
+        // the fill sets: ways of filling a map with props (Forest, Desert, Snow)
+        Directory.CreateDirectory(Path.Combine(GameDirectory, "FillSets"));
         Directory.CreateDirectory(Path.Combine(GameDirectory, "Settings"));
         Directory.CreateDirectory(Path.Combine(GameDirectory, "States"));
         Directory.CreateDirectory(Path.Combine(GameDirectory, "Troops"));
@@ -118,6 +123,9 @@ public class LocationService(IJsonService jsonService) : ILocationService
         Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Faces"));
         Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Icons"));
         Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Maps"));
+
+        // trees, rocks, ruins and the like, placed on maps and sorted with the characters by where they meet the ground
+        Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Props"));
     }
 
     private void ShowErrorMessageAndExit(string title, string message)

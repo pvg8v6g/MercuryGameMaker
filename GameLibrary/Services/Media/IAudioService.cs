@@ -34,7 +34,7 @@ public interface IAudioService
 
     #region ME
 
-    void PlayMe(string file, double volume = 1.0, double pitch = 1.0);
+    Task PlayMe(string file, double volume = 1.0, double pitch = 1.0);
 
     void StopMe();
 

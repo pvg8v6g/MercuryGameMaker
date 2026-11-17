@@ -114,6 +114,12 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
             new()
             {
                 IsChecked = false,
+                CommandIndex = "13",
+                Tooltip = "Props"
+            },
+            new()
+            {
+                IsChecked = false,
                 CommandIndex = "10",
                 Tooltip = "Settings",
                 MenuItems =
@@ -125,10 +131,12 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
             }
         ];
 
+        // the picture of each button in Icons.png, in button order (Props was added later, its picture is 17)
+        int[] iconIndices = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 17, 10];
         var tasks = buttonIcons
             .Select(async (x, i) =>
             {
-                x.CroppedImage = await graphicsService.GetEngineIcon(i);
+                x.CroppedImage = await graphicsService.GetEngineIcon(iconIndices[i]);
                 return x;
             })
             .ToArray();
@@ -171,6 +179,9 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
                 break;
             case "9": // animations
                 navigationService.NavigateTo<Views.AnimationsPage.AnimationsPage>();
+                break;
+            case "13": // props
+                navigationService.NavigateTo<Views.PropsPage.PropsPage>();
                 break;
             case "10.1": // attributes
                 EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;

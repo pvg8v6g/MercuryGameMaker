@@ -33,7 +33,7 @@
         <NumberBox Grid.Column="1"
                    Header="Z"
                    SmallChange="1"
-                   SpinButtonPlacementMode="Compact"
+                   SpinButtonPlacementMode="Inline"
                    Value="{x:Bind ViewModel.EntityZ, Mode=TwoWay}"
                    ToolTipService.ToolTip="Draw order against the map layers and other entities. The layers button shows each layer's z." />
       </Grid>

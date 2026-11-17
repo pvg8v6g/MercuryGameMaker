@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using GameLibrary.Utilities;
+using System.Collections.ObjectModel;
 using GameLibrary.Commands;
 using GameLibrary.Models.Media;
 using GameLibrary.Services.Media;
@@ -120,7 +121,7 @@ public class MediaPlayerPageViewModel(IMediaService mediaService, IAudioService 
                 audioService.PlayBgs(SelectedFile.Name, Volume, Pitch);
                 break;
             case "ME":
-                audioService.PlayMe(SelectedFile.Name, Volume, Pitch);
+                audioService.PlayMe(SelectedFile.Name, Volume, Pitch).Forget();
                 break;
             case "SFX":
                 audioService.PlaySfx(SelectedFile.Name, Volume, Pitch);

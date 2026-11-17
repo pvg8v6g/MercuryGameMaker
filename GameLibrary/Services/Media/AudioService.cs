@@ -1,4 +1,5 @@
-﻿using Windows.Media.Audio;
+﻿using GameLibrary.Utilities;
+using Windows.Media.Audio;
 using Windows.Media.Render;
 using Windows.Storage;
 
@@ -112,7 +113,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     #region ME
 
-    public async void PlayMe(string file, double volume = 1.0, double pitch = 1.0)
+    public async Task PlayMe(string file, double volume = 1.0, double pitch = 1.0)
     {
         StopMe();
         _me = await CreateLoopingNode(mediaService.GetMe(file), volume, pitch);
@@ -145,12 +146,12 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     public void PlaySfx(string file, double volume = 1.0, double pitch = 1.0)
     {
-        PlayOneShot(mediaService.GetSfx(file), volume, pitch);
+        PlayOneShot(mediaService.GetSfx(file), volume, pitch).Forget();
     }
 
     public void PlayFootstep(string file, double volume = 1.0, double pitch = 1.0)
     {
-        PlayOneShot(mediaService.GetFootstep(file), volume, pitch);
+        PlayOneShot(mediaService.GetFootstep(file), volume, pitch).Forget();
     }
 
     #endregion
@@ -223,7 +224,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
         return node;
     }
 
-    private async void PlayOneShot(Uri source, double volume, double pitch)
+    private async Task PlayOneShot(Uri source, double volume, double pitch)
     {
         var node = await CreateNode(source, volume, pitch);
         if (node is null) return;

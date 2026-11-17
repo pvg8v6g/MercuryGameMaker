@@ -1,4 +1,5 @@
-﻿using GameLibrary.Tasks;
+﻿using GameLibrary.Utilities;
+using GameLibrary.Tasks;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Data;
@@ -30,7 +31,12 @@ public partial class ProgressPopup
         Hide();
     }
 
-    private async void OnLoaded(object sender, RoutedEventArgs e)
+    private void OnLoaded(object sender, RoutedEventArgs e)
+    {
+        Run().Forget();
+    }
+
+    private async Task Run()
     {
         var progressBinding = new Binding
         {

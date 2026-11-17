@@ -42,7 +42,7 @@ public static class TreeViewBehaviors
     private static void TreeView_SelectionChanged(TreeView sender, TreeViewSelectionChangedEventArgs args)
     {
         var selected = args.AddedItems.Count > 0 ? args.AddedItems[0] : null;
-        if (!ReferenceEquals(GetSelectedItem(sender), selected))
+        if (!ReferenceEquals(GetSelectedItem(sender), selected) && selected is not null)
         {
             SetSelectedItem(sender, selected);
         }
@@ -117,7 +117,7 @@ public static class TreeViewBehaviors
 
         var command = GetDoubleTapCommand(treeView);
         var parameter = treeView.SelectedItem;
-        if (command is not null && parameter is not null && command.CanExecute(parameter))
+        if (parameter is not null && command.CanExecute(parameter))
         {
             command.Execute(parameter);
         }

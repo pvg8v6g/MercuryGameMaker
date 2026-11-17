@@ -21,7 +21,8 @@ public class SceneSprite(PictureBox picture)
     public double Height { get; set; }
 
     // entities on the same z are drawn top of the map first, so what is lower down stands in front. This is where
-    // their feet are in map pixels, anything else (map images, environments) has none and stays under them
+    // their feet are in map pixels, map objects (trees, rocks) use where they meet the ground so characters can stand
+    // in front of or behind them. Anything else (map layer images, environments) has none and stays under them
     public double? SortY { get; set; }
 
     #endregion

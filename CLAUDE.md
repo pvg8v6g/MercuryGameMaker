@@ -11,6 +11,8 @@
 
 - the game project folder is `C:\Users\philb\Documents\Tale Of Betrayal 1`. it is the "database" for the game being built with this game maker: graphics, maps, fighters, items, settings and so on. look here for a game's actual data and assets, not in this repo.
 - the active project is set by `GameDirectory` in `C:\Users\philb\Documents\Mercury Game Maker\config.json`.
+- **all game art is made with Recraft (recraft.ai).** read `C:\Users\philb\Documents\Tale Of Betrayal 1\ArtGuide.md` before any art work: it has the Recraft project link, the art direction, the sprite format, the workflow and the approved character designs.
+- the story bible is `C:\Users\philb\Documents\Tale Of Betrayal 1\Story.md`.
 
 # Claude Instructions
 
@@ -21,3 +23,4 @@
   ```
 
   the +5 is the number of lines added to the file, and the -82 is the number of lines removed from the file.
+- only list files changed in the current turn. If nothing changed this turn, leave the list out.

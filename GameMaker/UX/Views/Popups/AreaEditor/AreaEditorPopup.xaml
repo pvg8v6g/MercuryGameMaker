@@ -21,7 +21,7 @@
         <ComboBox Grid.Column="1"
                   Header="Type"
                   HorizontalAlignment="Stretch"
-                  ItemsSource="{x:Bind ViewModel.AreaTypes}"
+                  ItemsSource="{x:Bind ViewModel.AreaTool.AreaTypes}"
                   SelectedItem="{x:Bind ViewModel.SelectedArea.AreaType, Mode=TwoWay}" />
       </Grid>
       <Grid ColumnSpacing="10">
@@ -50,7 +50,7 @@
       <TextBlock Foreground="{StaticResource LightGreyBrush}"
                  TextWrapping="Wrap">
         <Run Text="X, Y, W and H count cells of" />
-        <Run Text="{x:Bind ViewModel.AreaGridSize, Mode=OneWay}" />
+        <Run Text="{x:Bind ViewModel.AreaTool.GridSize, Mode=OneWay}" />
         <Run Text="pixels, the area grid picked in the top bar." />
       </TextBlock>
       <ComboBox Header="Footstep Sound"

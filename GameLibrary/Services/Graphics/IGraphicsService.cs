@@ -23,4 +23,5 @@ public interface IGraphicsService
     Task<BitmapImage> GetImage(string imagePath, Cache cache = Cache.Regular);
     Task<(double width, double height)> GetSegmentation(string fileName);
     (double x, double y) GetCharacterDivisions(string fileName);
+    Task<string> GetPropImagePath(string imagePath, bool flip, int bury, int feather);
 }

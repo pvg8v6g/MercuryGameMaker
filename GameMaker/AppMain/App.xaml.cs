@@ -1,4 +1,7 @@
-﻿using GameLibrary.Services.GameData;
+﻿using GameMaker.Services.Maps;
+using GameMaker.Services.Testing;
+using GameLibrary.Utilities;
+using GameLibrary.Services.GameData;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Services.Json;
 using GameLibrary.Services.Location;
@@ -20,6 +23,7 @@ using GameMaker.UX.ViewModels.ItemsPage;
 using GameMaker.UX.ViewModels.MainPage;
 using GameMaker.UX.ViewModels.MediaPlayerPage;
 using GameMaker.UX.ViewModels.StatesPage;
+using GameMaker.UX.ViewModels.PropsPage;
 using GameMaker.UX.ViewModels.TopBar;
 using GameMaker.UX.ViewModels.TroopsPage;
 using GameMaker.UX.Views.ActorsPage;
@@ -37,6 +41,7 @@ using GameMaker.UX.Views.MainPage;
 using GameMaker.UX.Views.MainWindow;
 using GameMaker.UX.Views.MediaPlayerPage;
 using GameMaker.UX.Views.StatesPage;
+using GameMaker.UX.Views.PropsPage;
 using GameMaker.UX.Views.TopBar;
 using GameMaker.UX.Views.TroopsPage;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,6 +78,7 @@ public partial class App
         services.AddSingleton<ItemsPageViewModel>();
         services.AddSingleton<MediaPlayerPageViewModel>();
         services.AddSingleton<StatesPageViewModel>();
+        services.AddSingleton<PropsPageViewModel>();
         services.AddSingleton<AnimationsPageViewModel>();
         services.AddSingleton<EnemiesPageViewModel>();
         services.AddSingleton<TroopsPageViewModel>();
@@ -95,6 +101,7 @@ public partial class App
         services.AddSingleton<ItemsPage>();
         services.AddSingleton<MediaPlayerPage>();
         services.AddSingleton<StatesPage>();
+        services.AddSingleton<PropsPage>();
         services.AddSingleton<AnimationsPage>();
         services.AddSingleton<EnemiesPage>();
         services.AddSingleton<TroopsPage>();
@@ -112,6 +119,9 @@ public partial class App
 
         services.AddSingleton<Func<Type, EngineTask>>(provider => taskType => (EngineTask) provider.GetRequiredService(taskType));
         services.AddSingleton<INavigationService, NavigationService>();
+        services.AddSingleton<IMapEditService, MapEditService>();
+        services.AddSingleton<IPropFillService, PropFillService>();
+        services.AddSingleton<ITestLaunchService, TestLaunchService>();
         services.AddSingleton<ILocationService, LocationService>();
         services.AddSingleton<IGraphicsService, GraphicsService>();
         services.AddSingleton<IGameDataService, GameDataService>();
@@ -124,6 +134,12 @@ public partial class App
         ServiceProvider = services.BuildServiceProvider();
 
         InitializeComponent();
+
+        // nothing should fail unseen: the reason goes in crash.log next to the exe
+        UnhandledException += (_, e) => WriteCrash(e.Exception);
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => WriteCrash(e.ExceptionObject as Exception);
+        TaskScheduler.UnobservedTaskException += (_, e) => WriteCrash(e.Exception);
+        ForgetExtensions.Failed += WriteCrash;
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
@@ -133,4 +149,15 @@ public partial class App
     }
 
     private Window? _window;
+
+    private static void WriteCrash(Exception? exception)
+    {
+        try
+        {
+            File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "crash.log"), $"{DateTime.Now}\n{exception}\n\n");
+        }
+        catch (IOException)
+        {
+        }
+    }
 }

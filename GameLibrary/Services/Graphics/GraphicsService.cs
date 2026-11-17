@@ -65,6 +65,10 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
     public async Task<CroppedImage> GetCharacter(string fileName, int index, Direction direction)
     {
         var path = Path.Combine(GetCharacterPath(), fileName);
+
+        // missing file (renamed or deleted) - return an empty image so previews clear instead of throwing
+        if (!File.Exists(path)) return new CroppedImage { ImagePath = path };
+
         var source = await GetImage(path);
         var dimensions = await GetImageDimensions(path);
         var divisions = GetCharacterDivisions(fileName);
@@ -175,6 +179,14 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
         if (Path.GetFileName(fileName).StartsWith('~')) return (32.0d, 32.0d);
         var dimensions = await GetImageDimensions(fileName);
         var divisions = GetCharacterDivisions(fileName);
+
+        // face sheets are always 4 across but can have any number of rows, so the cells are square
+        if (Path.GetFileName(fileName).StartsWith('&'))
+        {
+            var size = dimensions.width / divisions.x;
+            return (size, size);
+        }
+
         return (dimensions.width / divisions.x, dimensions.height / divisions.y);
     }
 
@@ -190,6 +202,77 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
             '&' => (4.0d, 2.0d),
             _ => (12.0d, 8.0d),
         };
+    }
+
+    #endregion
+
+    #region Props
+
+    // the picture a placed prop is drawn with. The canvas can't mirror or fade a picture, so a flipped prop or one
+    // buried in the ground uses a copy made once and cached (remade when the original changes). The copy keeps the
+    // original size, a buried prop just has its bottom cut away and the line above it faded, so nothing moves.
+    // The cache sits in a short folder on purpose, see PriPathGuard
+    public async Task<string> GetPropImagePath(string imagePath, bool flip, int bury, int feather)
+    {
+        bury = Math.Max(0, bury);
+        feather = Math.Max(0, feather);
+        if (!flip && bury == 0) return imagePath;
+
+        var cache = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MercuryGameMaker", "cache", "props");
+        Directory.CreateDirectory(cache);
+
+        // the full path decides the name, two games can have a tree_oak.png that look nothing alike
+        var hash = Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(Path.GetFullPath(imagePath).ToLowerInvariant())))[..12];
+        var processed = Path.Combine(cache, $"{Path.GetFileNameWithoutExtension(imagePath)}_{hash}_{(flip ? "f" : "n")}_{bury}_{feather}.png");
+        if (File.Exists(processed) && File.GetLastWriteTimeUtc(processed) >= File.GetLastWriteTimeUtc(imagePath)) return processed;
+
+        var source = await StorageFile.GetFileFromPathAsync(Path.GetFullPath(imagePath));
+        using (var input = await source.OpenReadAsync())
+        {
+            var decoder = await BitmapDecoder.CreateAsync(input);
+            var pixelData = await decoder.GetPixelDataAsync(
+                BitmapPixelFormat.Bgra8,
+                BitmapAlphaMode.Straight,
+                new BitmapTransform { Flip = flip ? BitmapFlip.Horizontal : BitmapFlip.None },
+                ExifOrientationMode.IgnoreExifOrientation,
+                ColorManagementMode.DoNotColorManage);
+            var pixels = pixelData.DetachPixelData();
+            Bury(pixels, (int) decoder.PixelWidth, (int) decoder.PixelHeight, bury, feather);
+
+            var folder = await StorageFolder.GetFolderFromPathAsync(cache);
+            var target = await folder.CreateFileAsync(Path.GetFileName(processed), CreationCollisionOption.ReplaceExisting);
+            using var output = await target.OpenAsync(FileAccessMode.ReadWrite);
+            var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, output);
+            encoder.SetPixelData(BitmapPixelFormat.Bgra8, BitmapAlphaMode.Straight, decoder.PixelWidth, decoder.PixelHeight, 96, 96, pixels);
+            await encoder.FlushAsync();
+        }
+
+        return processed;
+    }
+
+    // the bottom rows go, the rows above fade in from nothing to solid (smoothly, so there's no visible line)
+    private static void Bury(byte[] bgra, int width, int height, int bury, int feather)
+    {
+        if (bury <= 0) return;
+
+        var groundLine = Math.Max(0, height - bury);
+        var fadeTop = Math.Max(0, groundLine - feather);
+        for (var y = fadeTop; y < height; y++)
+        {
+            double keep;
+            if (y >= groundLine) keep = 0;
+            else
+            {
+                var t = (groundLine - y) / (double) Math.Max(1, feather);
+                keep = t * t * (3 - 2 * t);
+            }
+
+            for (var x = 0; x < width; x++)
+            {
+                var i = (y * width + x) * 4 + 3;
+                bgra[i] = (byte) Math.Round(bgra[i] * keep);
+            }
+        }
     }
 
     #endregion

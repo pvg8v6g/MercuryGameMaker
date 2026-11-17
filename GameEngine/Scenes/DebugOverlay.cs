@@ -1,3 +1,4 @@
+﻿using GameEngine.Services.GameState;
 using GameEngine.Models;
 using GameEngine.Services.Start;
 using GameEngine.Systems;
@@ -25,6 +26,7 @@ public partial class DebugOverlay(
     IGameDataService gameDataService,
     ILocationService locationService,
     IStartService startService,
+    IGameStateService gameStateService,
     HitboxSystem hitboxSystem) : PropertyChangedUpdater
 {
     #region Fields
@@ -79,7 +81,7 @@ public partial class DebugOverlay(
         if (map != _map)
         {
             _map = map;
-            ShowMapAreas(map, configuration);
+            ShowMapAreas(configuration);
         }
 
         if (!configuration.ShowEntityHitboxes && !configuration.ShowAreas && !configuration.ShowCollisions) return;
@@ -99,10 +101,11 @@ public partial class DebugOverlay(
 
     #region Private Methods
 
-    private void ShowMapAreas(GameMap map, MercuryGameMakerConfiguration configuration)
+    // the map's live areas: the ones painted in the editor plus the footprints of its props
+    private void ShowMapAreas(MercuryGameMakerConfiguration configuration)
     {
         var scale = gameDataService.ScaleFactor;
-        var shown = map.Areas.Where(x => x.AreaType == MapAreaType.Collision ? configuration.ShowCollisions : configuration.ShowAreas).ToArray();
+        var shown = gameStateService.MapAreas.Where(x => x.AreaType == MapAreaType.Collision ? configuration.ShowCollisions : configuration.ShowAreas).ToArray();
         var areas = shown.Where(x => x.AreaType != MapAreaType.Collision).Select(x => ToShape(x, scale)).ToArray();
         var collisions = shown.Where(x => x.AreaType == MapAreaType.Collision).Select(x => ToShape(x, scale)).ToArray();
         _dispatcherQueue.TryEnqueue(() =>

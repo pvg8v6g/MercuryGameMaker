@@ -125,7 +125,7 @@ public class CharacterImageSystem(IGameDataService gameDataService, IGameStateSe
         position.Direction = (Direction) ((int) position.Direction % 4);
     }
 
-    // standing shows the middle frame, walking alternates the outer frames (the feet)
+    // standing shows the middle frame, walking cycles step, stand, other step, stand
     private static void Animate(CharacterImageState state, MovementModule movementModule, MovementState movement)
     {
         if (!movementModule.Stepping) return;
@@ -135,9 +135,27 @@ public class CharacterImageSystem(IGameDataService gameDataService, IGameStateSe
             state.NotMovingTimer = 0;
 
             // the first step shows straight away so even a tap of the key takes a step
-            if (state.Frame == StandingFrame || ++state.SteppingTimer >= StepUpdates) TakeStep(state);
+            if (!state.Walking)
+            {
+                state.Walking = true;
+                TakeStep(state);
+                return;
+            }
+
+            if (++state.SteppingTimer < StepUpdates) return;
+
+            // a step passes through standing before the other foot
+            if (state.Frame == StandingFrame) TakeStep(state);
+            else
+            {
+                state.Frame = StandingFrame;
+                state.SteppingTimer = 0;
+            }
+
             return;
         }
+
+        state.Walking = false;
 
         // a step that was just taken finishes showing before the character stands
         if (state.Frame != StandingFrame && ++state.SteppingTimer < StepUpdates) return;

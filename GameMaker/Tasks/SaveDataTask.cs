@@ -36,7 +36,9 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
         "Troops",
         "States",
         "Animations",
-        "Maps"
+        "Maps",
+        "Props",
+        "FillSets"
     ];
 
     private static readonly string GameStartFile = Path.Combine("Settings", "GameStart.data");
@@ -90,6 +92,8 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
             Add(files, gameDirectory, DataFolders[10], gameDataService.States);
             Add(files, gameDirectory, DataFolders[11], gameDataService.Animations);
             Add(files, gameDirectory, DataFolders[12], gameDataService.GameMaps);
+            Add(files, gameDirectory, DataFolders[13], gameDataService.Props);
+            Add(files, gameDirectory, DataFolders[14], gameDataService.FillSets);
             files[Path.Combine(gameDirectory, GameStartFile)] = jsonService.Serialize(gameDataService.GameStart);
         }
         catch (Exception exception)

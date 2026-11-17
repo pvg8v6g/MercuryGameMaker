@@ -42,7 +42,9 @@ public sealed class MapScene
         return Add(imagePath, worldX, worldY, settings.Z, null, (float) settings.Opacity, settings.MapBlendMode);
     }
 
-    public PictureBox Add(string imagePath, double worldX, double worldY, double z, Rect? viewport = null, float opacity = 1.0f, BlendMode? blendMode = null)
+    // sortBottom: the line it sorts by on its z, the bottom of the picture unless given (props sort by their base plus offset)
+    public PictureBox Add(string imagePath, double worldX, double worldY, double z, Rect? viewport = null, float opacity = 1.0f, BlendMode? blendMode = null,
+        double? sortBottom = null)
     {
         var sprite = new PictureBox
         {
@@ -52,7 +54,7 @@ public sealed class MapScene
             BlendMode = blendMode
         };
 
-        var scene = new SceneSprite(new Point(worldX, worldY), z, worldY + (viewport?.Height ?? 0));
+        var scene = new SceneSprite(new Point(worldX, worldY), z, sortBottom ?? worldY + (viewport?.Height ?? 0));
         _sprites[sprite] = scene;
 
         // insert after everything that sorts before or level with it, so equal sprites keep the order they were added in

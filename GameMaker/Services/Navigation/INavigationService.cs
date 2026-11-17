@@ -1,4 +1,5 @@
-﻿using GameLibrary.Tasks;
+﻿using GameMaker.UX.ViewModels.Popups.FillProps;
+using GameLibrary.Tasks;
 using GameMaker.UX.ViewModels.Popups.ActionEditor;
 using GameMaker.UX.ViewModels.Popups.BranchActionEditor;
 using GameMaker.UX.ViewModels.Popups.AnimationEffects;
@@ -55,4 +56,15 @@ public interface INavigationService
     Task<ContentDialogResult> ShowMapIdConflictPopup(MapIdConflictViewModel viewModel);
 
     Task ShowGameStartPopup(GameStartViewModel viewModel);
+
+    // the full path of a file the user picks, null when cancelled. extensions like ".json"
+    Task<string?> PickFile(params string[] extensions);
+
+    Task<ContentDialogResult> ShowFillPropsPopup(FillPropsViewModel viewModel);
+
+    // a yes/no question, true for yes
+    Task<bool> Confirm(string title, string message, string yes);
+
+    // a simple message with an OK button
+    Task ShowMessage(string title, string message);
 }

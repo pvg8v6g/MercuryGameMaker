@@ -9,7 +9,7 @@ using GameLibrary.Services.GameData;
 namespace GameEngine.Systems;
 
 /// <summary>
-/// Walks entities one step (grid size / division) at a time. A step only starts when nothing is in the way.
+/// Walks entities one step (StepSize, the grid divided by Division) at a time. A step only starts when nothing is in the way.
 /// </summary>
 public class MovementSystem(
     IGameDataService gameDataService,
@@ -58,7 +58,7 @@ public class MovementSystem(
 
         var dashing = gameStateService.ActiveMap is not { DisableDash: true } && inputService.Shift && movementModule.Dashing;
         var increment = (dashing ? 2.0 : 1.0) * movementModule.Speed;
-        var distance = (double) gameDataService.GridSize / gameDataService.Division * gameDataService.ScaleFactor;
+        var distance = gameDataService.StepSize * gameDataService.ScaleFactor;
 
         var (unitX, unitY) = direction switch
         {

@@ -31,5 +31,8 @@ public class CharacterImageState
 
     public int NotMovingTimer { get; set; }
 
+    // true while the walk is running, so the standing frame shown between the steps isn't mistaken for a new walk
+    public bool Walking { get; set; }
+
     #endregion
 }

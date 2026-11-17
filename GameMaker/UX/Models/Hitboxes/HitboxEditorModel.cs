@@ -112,8 +112,9 @@ public partial class HitboxEditorModel(IGraphicsService graphicsService) : Prope
         }
 
         var direction = SelectedDirection is Direction.None ? Direction.Down : SelectedDirection;
-        AnchorImage = await graphicsService.GetCharacter(_characterName!, _characterIndex, direction);
-        _spriteBox = AnchorImage.Rect;
+        var image = await graphicsService.GetCharacter(_characterName!, _characterIndex, direction);
+        AnchorImage = image.ImageSource is null ? null : image;
+        _spriteBox = AnchorImage?.Rect;
 
         _hitboxes.TryAdd(SelectedDirection, []);
         SelectedDirectionHitboxes = _hitboxes[SelectedDirection];

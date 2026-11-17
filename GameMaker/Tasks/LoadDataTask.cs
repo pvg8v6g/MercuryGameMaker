@@ -34,6 +34,8 @@ public class LoadDataTask(ILocationService locationService, IJsonService jsonSer
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "States")).Length; // states
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Animations")).Length; // animations
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Maps")).Length; // maps
+        MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Props")).Length; // props
+        MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "FillSets")).Length; // fill sets
     }
 
     private void LoadData()
@@ -51,6 +53,8 @@ public class LoadDataTask(ILocationService locationService, IJsonService jsonSer
         DecryptData(Path.Combine("States"), gameDataService.States);
         DecryptData(Path.Combine("Animations"), gameDataService.Animations);
         DecryptData(Path.Combine("Maps"), gameDataService.GameMaps);
+        DecryptData(Path.Combine("Props"), gameDataService.Props);
+        DecryptData(Path.Combine("FillSets"), gameDataService.FillSets);
 
         var gameStart = Path.Combine(locationService.GameDirectory!, "Settings", "GameStart.data");
         if (File.Exists(gameStart) && jsonService.DecryptFile<GameStart>(gameStart) is { } start) gameDataService.GameStart = start;

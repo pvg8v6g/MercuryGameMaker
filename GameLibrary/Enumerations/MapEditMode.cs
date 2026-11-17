@@ -3,5 +3,6 @@
 public enum MapEditMode
 {
     Entities,
-    Areas
+    Areas,
+    Props
 }

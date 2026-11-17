@@ -9,6 +9,7 @@
       xmlns:enginePanel="using:GameMaker.UX.Components.EnginePanel"
       xmlns:gridArea="using:GameMaker.UX.Components.GridArea"
       xmlns:mercury="using:MercuryLibrary.CanvasComponents"
+      xmlns:foundation="using:Windows.Foundation"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance mainPage:MainPageViewModel}"
       behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
@@ -94,10 +95,11 @@
 
       <Grid ColumnSpacing="20"
             Visibility="{x:Bind ViewModel.IsMapSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <!-- the mode tools take what they need, the view toggles sit in the middle of what is left -->
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
         <StackPanel Orientation="Horizontal" Spacing="15">
@@ -113,16 +115,74 @@
                        behaviors:PointerCursorBehavior.CursorType="Hand"
                        IsChecked="{x:Bind ViewModel.IsAreaMode, Mode=TwoWay}"
                        ToolTipService.ToolTip="Click or drag on empty tiles to draw an area, drag an area to move it." />
+          <RadioButton Content="Props"
+                       GroupName="MapEditMode"
+                       MinWidth="0"
+                       behaviors:PointerCursorBehavior.CursorType="Hand"
+                       IsChecked="{x:Bind ViewModel.IsPropMode, Mode=TwoWay}"
+                       IsEnabled="{x:Bind ViewModel.HasProps, Mode=OneWay}"
+                       ToolTipService.ToolTip="Pick a prop, click the map to stamp it (its base goes where you click). Props sit on the character step grid. Click a prop to select it, drag to move. Delete removes, F flips, arrows nudge one character step (Shift: a tile), Ctrl+C / Ctrl+V copy and paste." />
+          <ComboBox MinWidth="200"
+                    VerticalAlignment="Center"
+                    ItemsSource="{x:Bind ViewModel.PropTool.Choices}"
+                    SelectedItem="{x:Bind ViewModel.PropTool.SelectedChoice, Mode=TwoWay}"
+                    Visibility="{x:Bind ViewModel.IsPropMode, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    ToolTipService.ToolTip="The prop a click stamps. Props are made on the Props page.">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="mainPageModels:PropChoiceModel">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Image Source="{x:Bind Image}"
+                         Width="32"
+                         Height="32"
+                         Stretch="Uniform" />
+                  <TextBlock Text="{x:Bind Name}"
+                             VerticalAlignment="Center" />
+                </StackPanel>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+          <Button Content="&#xE72C;"
+                  FontFamily="{StaticResource SymbolThemeFontFamily}"
+                  VerticalAlignment="Center"
+                  Command="{x:Bind ViewModel.PropTool.RefreshChoicesCommand}"
+                  Visibility="{x:Bind ViewModel.IsPropMode, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                  ToolTipService.ToolTip="Reload the props (after changing them on the Props page)"
+                  behaviors:PointerCursorBehavior.CursorType="Hand" />
+          <Button Content="Fill..."
+                  VerticalAlignment="Center"
+                  Command="{x:Bind ViewModel.FillPropsCommand}"
+                  Visibility="{x:Bind ViewModel.IsPropMode, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                  ToolTipService.ToolTip="Fill the map with props by a fill set (forest, desert, snow...): what goes on unpassable ground, open ground, named areas"
+                  behaviors:PointerCursorBehavior.CursorType="Hand" />
+          <Button Content="Clear"
+                  VerticalAlignment="Center"
+                  Command="{x:Bind ViewModel.ClearPropsCommand}"
+                  Visibility="{x:Bind ViewModel.IsPropMode, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                  ToolTipService.ToolTip="Remove every prop from this map"
+                  behaviors:PointerCursorBehavior.CursorType="Hand" />
+          <Button Content="Import..."
+                  VerticalAlignment="Center"
+                  Command="{x:Bind ViewModel.ImportPropsCommand}"
+                  Visibility="{x:Bind ViewModel.IsPropMode, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                  ToolTipService.ToolTip="Place props from a props file (made by the map composer). Pictures are matched to props on the Props page."
+                  behaviors:PointerCursorBehavior.CursorType="Hand" />
+          <CheckBox Content="Snap to tile"
+                    MinWidth="0"
+                    VerticalAlignment="Center"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    IsChecked="{x:Bind ViewModel.PropTool.SnapToTile, Mode=TwoWay}"
+                    Visibility="{x:Bind ViewModel.IsPropMode, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    ToolTipService.ToolTip="Put each prop's base on the middle of the bottom of a tile. Off: exactly where you click." />
           <ComboBox MinWidth="140"
                     VerticalAlignment="Center"
-                    ItemsSource="{x:Bind ViewModel.AreaTypes}"
-                    SelectedItem="{x:Bind ViewModel.NewAreaType, Mode=TwoWay}"
+                    ItemsSource="{x:Bind ViewModel.AreaTool.AreaTypes}"
+                    SelectedItem="{x:Bind ViewModel.AreaTool.NewAreaType, Mode=TwoWay}"
                     Visibility="{x:Bind ViewModel.IsAreaMode, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
                     ToolTipService.ToolTip="The type of area to draw." />
           <ComboBox MinWidth="90"
                     VerticalAlignment="Center"
-                    ItemsSource="{x:Bind ViewModel.AreaGridSizes}"
-                    SelectedItem="{x:Bind ViewModel.AreaGridSize, Mode=TwoWay}"
+                    ItemsSource="{x:Bind ViewModel.AreaTool.GridSizes}"
+                    SelectedItem="{x:Bind ViewModel.AreaTool.GridSize, Mode=TwoWay}"
                     Visibility="{x:Bind ViewModel.IsAreaMode, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
                     ToolTipService.ToolTip="Area grid in pixels: what areas snap to while drawing and moving. 48 is a tile, smaller makes finer collisions." />
         </StackPanel>
@@ -177,7 +237,10 @@
                     IsChecked="{x:Bind ViewModel.ShowEnvironments, Mode=TwoWay}" />
         </StackPanel>
 
+        <!-- fixed width so the changing numbers never move the rest of the bar -->
         <TextBlock Grid.Column="2"
+                   Width="150"
+                   TextAlignment="Right"
                    HorizontalAlignment="Right"
                    VerticalAlignment="Center"
                    Foreground="{StaticResource LightGreyBrush}"
@@ -198,26 +261,6 @@
             <Grid.Clip>
               <RectangleGeometry Rect="{x:Bind ViewModel.ViewportRect, Mode=OneWay}" />
             </Grid.Clip>
-            <Grid.KeyboardAccelerators>
-              <KeyboardAccelerator Key="Delete"
-                                   ScopeOwner="{x:Bind MapCanvas}"
-                                   behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.DeleteSelectionCommand}" />
-              <KeyboardAccelerator Key="Escape"
-                                   ScopeOwner="{x:Bind MapCanvas}"
-                                   behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.ClearSelectionCommand}" />
-              <KeyboardAccelerator Key="Enter"
-                                   ScopeOwner="{x:Bind MapCanvas}"
-                                   behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.EditSelectionCommand}" />
-              <KeyboardAccelerator Key="C"
-                                   Modifiers="Control"
-                                   ScopeOwner="{x:Bind MapCanvas}"
-                                   behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.CopySelectionCommand}" />
-              <KeyboardAccelerator Key="V"
-                                   Modifiers="Control"
-                                   ScopeOwner="{x:Bind MapCanvas}"
-                                   behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.PasteSelectionCommand}" />
-            </Grid.KeyboardAccelerators>
-
             <!-- the game's renderer: ground, entities, parallax and light with their blend modes -->
             <!-- 96 draws every image at its pixel size, art saved at 72 dpi would otherwise be drawn 1.33x too big -->
             <mercury:GameCanvasView x:Name="MapCanvas"
@@ -236,6 +279,52 @@
                                     behaviors:PointerCommandBehavior.PointerReleasedCommand="{x:Bind ViewModel.CanvasReleasedCommand}"
                                     behaviors:PointerCommandBehavior.PointerWheelChangedCommand="{x:Bind ViewModel.CanvasWheelCommand}"
                                     behaviors:PointerCommandBehavior.DoubleTappedCommand="{x:Bind ViewModel.CanvasDoubleTappedCommand}">
+              <mercury:GameCanvasView.KeyboardAccelerators>
+                <KeyboardAccelerator Key="Delete"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.DeleteSelectionCommand}" />
+                <KeyboardAccelerator Key="Back"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.DeleteSelectionCommand}" />
+                <KeyboardAccelerator Key="Escape"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.ClearSelectionCommand}" />
+                <KeyboardAccelerator Key="Enter"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.EditSelectionCommand}" />
+                <KeyboardAccelerator Key="C"
+                                     Modifiers="Control"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.CopySelectionCommand}" />
+                <KeyboardAccelerator Key="V"
+                                     Modifiers="Control"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.PasteSelectionCommand}" />
+                <KeyboardAccelerator Key="F"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.FlipSelectionCommand}" />
+                <KeyboardAccelerator Key="Left"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.NudgeSelectionCommand}"
+                                     behaviors:KeyboardAcceleratorBehavior.CommandParameter="Left" />
+                <KeyboardAccelerator Key="Left"
+                                     Modifiers="Shift"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.NudgeSelectionCommand}"
+                                     behaviors:KeyboardAcceleratorBehavior.CommandParameter="Shift+Left" />
+                <KeyboardAccelerator Key="Right"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.NudgeSelectionCommand}"
+                                     behaviors:KeyboardAcceleratorBehavior.CommandParameter="Right" />
+                <KeyboardAccelerator Key="Right"
+                                     Modifiers="Shift"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.NudgeSelectionCommand}"
+                                     behaviors:KeyboardAcceleratorBehavior.CommandParameter="Shift+Right" />
+                <KeyboardAccelerator Key="Up"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.NudgeSelectionCommand}"
+                                     behaviors:KeyboardAcceleratorBehavior.CommandParameter="Up" />
+                <KeyboardAccelerator Key="Up"
+                                     Modifiers="Shift"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.NudgeSelectionCommand}"
+                                     behaviors:KeyboardAcceleratorBehavior.CommandParameter="Shift+Up" />
+                <KeyboardAccelerator Key="Down"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.NudgeSelectionCommand}"
+                                     behaviors:KeyboardAcceleratorBehavior.CommandParameter="Down" />
+                <KeyboardAccelerator Key="Down"
+                                     Modifiers="Shift"
+                                     behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.NudgeSelectionCommand}"
+                                     behaviors:KeyboardAcceleratorBehavior.CommandParameter="Shift+Down" />
+              </mercury:GameCanvasView.KeyboardAccelerators>
               <mercury:GameCanvasView.ContextFlyout>
                 <MenuFlyout>
                   <MenuFlyoutItem Text="New Entity" Command="{x:Bind ViewModel.NewEntityCommand}">
@@ -256,6 +345,11 @@
                   <MenuFlyoutItem Text="Paste" Command="{x:Bind ViewModel.PasteSelectionCommand}">
                     <MenuFlyoutItem.Icon>
                       <SymbolIcon Symbol="Paste" />
+                    </MenuFlyoutItem.Icon>
+                  </MenuFlyoutItem>
+                  <MenuFlyoutItem Text="Flip" Command="{x:Bind ViewModel.FlipSelectionCommand}">
+                    <MenuFlyoutItem.Icon>
+                      <FontIcon Glyph="&#xE8AB;" />
                     </MenuFlyoutItem.Icon>
                   </MenuFlyoutItem>
                   <MenuFlyoutSeparator />
@@ -340,6 +434,61 @@
                 </gridArea:CanvasItemsControl.ItemTemplate>
               </gridArea:CanvasItemsControl>
 
+              <!-- Prop footprints (what blocks movement), shown with the areas -->
+              <ItemsControl ItemsSource="{x:Bind ViewModel.PropTool.Footprints}"
+                            Visibility="{x:Bind ViewModel.ShowAreas, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <Canvas />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="foundation:Rect">
+                    <Rectangle Width="{x:Bind Width}"
+                               Height="{x:Bind Height}"
+                               Fill="#6EE63C3C"
+                               Stroke="#FFE63C3C"
+                               StrokeThickness="1">
+                      <Rectangle.RenderTransform>
+                        <TranslateTransform X="{x:Bind X}" Y="{x:Bind Y}" />
+                      </Rectangle.RenderTransform>
+                    </Rectangle>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <!-- Props (the picture is drawn by the canvas): a box round the selected one -->
+              <ItemsControl ItemsSource="{x:Bind ViewModel.PropTool.Props}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <Canvas />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="mainPageModels:MapPropModel">
+                    <Canvas>
+                      <Rectangle Width="{x:Bind ImageWidth}"
+                                 Height="{x:Bind ImageHeight}"
+                                 Stroke="{StaticResource LightYellowBrush}"
+                                 StrokeThickness="2"
+                                 Visibility="{x:Bind IsSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Rectangle.RenderTransform>
+                          <TranslateTransform X="{x:Bind X, Mode=OneWay}" Y="{x:Bind Y, Mode=OneWay}" />
+                        </Rectangle.RenderTransform>
+                      </Rectangle>
+                    </Canvas>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+
+              <!-- Prop stamp preview: the picked prop where a click would put it -->
+              <Image Canvas.Left="{x:Bind ViewModel.PropTool.GhostX, Mode=OneWay}"
+                     Canvas.Top="{x:Bind ViewModel.PropTool.GhostY, Mode=OneWay}"
+                     Source="{x:Bind ViewModel.PropTool.GhostImage, Mode=OneWay}"
+                     Stretch="None"
+                     Opacity="0.55"
+                     Visibility="{x:Bind ViewModel.PropTool.IsGhostShown, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
               <!-- Entities (the sprite is drawn by the canvas, this is the tile marker) -->
               <gridArea:CanvasItemsControl ItemsSource="{x:Bind ViewModel.Entities}"
                                            LeftPropertyName="X"
@@ -404,15 +553,15 @@
               </Border>
 
               <!-- Area Draw Preview -->
-              <Rectangle Canvas.Left="{x:Bind ViewModel.DrawPreview.X, Mode=OneWay}"
-                         Canvas.Top="{x:Bind ViewModel.DrawPreview.Y, Mode=OneWay}"
-                         Width="{x:Bind ViewModel.DrawPreview.Width, Mode=OneWay}"
-                         Height="{x:Bind ViewModel.DrawPreview.Height, Mode=OneWay}"
+              <Rectangle Canvas.Left="{x:Bind ViewModel.AreaTool.DrawPreview.X, Mode=OneWay}"
+                         Canvas.Top="{x:Bind ViewModel.AreaTool.DrawPreview.Y, Mode=OneWay}"
+                         Width="{x:Bind ViewModel.AreaTool.DrawPreview.Width, Mode=OneWay}"
+                         Height="{x:Bind ViewModel.AreaTool.DrawPreview.Height, Mode=OneWay}"
                          Fill="{StaticResource LightYellowBrush}"
                          Opacity="0.35"
                          Stroke="{StaticResource LightYellowBrush}"
                          StrokeThickness="2"
-                         Visibility="{x:Bind ViewModel.IsDrawing, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                         Visibility="{x:Bind ViewModel.AreaTool.IsDrawing, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
             </Canvas>
           </Grid>
 

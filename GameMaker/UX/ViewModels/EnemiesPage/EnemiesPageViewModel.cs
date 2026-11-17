@@ -276,7 +276,8 @@ public partial class EnemiesPageViewModel(
         }
 
         var direction = SelectedDirection is Direction.None ? Direction.Down : SelectedDirection;
-        AnchorImage = await graphicsService.GetCharacter(SelectedEntity!.CharacterName!, SelectedEntity.CharacterIndex, direction);
+        var image = await graphicsService.GetCharacter(SelectedEntity!.CharacterName!, SelectedEntity.CharacterIndex, direction);
+        AnchorImage = image.ImageSource is null ? null : image;
     }
 
     // sizes the sprite box and links the hitboxes to the selected entity

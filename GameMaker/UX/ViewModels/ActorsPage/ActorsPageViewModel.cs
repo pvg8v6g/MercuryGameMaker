@@ -129,7 +129,22 @@ public partial class ActorsPageViewModel(
         SelectedEntity.CharacterName = args.FileName;
         SelectedEntity.CharacterIndex = args.Index;
         SelectedEntity.CharacterDirection = args.Direction;
-        _ = RefreshAnchor();
+        _ = RefreshSprite();
+    }
+
+    private async Task RefreshSprite()
+    {
+        await RefreshAnchor();
+        CharacterName = SelectedEntity?.CharacterName;
+        if (SelectedEntity is null || CharacterName.IsNullOrEmpty())
+        {
+            _spriteBox = null;
+            RefreshHitboxes();
+            return;
+        }
+
+        _spriteBox = (await graphicsService.GetCharacter(SelectedEntity.CharacterName!, SelectedEntity.CharacterIndex, SelectedDirection)).Rect;
+        LinkHitboxes(SelectedDirection);
     }
 
     protected override async Task OnSelectedIndexChanged(int selectedIndex)
@@ -142,6 +157,7 @@ public partial class ActorsPageViewModel(
         CharacterName = SelectedEntity?.CharacterName;
         if (SelectedEntity is null || CharacterName.IsNullOrEmpty())
         {
+            _spriteBox = null;
             SelectedDirectionHitboxes = [];
             CharacterIndex = 1;
             return;
@@ -173,7 +189,8 @@ public partial class ActorsPageViewModel(
         }
 
         var direction = SelectedDirection is Direction.None ? Direction.Down : SelectedDirection;
-        AnchorImage = await graphicsService.GetCharacter(SelectedEntity!.CharacterName!, SelectedEntity.CharacterIndex, direction);
+        var image = await graphicsService.GetCharacter(SelectedEntity!.CharacterName!, SelectedEntity.CharacterIndex, direction);
+        AnchorImage = image.ImageSource is null ? null : image;
     }
 
     private void RefreshStats()

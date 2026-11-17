@@ -1,4 +1,5 @@
-﻿using Windows.Foundation;
+﻿using GameLibrary.Utilities;
+using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using System.Windows.Input;
@@ -47,19 +48,19 @@ public partial class ImageChooser
         if (d is ImageChooser control) control.LoadFiles();
     }
 
-    private static async void OnFileNameChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnFileNameChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is ImageChooser control) await control.UpdateCroppedImage();
+        if (d is ImageChooser control) control.UpdateCroppedImage().Forget();
     }
 
-    private static async void OnIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is ImageChooser control) await control.UpdateCroppedImage();
+        if (d is ImageChooser control) control.UpdateCroppedImage().Forget();
     }
 
-    private static async void OnShowGridChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnShowGridChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is ImageChooser control) await control.UpdateCroppedImage();
+        if (d is ImageChooser control) control.UpdateCroppedImage().Forget();
     }
 
     public string FolderPath
@@ -112,7 +113,7 @@ public partial class ImageChooser
     {
         InitializeComponent();
         ImageFlyout.Opened += ImageFlyout_Opened;
-        Loaded += async (_, _) => await UpdateCroppedImage();
+        Loaded += (_, _) => UpdateCroppedImage().Forget();
     }
 
     private void LoadFiles()
@@ -135,17 +136,18 @@ public partial class ImageChooser
     {
         var ticket = ++_updateTicket;
 
-        if (FileName.IsNullOrEmpty() || FolderPath.IsNullOrEmpty())
-        {
-            if (ticket != _updateTicket) return;
-            CroppedImage.ImageSource = null;
-            CroppedImage.Rect = null;
-            UpdateSelectedBorder();
-            return;
-        }
+        // clear first so a previous selection never lingers while loading or when the file is missing
+        CroppedImage.ImageSource = null;
+        CroppedImage.Rect = null;
+        SelectedBorder.Visibility = Visibility.Collapsed;
+
+        if (FileName.IsNullOrEmpty() || FolderPath.IsNullOrEmpty()) return;
 
         var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
         var path = Path.IsPathRooted(FileName) ? FileName : Path.Combine(FolderPath, FileName);
+
+        // renamed or deleted image - leave the preview empty
+        if (!File.Exists(path)) return;
 
         var source = await graphicsService.GetImage(path);
         if (ticket != _updateTicket) return;
@@ -154,7 +156,9 @@ public partial class ImageChooser
         {
             if (source.PixelWidth == 0)
             {
-                source.ImageOpened += async (_, _) =>
+                source.ImageOpened += (_, _) => ShowWholeImage().Forget();
+
+                async Task ShowWholeImage()
                 {
                     if (ticket != _updateTicket) return;
                     var dims = await GetImageDimensions(path);
@@ -162,7 +166,7 @@ public partial class ImageChooser
                     CroppedImage.ImageSource = source;
                     CroppedImage.Rect = new Rect(0, 0, dims.width, dims.height);
                     UpdateSelectedBorder();
-                };
+                }
             }
 
             var dimensions = await GetImageDimensions(path);
@@ -181,7 +185,9 @@ public partial class ImageChooser
 
         if (source.PixelWidth == 0)
         {
-            source.ImageOpened += async (_, _) =>
+            source.ImageOpened += (_, _) => ShowGridCell().Forget();
+
+            async Task ShowGridCell()
             {
                 if (ticket != _updateTicket) return;
                 var dims = await GetImageDimensions(path);
@@ -192,7 +198,7 @@ public partial class ImageChooser
                 var yPos = (currentIndex / cols) * h;
                 CroppedImage.Rect = new Rect(xPos, yPos, w, h);
                 UpdateSelectedBorder();
-            };
+            }
         }
 
         var dimensionsWithGrid = await GetImageDimensions(path);
@@ -221,7 +227,12 @@ public partial class ImageChooser
         FlyoutBase.ShowAttachedFlyout(RootGrid);
     }
 
-    private async void ImageFlyout_Opened(object? sender, object e)
+    private void ImageFlyout_Opened(object? sender, object e)
+    {
+        OpenFlyout().Forget();
+    }
+
+    private async Task OpenFlyout()
     {
         if (FileListView.ItemsSource == null) LoadFiles();
 
@@ -233,30 +244,29 @@ public partial class ImageChooser
             return;
         }
 
-        if (FileListView.SelectedItem == null && !FileName.IsNullOrEmpty())
-        {
-            FileListView.SelectedItem = FileName;
-        }
+        // always sync the list to the current file - the control is reused between entities
+        FileListView.SelectedItem = null;
+        if (!FileName.IsNullOrEmpty()) FileListView.SelectedItem = FileName;
 
-        if (ShowGrid)
-        {
-            await LoadFullImage();
-            UpdateSelectedBorder();
-            ScrollToSelected();
-        }
+        await LoadFullImage();
+        UpdateSelectedBorder();
+        ScrollToSelected();
     }
 
     private async Task LoadFullImage()
     {
-        if (FileName.IsNullOrEmpty())
+        var path = FileName.IsNullOrEmpty()
+            ? null
+            : Path.IsPathRooted(FileName) ? FileName : Path.Combine(FolderPath, FileName);
+
+        if (path is null || !File.Exists(path))
         {
             FullImage.Source = null;
-            UpdateSelectedBorder();
+            SelectedBorder.Visibility = Visibility.Collapsed;
             return;
         }
 
         var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
-        var path = Path.IsPathRooted(FileName) ? FileName : Path.Combine(FolderPath, FileName);
         var bitmapImage = await graphicsService.GetImage(path);
 
         if (bitmapImage.PixelWidth == 0)
@@ -323,7 +333,7 @@ public partial class ImageChooser
         ImageScrollViewer.ChangeView(0, offsetY, null);
     }
 
-    private async void UpdateSelectedBorder()
+    private void UpdateSelectedBorder()
     {
         if (FullImage.Source is BitmapImage bitmapImage)
         {
@@ -346,13 +356,17 @@ public partial class ImageChooser
         }
     }
 
-    private async void ImageContainer_OnPointerMoved(object sender, PointerRoutedEventArgs e)
+    private void ImageContainer_OnPointerMoved(object sender, PointerRoutedEventArgs e)
     {
-        if (FileName.IsNullOrEmpty()) return;
+        ShowHover(e.GetCurrentPoint(ImageContainer).Position).Forget();
+    }
+
+    private async Task ShowHover(Point position)
+    {
+        if (FileName.IsNullOrEmpty() || FullImage.Source is null) return;
         var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
         var path = Path.IsPathRooted(FileName) ? FileName : Path.Combine(FolderPath, FileName);
         var (w, h) = await graphicsService.GetSegmentation(path);
-        var position = e.GetCurrentPoint(ImageContainer).Position;
 
         var x = (int) (position.X / w) * w;
         var y = (int) (position.Y / h) * h;
@@ -369,13 +383,17 @@ public partial class ImageChooser
         HoverBorder.Visibility = Visibility.Collapsed;
     }
 
-    private async void FullImage_OnTapped(object sender, TappedRoutedEventArgs e)
+    private void FullImage_OnTapped(object sender, TappedRoutedEventArgs e)
     {
-        if (FileName.IsNullOrEmpty()) return;
+        PickCell(e.GetPosition(ImageContainer)).Forget();
+    }
+
+    private async Task PickCell(Point position)
+    {
+        if (FileName.IsNullOrEmpty() || FullImage.Source is null) return;
         var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
         var path = Path.IsPathRooted(FileName) ? FileName : Path.Combine(FolderPath, FileName);
         var (w, h) = await graphicsService.GetSegmentation(path);
-        var position = e.GetPosition(ImageContainer);
 
         var xIndex = (int) (position.X / w);
         var yIndex = (int) (position.Y / h);

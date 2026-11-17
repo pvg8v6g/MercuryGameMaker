@@ -143,5 +143,8 @@ public partial class GameMap : BaseModel
     // any areas on this map
     public ObservableCollection<MapArea> Areas { get; init; } = [];
 
+    // the trees, rocks and the like placed on this map, each one points at a prop in the catalogue
+    public ObservableCollection<MapProp> Props { get; init; } = [];
+
     #endregion
 }

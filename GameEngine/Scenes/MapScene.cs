@@ -5,6 +5,7 @@ using GameEngine.Services.Input;
 using GameEngine.Systems;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.GameMaps;
+using GameLibrary.Models.Areas;
 using GameLibrary.Models.Modules;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Graphics;
@@ -76,11 +77,13 @@ public class MapScene(
         lock (_lock) gameStateService.IsTransferring = true;
 
         var entities = map.Entities.Select(x => new MapEntity(jsonService.Copy(x)!)).ToList();
-        var player = playerSpawner.Create(spawn, at) is { } leader ? new MapEntity(leader) : null;
+        var player = await playerSpawner.Create(spawn, at) is { } leader ? new MapEntity(leader) : null;
         if (player is not null) entities.Add(player);
         foreach (var entity in entities) ScalePositions(entity);
 
         var mapImages = await LoadMapImages(map);
+        var (propSprites, footprints) = await LoadProps(map);
+        mapImages.AddRange(propSprites);
         var environments = await LoadEnvironments(map);
         renderer.Preload(mapImages.Concat(environments.SelectMany(x => x.Frames)).Select(x => x.Picture.ImagePath));
         foreach (var system in _systems) await system.Load(entities);
@@ -93,6 +96,7 @@ public class MapScene(
             gameStateService.MapEntities.AddRange(entities);
             gameStateService.MapAreas.Clear();
             gameStateService.MapAreas.AddRange(map.Areas);
+            gameStateService.MapAreas.AddRange(footprints);
             _mapImages.Clear();
             _mapImages.AddRange(mapImages);
             _environments.Clear();
@@ -116,6 +120,58 @@ public class MapScene(
             position.X *= gameDataService.ScaleFactor;
             position.Y *= gameDataService.ScaleFactor;
         }
+    }
+
+    // the props placed on the map: each one sorts with the characters by its base (where it meets the ground), and its
+    // footprint becomes collision like an area painted in the editor. A flat prop is drawn under everyone
+    private async Task<(List<SceneSprite> sprites, List<MapArea> footprints)> LoadProps(GameMap map)
+    {
+        var scale = gameDataService.ScaleFactor;
+        var folder = Path.Combine(locationService.GraphicsDirectory!, "Props");
+        var sprites = new List<SceneSprite>();
+        var footprints = new List<MapArea>();
+        foreach (var placed in map.Props)
+        {
+            if (gameDataService.Props.FirstOrDefault(x => x.Guid == placed.PropGuid) is not { ImageName: { } imageName } prop) continue;
+
+            var path = Path.Combine(folder, imageName);
+            if (!File.Exists(path)) continue;
+
+            // the base point is the bottom middle of the picture, everything below is unscaled map pixels
+            var (width, height) = await graphicsService.GetImageDimensions(path);
+            var left = placed.X - width / 2.0;
+            var top = placed.Y - height;
+            sprites.Add(new SceneSprite(new PictureBox
+            {
+                // a flipped prop draws a mirrored copy of the picture, same size, so it stays where it was placed
+                ImagePath = await graphicsService.GetPropImagePath(path, placed.Flip, prop.BuryDepth, prop.BuryFeather),
+                Z = 0,
+                ScaleX = (float) scale,
+                ScaleY = (float) scale
+            })
+            {
+                X = left * scale,
+                Y = top * scale,
+                Width = width,
+                Height = height,
+                SortY = prop.Flat ? null : (placed.Y + prop.SortOffset) * scale
+            });
+
+            foreach (var area in prop.Footprint)
+            {
+                var offsetX = placed.Flip ? width - area.OffsetX - area.Width : area.OffsetX;
+                footprints.Add(new MapArea
+                {
+                    AreaType = MapAreaType.Collision,
+                    OffsetX = (int) Math.Round(left + offsetX),
+                    OffsetY = (int) Math.Round(top + area.OffsetY),
+                    Width = area.Width,
+                    Height = area.Height
+                });
+            }
+        }
+
+        return (sprites, footprints);
     }
 
     // a layer is drawn when its image exists for the map id, the map's layer options change its defaults

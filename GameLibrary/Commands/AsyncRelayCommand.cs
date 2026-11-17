@@ -1,3 +1,4 @@
+﻿using GameLibrary.Utilities;
 using System.Windows.Input;
 
 namespace GameLibrary.Commands;
@@ -13,9 +14,10 @@ public partial class AsyncRelayCommand(Func<Task> execute, Func<bool>? canExecut
         return canExecute == null || canExecute();
     }
 
-    public async void Execute(object? parameter)
+    // ICommand.Execute has to return void, Forget runs the task and reports a failure instead of crashing
+    public void Execute(object? parameter)
     {
-        await execute();
+        execute().Forget();
     }
 
     #endregion
@@ -33,10 +35,10 @@ public partial class AsyncRelayCommand<T>(Func<T, Task> execute, Func<T, bool>? 
         return canExecute == null || canExecute((T) parameter);
     }
 
-    public async void Execute(object? parameter)
+    public void Execute(object? parameter)
     {
         if (parameter is null) return;
-        await execute((T) parameter);
+        execute((T) parameter).Forget();
     }
 
     public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);

@@ -1,4 +1,5 @@
-﻿using Microsoft.UI.Xaml;
+﻿using GameLibrary.Utilities;
+using Microsoft.UI.Xaml;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Utilities.ComponentModels;
 using GameMaker.AppMain;
@@ -11,10 +12,9 @@ public sealed partial class EngineIcon
     public static readonly DependencyProperty IconIndexProperty = DependencyProperty.Register(
         nameof(IconIndex), typeof(int), typeof(EngineIcon), new PropertyMetadata(0, OnIconIndexChanged));
 
-    private static async void OnIconIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnIconIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
-        if (d is not EngineIcon engineIcon) return;
-        await engineIcon.UpdateCroppedImage();
+        if (d is EngineIcon engineIcon) engineIcon.UpdateCroppedImage().Forget();
     }
 
     public int IconIndex
@@ -28,7 +28,7 @@ public sealed partial class EngineIcon
     public EngineIcon()
     {
         InitializeComponent();
-        Loaded += async (_, _) => await UpdateCroppedImage();
+        Loaded += (_, _) => UpdateCroppedImage().Forget();
     }
 
     private async Task UpdateCroppedImage()

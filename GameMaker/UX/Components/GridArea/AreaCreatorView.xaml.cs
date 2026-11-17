@@ -199,7 +199,6 @@ public partial class AreaCreatorView
 
         if (ShowAnchor)
         {
-            Console.WriteLine(1);
             var center = Calculations.RoundToMultiple(State.InternalGridSize / 2.0, State.BoxSize, Rounding.Down);
             State.AnchorPosition = new Position { X = center, Y = center };
             return;

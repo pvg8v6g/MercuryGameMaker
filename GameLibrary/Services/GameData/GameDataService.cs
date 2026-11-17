@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using GameLibrary.Models.Props;
+using System.Collections.ObjectModel;
 using GameLibrary.Models.Animations;
 using GameLibrary.Models.Artes;
 using GameLibrary.Models.Disciplines;
@@ -52,6 +53,10 @@ public partial class GameDataService : PropertyChangedUpdater, IGameDataService
 
     public int Division { get; set; } = 12;
 
+    // how far a character moves in one step (one tap of a direction), in unscaled map pixels: the grid divided by Division.
+    // Props snap to it in the editor, so nothing sits between two places a character can stand
+    public int StepSize => Math.Max(1, GridSize / Math.Max(1, Division));
+
     public double FrameRate { get; set; } = 16.6666667d; // 60fps
 
     public int MaxEntities { get; set; } = 5000;
@@ -91,6 +96,10 @@ public partial class GameDataService : PropertyChangedUpdater, IGameDataService
     public ObservableCollection<State> States { get; } = [];
 
     public ObservableCollection<Animation> Animations { get; } = [];
+
+    public ObservableCollection<Prop> Props { get; } = [];
+
+    public ObservableCollection<FillSet> FillSets { get; } = [];
 
     public ObservableCollection<Attribute> Attributes { get; } = [];
 

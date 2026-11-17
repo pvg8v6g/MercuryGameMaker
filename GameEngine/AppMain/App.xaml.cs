@@ -1,4 +1,5 @@
-﻿using GameEngine.Scenes;
+﻿using GameLibrary.Utilities;
+using GameEngine.Scenes;
 using GameEngine.Services.Conditions;
 using GameEngine.Services.GameState;
 using GameEngine.Services.Input;
@@ -85,14 +86,46 @@ public partial class App
         ServiceProvider = services.BuildServiceProvider();
 
         InitializeComponent();
+
+        // a crash closes the window with no message, this leaves the reason next to the exe
+        UnhandledException += (_, e) => WriteCrash(e.Exception);
+        AppDomain.CurrentDomain.UnhandledException += (_, e) => WriteCrash(e.ExceptionObject as Exception);
+        TaskScheduler.UnobservedTaskException += (_, e) => WriteCrash(e.Exception);
+        ForgetExtensions.Failed += WriteCrash;
+    }
+
+    private static void WriteCrash(Exception? exception)
+    {
+        try
+        {
+            File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "crash.log"), $"{DateTime.Now}\n{exception}\n\n");
+        }
+        catch (IOException)
+        {
+        }
     }
 
     // the game is loaded and sized before the window shows, the game view starts on the first map once it loads
-    protected override async void OnLaunched(LaunchActivatedEventArgs args)
+    // WinUI's override has to return void, so the real work is a Task that can't take the process down unseen
+    protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        _window = Services!.GetRequiredService<MainWindow>();
-        await Services!.GetRequiredService<IWindowService>().BuildGameEngine(_window);
-        _window.Activate();
+        _ = Launch();
+    }
+
+    private async Task Launch()
+    {
+        try
+        {
+            _window = Services!.GetRequiredService<MainWindow>();
+            await Services!.GetRequiredService<IWindowService>().BuildGameEngine(_window);
+            _window.Activate();
+        }
+        catch (Exception exception)
+        {
+            // the game can't start without its window, leave the reason in crash.log and close
+            WriteCrash(exception);
+            Exit();
+        }
     }
 
     private Window? _window;

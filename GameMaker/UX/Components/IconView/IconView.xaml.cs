@@ -1,4 +1,5 @@
-﻿using GameLibrary.Services.Graphics;
+﻿using GameLibrary.Utilities;
+using GameLibrary.Services.Graphics;
 using GameLibrary.Utilities.ComponentModels;
 using GameMaker.AppMain;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,11 +16,11 @@ public partial class IconView
     public static readonly DependencyProperty IconIndexProperty = DependencyProperty.Register(
         nameof(IconIndex), typeof(int), typeof(IconView), new PropertyMetadata(0, OnIconIndexChanged));
 
-    private static async void OnIconIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnIconIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not IconView iconView) return;
         iconView.UpdateSelectedBorder();
-        await iconView.UpdateCroppedImage();
+        iconView.UpdateCroppedImage().Forget();
     }
 
     public int IconIndex
@@ -34,7 +35,7 @@ public partial class IconView
     {
         InitializeComponent();
         IconFlyout.Opened += IconFlyout_Opened;
-        Loaded += async (_, _) => await UpdateCroppedImage();
+        Loaded += (_, _) => UpdateCroppedImage().Forget();
     }
 
     private async Task UpdateCroppedImage()
@@ -52,7 +53,12 @@ public partial class IconView
         FlyoutBase.ShowAttachedFlyout(sender as FrameworkElement);
     }
 
-    private async void IconFlyout_Opened(object? sender, object e)
+    private void IconFlyout_Opened(object? sender, object e)
+    {
+        LoadFullIcons().Forget();
+    }
+
+    private async Task LoadFullIcons()
     {
         if (FullIconsImage.Source == null)
         {
