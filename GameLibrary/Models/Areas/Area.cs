@@ -64,6 +64,16 @@ public partial class Area : BaseModel
         set => SetField(ref field, value);
     }
 
+    /// <summary>
+    /// Gets or sets the level the area is on: it only affects entities on the same level, 0 is the ground. A level change area
+    /// moves whoever steps into it to this level.
+    /// </summary>
+    public int Level
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     #endregion
 
     public override string ToString()

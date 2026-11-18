@@ -22,7 +22,43 @@
                   Header="Type"
                   HorizontalAlignment="Stretch"
                   ItemsSource="{x:Bind ViewModel.AreaTool.AreaTypes}"
+                  ItemTemplate="{StaticResource EnumDisplayNameTemplate}"
                   SelectedItem="{x:Bind ViewModel.SelectedArea.AreaType, Mode=TwoWay}" />
+      </Grid>
+      <Grid ColumnSpacing="10">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="3*" />
+        </Grid.ColumnDefinitions>
+        <engineTextBox:EngineTextBox Header="Level"
+                                     InputType="Integer"
+                                     Text="{x:Bind ViewModel.SelectedArea.Level, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTipService.ToolTip="The area only affects entities on this level, 0 is the ground. A level change moves whoever steps into it to this level." />
+        <!-- moving up onto the area is blocked by its bottom side, the map draws a bar on each blocked side -->
+        <StackPanel Grid.Column="1"
+                    Spacing="4"
+                    Visibility="{x:Bind ViewModel.SelectedArea.IsCollision, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Collapsed}">
+          <TextBlock Text="Blocks Moving" />
+          <StackPanel Orientation="Horizontal"
+                      Spacing="6">
+            <ToggleButton Content="&#x2191;"
+                          MinWidth="44"
+                          IsChecked="{x:Bind ViewModel.SelectedArea.BlocksUp, Mode=TwoWay, FallbackValue=False}"
+                          ToolTipService.ToolTip="Stops moving up onto the area" />
+            <ToggleButton Content="&#x2193;"
+                          MinWidth="44"
+                          IsChecked="{x:Bind ViewModel.SelectedArea.BlocksDown, Mode=TwoWay, FallbackValue=False}"
+                          ToolTipService.ToolTip="Stops moving down onto the area" />
+            <ToggleButton Content="&#x2190;"
+                          MinWidth="44"
+                          IsChecked="{x:Bind ViewModel.SelectedArea.BlocksLeft, Mode=TwoWay, FallbackValue=False}"
+                          ToolTipService.ToolTip="Stops moving left onto the area" />
+            <ToggleButton Content="&#x2192;"
+                          MinWidth="44"
+                          IsChecked="{x:Bind ViewModel.SelectedArea.BlocksRight, Mode=TwoWay, FallbackValue=False}"
+                          ToolTipService.ToolTip="Stops moving right onto the area" />
+          </StackPanel>
+        </StackPanel>
       </Grid>
       <Grid ColumnSpacing="10">
         <Grid.ColumnDefinitions>

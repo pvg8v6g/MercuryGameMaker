@@ -41,7 +41,7 @@
 
       <!-- Wait -->
       <StackPanel x:Name="WaitPanel" x:Load="{x:Bind ViewModel.IsWait}" Spacing="10">
-        <engineTextBox:EngineTextBox Header="Wait Time (frames)" InputType="Integer"
+        <engineTextBox:EngineTextBox Header="Wait Time (ms)" InputType="Integer"
                                      Text="{x:Bind ViewModel.AsWait.WaitTime, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
       </StackPanel>
 

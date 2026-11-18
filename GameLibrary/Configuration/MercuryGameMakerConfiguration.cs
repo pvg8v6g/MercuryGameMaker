@@ -10,4 +10,7 @@ public class MercuryGameMakerConfiguration
     public bool ShowAreas { get; set; }
 
     public bool ShowCollisions { get; set; }
+
+    // a test opens in a window unless this is on
+    public bool TestFullScreen { get; set; }
 }

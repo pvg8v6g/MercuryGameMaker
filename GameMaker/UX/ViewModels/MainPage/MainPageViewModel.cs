@@ -238,14 +238,14 @@ public partial class MainPageViewModel(
         }
     } = true;
 
-    // tests in a window instead of full screen (full screen tears on some graphics drivers)
-    public bool TestWindowed
+    // what a test opens in and draws over the game: global settings kept in config.json, the engine reads the overlays from there
+    // a test opens in a window unless full screen is picked (full screen tears on some graphics drivers)
+    public bool TestFullScreen
     {
-        get;
-        set => SetField(ref field, value);
+        get => locationService.Configuration?.TestFullScreen ?? false;
+        set => SetTestSetting(value, TestFullScreen, configuration => configuration.TestFullScreen = value);
     }
 
-    // what a test draws over the game: global settings kept in config.json, the engine reads them from there
     public bool TestShowHitboxes
     {
         get => locationService.Configuration?.ShowEntityHitboxes ?? false;
@@ -588,6 +588,7 @@ public partial class MainPageViewModel(
         if (value == current || locationService.Configuration is not { } configuration) return;
         apply(configuration);
         locationService.SaveConfiguration();
+        OnPropertyChanged(nameof(TestFullScreen));
         OnPropertyChanged(nameof(TestShowHitboxes));
         OnPropertyChanged(nameof(TestShowAreas));
         OnPropertyChanged(nameof(TestShowCollisions));
@@ -859,7 +860,7 @@ public partial class MainPageViewModel(
 
         // the game plays the map's audio itself, a preview left on here would play over it
         Map.StopAudio();
-        await testLaunchService.Launch(map, TestWindowed);
+        await testLaunchService.Launch(map, !TestFullScreen);
     }
 
     private void RefreshSpawns()

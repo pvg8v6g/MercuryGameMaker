@@ -14,7 +14,11 @@ namespace GameEngine.Systems;
 /// Draws each entity's character sheet frame where the entity stands and animates the walk.
 /// Sheets are measured while the map loads so an update never waits on an image.
 /// </summary>
-public class CharacterImageSystem(IGameDataService gameDataService, IGameStateService gameStateService, IGraphicsService graphicsService) : IEntitySystem
+public class CharacterImageSystem(
+    IGameDataService gameDataService,
+    IGameStateService gameStateService,
+    IGraphicsService graphicsService,
+    HitboxSystem hitboxSystem) : IEntitySystem
 {
     #region Properties
 
@@ -85,7 +89,9 @@ public class CharacterImageSystem(IGameDataService gameDataService, IGameStateSe
 
         var viewport = Viewport(sheet, image.ImageName!, state, position.Direction);
         sprite.Picture.Viewport = viewport;
-        sprite.Picture.Z = (int) (position.Z + position.SortZ);
+        // the level (position z) doesn't lift a character over the map, it sorts by its feet like everyone else
+        sprite.Picture.Z = (int) position.SortZ;
+        sprite.Tier = hitboxSystem.Tier(entity, position);
         sprite.X = position.X;
         sprite.Y = position.Y;
         sprite.Width = viewport.Width;

@@ -1,4 +1,5 @@
 ﻿using GameEngine.Models;
+using GameLibrary.Enumerations;
 using GameLibrary.Models.Areas;
 using GameLibrary.Models.GameMaps;
 
@@ -32,6 +33,25 @@ public class GameStateService : IGameStateService
     public Dictionary<string, bool> Switches { get; } = [];
 
     public Dictionary<string, string> Variables { get; } = [];
+
+    public Dictionary<(Guid Map, Guid Entity, SelfSwitch Key), bool> SelfSwitches { get; } = [];
+
+    public bool IsPlayerBusy { get; set; }
+
+    #endregion
+
+    #region Methods
+
+    // a self switch that was never set is off
+    public bool SelfSwitch(MapEntity entity, SelfSwitch key)
+    {
+        return SelfSwitches.GetValueOrDefault((ActiveMap?.Guid ?? Guid.Empty, entity.Entity.Guid, key));
+    }
+
+    public void SetSelfSwitch(MapEntity entity, SelfSwitch key, bool value)
+    {
+        SelfSwitches[(ActiveMap?.Guid ?? Guid.Empty, entity.Entity.Guid, key)] = value;
+    }
 
     #endregion
 }

@@ -77,6 +77,9 @@
                     HorizontalAlignment="Stretch"
                     ItemsSource="{x:Bind ViewModel.Triggers}"
                     SelectedItem="{x:Bind ViewModel.SelectedPage.PageTrigger, Mode=TwoWay}" />
+          <CheckBox Content="Turn To Face Player"
+                    IsChecked="{x:Bind ViewModel.SelectedPage.FacePlayer, Mode=TwoWay, FallbackValue=True}"
+                    ToolTipService.ToolTip="The entity turns to the player when the player starts this page. Turn off for things like chests." />
 
           <TextBlock Text="Conditions" />
           <engineListView:EngineListView Height="200"

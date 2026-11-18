@@ -1,5 +1,6 @@
 ﻿using Windows.Foundation;
 using GameEngine.Models;
+using GameEngine.Pages;
 using GameEngine.Services.GameState;
 using GameEngine.Services.Input;
 using GameEngine.Systems;
@@ -32,6 +33,7 @@ public class MapScene(
     PlayerSpawner playerSpawner,
     MapAudio mapAudio,
     DebugOverlay debugOverlay,
+    PageRunner pageRunner,
     Renderer renderer)
 {
     #region Constants
@@ -97,6 +99,11 @@ public class MapScene(
             gameStateService.MapAreas.Clear();
             gameStateService.MapAreas.AddRange(map.Areas);
             gameStateService.MapAreas.AddRange(footprints);
+
+            pageRunner.Clear();
+
+            // a spawn or an edge transfer onto a raised platform starts the player on the platform's level
+            if (player is not null) hitboxSystem.StandOnSurface(player);
             _mapImages.Clear();
             _mapImages.AddRange(mapImages);
             _environments.Clear();
@@ -141,6 +148,7 @@ public class MapScene(
             var (width, height) = await graphicsService.GetImageDimensions(path);
             var left = placed.X - width / 2.0;
             var top = placed.Y - height;
+            var level = SurfaceLevel(map, placed.X, placed.Y);
             sprites.Add(new SceneSprite(new PictureBox
             {
                 // a flipped prop draws a mirrored copy of the picture, same size, so it stays where it was placed
@@ -166,12 +174,24 @@ public class MapScene(
                     OffsetX = (int) Math.Round(left + offsetX),
                     OffsetY = (int) Math.Round(top + area.OffsetY),
                     Width = area.Width,
-                    Height = area.Height
+                    Height = area.Height,
+                    Level = level
                 });
             }
         }
 
         return (sprites, footprints);
+    }
+
+    // a prop is on the level of the highest surface its base point is on (a crate on a raised platform), the ground otherwise.
+    // The base point is the bottom of the picture, the pixel above it is the one standing on the map
+    private static int SurfaceLevel(GameMap map, double x, double y)
+    {
+        return map.Areas
+            .Where(area => area.IsSurface && x >= area.OffsetX && x < area.OffsetX + area.Width && y - 1 >= area.OffsetY && y - 1 < area.OffsetY + area.Height)
+            .Select(area => area.Level)
+            .DefaultIfEmpty(0)
+            .Max();
     }
 
     // a layer is drawn when its image exists for the map id, the map's layer options change its defaults
@@ -281,6 +301,9 @@ public class MapScene(
         }
 
         gameStateService.Player ??= gameStateService.MapEntities.FirstOrDefault(x => x.HasModule<InputModule>());
+
+        // pages start after the systems picked the active pages and movement found what was touched
+        if (!paused) pageRunner.Update();
         UpdateCamera(map);
         if (!paused)
         {

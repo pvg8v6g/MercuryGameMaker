@@ -51,9 +51,15 @@ public class MovementRouteEditorViewModel(
         {
             if (action.Repeat == value) return;
             action.Repeat = value;
+
+            // a repeating route never finishes, so the page can't wait for it
+            if (value) WaitForCompletion = false;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(CanWaitForCompletion));
         }
     }
+
+    public bool CanWaitForCompletion => !action.Repeat;
 
     public int SelectedMovementIndex
     {

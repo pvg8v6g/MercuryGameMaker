@@ -10,6 +10,7 @@ namespace GameEngine.Systems;
 /// <summary>
 /// Moves every entity's hitboxes onto it, scaled to the map, and answers what they touch.
 /// An entity uses its hitboxes for every direction plus the ones for the direction it faces.
+/// An entity's level is its Z: it only bumps into areas and entities on the same level.
 /// </summary>
 public class HitboxSystem(IGameDataService gameDataService, IGameStateService gameStateService) : IEntitySystem
 {
@@ -37,15 +38,51 @@ public class HitboxSystem(IGameDataService gameDataService, IGameStateService ga
         return Areas(hitboxModule, position.Direction).Select(area => Place(new MapHitbox(area), area, position, stepX, stepY)).ToArray();
     }
 
-    // whether a collision area or any other entity that collides is in the way of the hitboxes
-    public bool Collides(MapHitbox[] hitboxes)
+    // whether a collision area or any other entity that collides is in the way of moving the hitboxes to where they're
+    // projected, both on the entity's level
+    public bool Collides(PositionModule position, MapHitbox[] current, MapHitbox[] projected, Direction direction)
     {
-        if (HitsCollisionArea(hitboxes)) return true;
+        var level = Level(position);
+        if (HitsCollisionArea(current, projected, direction, level)) return true;
 
-        return Placed(x => x.Collide)
-            .Where(x => hitboxes.All(y => y.Source != x.Source))
-            .Any(x => hitboxes.Any(x.Collide));
+        return Placed(x => x.Collide, level)
+            .Where(x => projected.All(y => y.Source != x.Source))
+            .Any(x => projected.Any(x.Collide));
     }
+
+    // a level change area the entity's main hitbox (its feet) stands in moves it to the area's level
+    public void ChangeLevel(EntityHitboxModule hitboxModule, PositionModule position)
+    {
+        if (hitboxModule.Hitboxes.GetValueOrDefault(Direction.None)?.FirstOrDefault() is not { } area) return;
+
+        var feet = Place(new MapHitbox(area), area, position, 0, 0);
+        var change = gameStateService.MapAreas.FirstOrDefault(x => x.AreaType == MapAreaType.LevelChange && Overlaps(feet, x));
+        if (change is not null) position.Z = change.Level;
+    }
+
+    // the draw tier: the entity's own level when its feet are on a surface of a higher level (underneath a bridge),
+    // otherwise the top tier with everything else on the map
+    public int Tier(MapEntity entity, PositionModule position)
+    {
+        if (entity.GetModule<EntityHitboxModule>()?.Hitboxes.GetValueOrDefault(Direction.None)?.FirstOrDefault() is not { } area) return SceneSprite.TopTier;
+
+        var level = Level(position);
+        var feet = Place(new MapHitbox(area), area, position, 0, 0);
+        return gameStateService.MapAreas.Any(x => x.IsSurface && x.Level > level && Overlaps(feet, x)) ? level : SceneSprite.TopTier;
+    }
+
+    // puts the entity on the level of the highest surface its feet are on, the ground when they aren't on one
+    public void StandOnSurface(MapEntity entity)
+    {
+        if (entity.GetModule<PositionModule>() is not { } position) return;
+        if (entity.GetModule<EntityHitboxModule>()?.Hitboxes.GetValueOrDefault(Direction.None)?.FirstOrDefault() is not { } area) return;
+
+        var feet = Place(new MapHitbox(area), area, position, 0, 0);
+        position.Z = gameStateService.MapAreas.Where(x => x.IsSurface && Overlaps(feet, x)).Select(x => x.Level).DefaultIfEmpty(0).Max();
+    }
+
+    // the level an entity is on, its Z
+    public static int Level(PositionModule position) => (int) Math.Round(position.Z);
 
     // the hitbox an entity is centered on, the first one used in every direction
     public MapHitbox? Main(MapEntity entity)
@@ -56,6 +93,30 @@ public class HitboxSystem(IGameDataService gameDataService, IGameStateService ga
 
     // every entity's hitboxes where they are right now
     public IEnumerable<MapHitbox> AllPlaced() => Placed(_ => true);
+
+    // one entity's hitboxes where it is right now
+    public IEnumerable<MapHitbox> PlacedOf(MapEntity entity)
+    {
+        if (entity.GetModule<EntityHitboxModule>() is not { } hitboxModule || entity.GetModule<PositionModule>() is not { } position) return [];
+
+        var state = entity.State<HitboxState>();
+        return Areas(hitboxModule, position.Direction).Select(state.Get);
+    }
+
+    // the entities on the mover's level that the step newly touches: overlapped where it's going and not where it is.
+    // An entity in the way is never overlapped, so walking into it again touches it again
+    public MapEntity[] Touched(MapEntity mover, PositionModule position, MapHitbox[] current, MapHitbox[] projected)
+    {
+        var level = Level(position);
+        return gameStateService.MapEntities
+            .Where(x => x != mover && !x.IsErased && x.GetModule<PositionModule>() is { } other && Level(other) == level)
+            .Where(x =>
+            {
+                var boxes = PlacedOf(x).ToArray();
+                return boxes.Any(box => projected.Any(box.Collide)) && !boxes.Any(box => current.Any(box.Collide));
+            })
+            .ToArray();
+    }
 
     #endregion
 
@@ -81,31 +142,35 @@ public class HitboxSystem(IGameDataService gameDataService, IGameStateService ga
         return hitbox;
     }
 
-    // the collision areas painted on the map in the editor, saved in unscaled map pixels like entity positions
-    private bool HitsCollisionArea(MapHitbox[] hitboxes)
+    // the collision areas painted on the map in the editor and the prop footprints. One only stops moving onto it in the
+    // directions it blocks, an entity already standing on it moves freely, so a raised platform can be left from inside
+    private bool HitsCollisionArea(MapHitbox[] current, MapHitbox[] projected, Direction direction, int level)
     {
-        var scale = gameDataService.ScaleFactor;
         foreach (var area in gameStateService.MapAreas)
         {
-            if (area.AreaType != MapAreaType.Collision) continue;
-
-            var x = area.OffsetX * scale;
-            var y = area.OffsetY * scale;
-            var width = area.Width * scale;
-            var height = area.Height * scale;
-            if (hitboxes.Any(box => box.X < x + width && x < box.X + box.Width && box.Y < y + height && y < box.Y + box.Height)) return true;
+            if (area.AreaType != MapAreaType.Collision || area.Level != level || !area.Blocks(direction)) continue;
+            if (current.Any(box => Overlaps(box, area))) continue;
+            if (projected.Any(box => Overlaps(box, area))) return true;
         }
 
         return false;
     }
 
-    // the placed hitboxes of every entity whose hitbox module matches
-    private IEnumerable<MapHitbox> Placed(Func<EntityHitboxModule, bool> include)
+    // map areas are saved in unscaled map pixels like entity positions
+    private bool Overlaps(MapHitbox box, MapArea area)
+    {
+        var scale = gameDataService.ScaleFactor;
+        return box.Collide(area.OffsetX * scale, area.OffsetY * scale, area.Width * scale, area.Height * scale);
+    }
+
+    // the placed hitboxes of every entity whose hitbox module matches, only the ones on the level when one is given
+    private IEnumerable<MapHitbox> Placed(Func<EntityHitboxModule, bool> include, int? level = null)
     {
         foreach (var entity in gameStateService.MapEntities)
         {
             if (entity.GetModule<EntityHitboxModule>() is not { } hitboxModule || !include(hitboxModule)) continue;
             if (entity.GetModule<PositionModule>() is not { } position) continue;
+            if (level is { } onLevel && Level(position) != onLevel) continue;
 
             var state = entity.State<HitboxState>();
             foreach (var area in Areas(hitboxModule, position.Direction)) yield return state.Get(area);

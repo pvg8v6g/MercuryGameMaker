@@ -1,19 +1,19 @@
 ﻿using GameEngine.Services.GameState;
-using GameLibrary.Models;
+using GameEngine.Models;
 using GameLibrary.Models.Conditions;
 
 namespace GameEngine.Services.Conditions;
 
 /// <summary>
-/// Checks a page condition against the game state. Self switches are checked against the page they belong to.
+/// Checks a page condition against the game state. Self switches are checked against the entity the page belongs to.
 /// </summary>
 public class ConditionService(IGameStateService gameStateService) : IConditionService
 {
     #region Methods
 
-    public bool Passed(Condition condition, Page page) => condition switch
+    public bool Passed(Condition condition, MapEntity entity) => condition switch
     {
-        SelfSwitchCondition selfSwitch => selfSwitch.SelfSwitch is { } key && selfSwitch.Value == page.SelfSwitchValues.GetValueOrDefault(key),
+        SelfSwitchCondition selfSwitch => selfSwitch.SelfSwitch is { } key && selfSwitch.Value == gameStateService.SelfSwitch(entity, key),
 
         // a switch or variable that was never set doesn't block the page
         SwitchCondition @switch => @switch.SwitchName is { } name && (!gameStateService.Switches.TryGetValue(name, out var value) || value == @switch.Value),

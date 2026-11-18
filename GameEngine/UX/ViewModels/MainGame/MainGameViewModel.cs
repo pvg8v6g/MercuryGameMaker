@@ -5,6 +5,7 @@ using GameEngine.Scenes;
 using GameEngine.Services.GameState;
 using GameEngine.Services.Input;
 using GameEngine.Services.Start;
+using GameEngine.Services.Window;
 using GameLibrary.Commands;
 using GameLibrary.Services.GameData;
 using MercuryLibrary.ImageComponents;
@@ -19,7 +20,8 @@ public partial class MainGameViewModel(
     IInputService inputService,
     IGameDataService gameDataService,
     IGameStateService gameStateService,
-    IStartService startService) : BaseViewModel
+    IStartService startService,
+    IWindowService windowService) : BaseViewModel
 {
     #region Properties
 
@@ -50,9 +52,10 @@ public partial class MainGameViewModel(
 
     protected override async Task LoadedAction()
     {
-        OnPropertyChanged(nameof(GameWidth));
-        OnPropertyChanged(nameof(GameHeight));
-        OnPropertyChanged(nameof(GameBounds));
+        // the page can load again, it only listens once
+        windowService.GameResized -= GameResized;
+        windowService.GameResized += GameResized;
+        RefreshGameSize();
         if (startService.Find() is not { } start) return;
 
         // a new game, the party is the game start's party
@@ -66,6 +69,22 @@ public partial class MainGameViewModel(
     protected override void Update()
     {
         mapScene.Update();
+    }
+
+    #endregion
+
+    #region Methods
+
+    private void GameResized(object? sender, EventArgs e)
+    {
+        RefreshGameSize();
+    }
+
+    private void RefreshGameSize()
+    {
+        OnPropertyChanged(nameof(GameWidth));
+        OnPropertyChanged(nameof(GameHeight));
+        OnPropertyChanged(nameof(GameBounds));
     }
 
     #endregion

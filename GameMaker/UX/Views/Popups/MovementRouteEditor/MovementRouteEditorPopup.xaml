@@ -20,7 +20,10 @@
     <StackPanel Grid.Row="0"
                 Orientation="Horizontal"
                 Spacing="20">
-      <CheckBox Content="Wait For Completion" IsChecked="{x:Bind ViewModel.WaitForCompletion, Mode=TwoWay}" />
+      <CheckBox Content="Wait For Completion"
+                IsChecked="{x:Bind ViewModel.WaitForCompletion, Mode=TwoWay}"
+                IsEnabled="{x:Bind ViewModel.CanWaitForCompletion, Mode=OneWay}"
+                ToolTipService.ToolTip="The page waits until the route is done. Not available on a repeating route, it never finishes." />
       <CheckBox Content="Skip If Cannot Move" IsChecked="{x:Bind ViewModel.SkipIfInterrupted, Mode=TwoWay}" />
       <CheckBox Content="Repeat" IsChecked="{x:Bind ViewModel.Repeat, Mode=TwoWay}" />
     </StackPanel>

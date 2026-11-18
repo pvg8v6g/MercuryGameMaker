@@ -15,6 +15,6 @@ public class ActivePageSystem(IConditionService conditionService) : IEntitySyste
     {
         entity.ActivePage = entity.Entity.Pages
             .OrderByDescending(x => x.Id)
-            .FirstOrDefault(page => page.Conditions.All(condition => conditionService.Passed(condition, page)));
+            .FirstOrDefault(page => page.Conditions.All(condition => conditionService.Passed(condition, entity)));
     }
 }

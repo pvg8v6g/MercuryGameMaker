@@ -176,6 +176,7 @@
           <ComboBox MinWidth="140"
                     VerticalAlignment="Center"
                     ItemsSource="{x:Bind ViewModel.AreaTool.AreaTypes}"
+                    ItemTemplate="{StaticResource EnumDisplayNameTemplate}"
                     SelectedItem="{x:Bind ViewModel.AreaTool.NewAreaType, Mode=TwoWay}"
                     Visibility="{x:Bind ViewModel.IsAreaMode, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
                     ToolTipService.ToolTip="The type of area to draw." />
@@ -203,8 +204,8 @@
             <SymbolIcon Symbol="Play" />
             <SplitButton.Flyout>
               <MenuFlyout Placement="Bottom">
-                <ToggleMenuFlyoutItem Text="Windowed"
-                                      IsChecked="{x:Bind ViewModel.TestWindowed, Mode=TwoWay}" />
+                <ToggleMenuFlyoutItem Text="Full Screen"
+                                      IsChecked="{x:Bind ViewModel.TestFullScreen, Mode=TwoWay}" />
                 <MenuFlyoutSeparator />
                 <ToggleMenuFlyoutItem Text="Show Hitboxes"
                                       IsChecked="{x:Bind ViewModel.TestShowHitboxes, Mode=TwoWay}" />
@@ -426,6 +427,23 @@
                                  FontSize="10"
                                  Margin="3,1"
                                  TextTrimming="CharacterEllipsis" />
+                      <!-- a collision's walled off sides, a side without a bar can be walked onto -->
+                      <Rectangle Height="4"
+                                 VerticalAlignment="Top"
+                                 Fill="#FFE63C3C"
+                                 Visibility="{x:Bind ShowTopBar, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                      <Rectangle Height="4"
+                                 VerticalAlignment="Bottom"
+                                 Fill="#FFE63C3C"
+                                 Visibility="{x:Bind ShowBottomBar, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                      <Rectangle Width="4"
+                                 HorizontalAlignment="Left"
+                                 Fill="#FFE63C3C"
+                                 Visibility="{x:Bind ShowLeftBar, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                      <Rectangle Width="4"
+                                 HorizontalAlignment="Right"
+                                 Fill="#FFE63C3C"
+                                 Visibility="{x:Bind ShowRightBar, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
                       <Rectangle Stroke="{StaticResource LightYellowBrush}"
                                  StrokeThickness="2"
                                  Visibility="{x:Bind IsSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />

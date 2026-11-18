@@ -1,4 +1,4 @@
-using GameLibrary.Enumerations;
+﻿using GameLibrary.Enumerations;
 using GameLibrary.Models.Areas;
 
 namespace GameEngine.Models;
@@ -40,8 +40,14 @@ public class MapHitbox(Area source)
 
     public bool Collide(MapHitbox hitbox)
     {
-        var collidesOnX = X < hitbox.X + hitbox.Width && hitbox.X < X + Width;
-        var collidesOnY = Y < hitbox.Y + hitbox.Height && hitbox.Y < Y + Height;
+        return Collide(hitbox.X, hitbox.Y, hitbox.Width, hitbox.Height);
+    }
+
+    // whether this hitbox overlaps a box in map pixels, boxes that only touch edges don't collide
+    public bool Collide(double x, double y, double width, double height)
+    {
+        var collidesOnX = X < x + width && x < X + Width;
+        var collidesOnY = Y < y + height && y < Y + Height;
         return collidesOnX && collidesOnY;
     }
 

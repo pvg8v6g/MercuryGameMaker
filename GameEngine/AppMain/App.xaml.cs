@@ -1,4 +1,6 @@
 ﻿using GameLibrary.Utilities;
+using GameEngine.Pages;
+using GameEngine.Pages.Handlers;
 using GameEngine.Scenes;
 using GameEngine.Services.Conditions;
 using GameEngine.Services.GameState;
@@ -70,6 +72,25 @@ public partial class App
         AddSystem<MovementSystem>(services);
         AddSystem<HitboxSystem>(services);
         AddSystem<CharacterImageSystem>(services);
+
+        #endregion
+
+        #region Register Pages
+
+        services.AddSingleton<PageTouches>();
+        services.AddSingleton<ActionRunner>();
+        services.AddSingleton<PageRunner>();
+
+        #endregion
+
+        #region Register Action Handlers
+
+        // each page action is run by the handler for its type, an action with none is skipped
+        services.AddSingleton<IActionHandler, FlowHandler>();
+        services.AddSingleton<IActionHandler, BranchHandler>();
+        services.AddSingleton<IActionHandler, WaitHandler>();
+        services.AddSingleton<IActionHandler, ExitProcessingHandler>();
+        services.AddSingleton<IActionHandler, EntityEraseHandler>();
 
         #endregion
 

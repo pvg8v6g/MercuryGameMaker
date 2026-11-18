@@ -1,5 +1,6 @@
 ﻿using GameLibrary.Enumerations;
 using GameLibrary.Models.Areas;
+using GameLibrary.Utilities;
 using MercuryLibrary.WinUI3Components;
 using Microsoft.UI;
 using Microsoft.UI.Xaml.Media;
@@ -18,6 +19,7 @@ public partial class MapAreaModel(MapArea area, int cellSize) : PropertyChangedU
     private static readonly Brush CollisionBrush = new SolidColorBrush(ColorHelper.FromArgb(110, 230, 60, 60));
     private static readonly Brush WaterBrush = new SolidColorBrush(ColorHelper.FromArgb(110, 40, 90, 220));
     private static readonly Brush FootstepBrush = new SolidColorBrush(ColorHelper.FromArgb(110, 80, 200, 110));
+    private static readonly Brush LevelChangeBrush = new SolidColorBrush(ColorHelper.FromArgb(120, 240, 170, 40));
 
     #endregion
 
@@ -56,18 +58,97 @@ public partial class MapAreaModel(MapArea area, int cellSize) : PropertyChangedU
             OnPropertyChanged(nameof(Fill));
             OnPropertyChanged(nameof(Label));
             OnPropertyChanged(nameof(IsFootstep));
+            OnPropertyChanged(nameof(IsCollision));
+            OnBlocksChanged();
         }
     }
 
     public bool IsFootstep => area.AreaType == MapAreaType.Footstep;
 
-    public string Label => area.AreaType == MapAreaType.Area && !string.IsNullOrEmpty(area.Name) ? area.Name : area.AreaType.ToString();
+    public bool IsCollision => area.AreaType == MapAreaType.Collision;
+
+    // the level the area is on, a level change area moves whoever steps into it to this level
+    public int Level
+    {
+        get => area.Level;
+        set
+        {
+            if (area.Level == value) return;
+            area.Level = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(Label));
+        }
+    }
+
+    public bool BlocksUp
+    {
+        get => area.BlocksUp;
+        set
+        {
+            if (area.BlocksUp == value) return;
+            area.BlocksUp = value;
+            OnBlocksChanged();
+        }
+    }
+
+    public bool BlocksDown
+    {
+        get => area.BlocksDown;
+        set
+        {
+            if (area.BlocksDown == value) return;
+            area.BlocksDown = value;
+            OnBlocksChanged();
+        }
+    }
+
+    public bool BlocksLeft
+    {
+        get => area.BlocksLeft;
+        set
+        {
+            if (area.BlocksLeft == value) return;
+            area.BlocksLeft = value;
+            OnBlocksChanged();
+        }
+    }
+
+    public bool BlocksRight
+    {
+        get => area.BlocksRight;
+        set
+        {
+            if (area.BlocksRight == value) return;
+            area.BlocksRight = value;
+            OnBlocksChanged();
+        }
+    }
+
+    // a bar on the side a collision is walled off from: moving up onto the area comes in through its bottom edge
+    public bool ShowBottomBar => IsCollision && area.BlocksUp;
+
+    public bool ShowTopBar => IsCollision && area.BlocksDown;
+
+    public bool ShowRightBar => IsCollision && area.BlocksLeft;
+
+    public bool ShowLeftBar => IsCollision && area.BlocksRight;
+
+    // the level shows on any area off the ground, and always on a level change so it's clear where it leads
+    public string Label
+    {
+        get
+        {
+            var name = area.AreaType == MapAreaType.Area && !string.IsNullOrEmpty(area.Name) ? area.Name : area.AreaType.GetDisplayName();
+            return area.Level != 0 || area.AreaType == MapAreaType.LevelChange ? $"{name} (L{area.Level})" : name;
+        }
+    }
 
     public Brush Fill => area.AreaType switch
     {
         MapAreaType.Collision => CollisionBrush,
         MapAreaType.Water => WaterBrush,
         MapAreaType.Footstep => FootstepBrush,
+        MapAreaType.LevelChange => LevelChangeBrush,
         _ => AreaBrush
     };
 
@@ -149,6 +230,18 @@ public partial class MapAreaModel(MapArea area, int cellSize) : PropertyChangedU
     #endregion
 
     #region Private Methods
+
+    private void OnBlocksChanged()
+    {
+        OnPropertyChanged(nameof(BlocksUp));
+        OnPropertyChanged(nameof(BlocksDown));
+        OnPropertyChanged(nameof(BlocksLeft));
+        OnPropertyChanged(nameof(BlocksRight));
+        OnPropertyChanged(nameof(ShowBottomBar));
+        OnPropertyChanged(nameof(ShowTopBar));
+        OnPropertyChanged(nameof(ShowRightBar));
+        OnPropertyChanged(nameof(ShowLeftBar));
+    }
 
     private void OnBoundsChanged()
     {

@@ -5,6 +5,12 @@
   <converters:NullToVisibilityConverter x:Key="NullToCollapsedConverter" Invert="False" />
   <converters:NullToVisibilityConverter x:Key="NullToVisibleConverter" Invert="True" />
   <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" Invert="False" />
+  <converters:EnumDisplayNameConverter x:Key="EnumDisplayNameConverter" />
+
+  <!-- a drop down item that shows an enum value by its Display name -->
+  <DataTemplate x:Key="EnumDisplayNameTemplate">
+    <TextBlock Text="{Binding Converter={StaticResource EnumDisplayNameConverter}}" />
+  </DataTemplate>
   <converters:NullToBooleanConverter x:Key="NullToFalseConverter" Invert="False" />
   <converters:NullToBooleanConverter x:Key="NullToTrueConverter" Invert="True" />
   <converters:RectPropertyConverter x:Key="RectWidthConverter" PropertyToExtract="Width" />

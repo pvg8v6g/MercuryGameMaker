@@ -1,4 +1,4 @@
-using GameLibrary.Models;
+﻿using GameLibrary.Models;
 using GameLibrary.Models.Modules;
 
 namespace GameEngine.Models;
@@ -23,6 +23,9 @@ public class MapEntity(Entity entity)
     public Page? ActivePage { get; set; }
 
     public IEnumerable<Module> Modules => ActivePage?.Modules ?? Enumerable.Empty<Module>();
+
+    // erased by a page, taken off the map until it loads again
+    public bool IsErased { get; set; }
 
     #endregion
 

@@ -53,9 +53,11 @@ public partial class Renderer(IGameDataService gameDataService) : PropertyChange
         // the canvas scales a picture around its center, this keeps the scaled picture's top left on the sprite
         var grow = gameDataService.ScaleFactor - 1.0;
 
-        // z is the floor, everything on a lower floor is drawn first. On the same floor entities sort by their feet
+        // z is the layer (ground, the map, parallax, light). On the map anything underneath a higher level goes first,
+        // then everything sorts by where it meets the ground, flat props before anything standing
         var ordered = sprites
             .OrderBy(x => x.Picture.Z)
+            .ThenBy(x => x.Tier)
             .ThenBy(x => x.SortY)
             .ToArray();
         foreach (var sprite in ordered)

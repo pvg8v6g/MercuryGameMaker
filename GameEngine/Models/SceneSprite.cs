@@ -1,4 +1,4 @@
-using MercuryLibrary.ImageComponents;
+﻿using MercuryLibrary.ImageComponents;
 
 namespace GameEngine.Models;
 
@@ -24,6 +24,12 @@ public class SceneSprite(PictureBox picture)
     // their feet are in map pixels, map objects (trees, rocks) use where they meet the ground so characters can stand
     // in front of or behind them. Anything else (map layer images, environments) has none and stays under them
     public double? SortY { get; set; }
+
+    // everything on the map sorts by SortY across levels, so a tree at the bottom of a cliff still covers whoever stands
+    // on top. Only something underneath a higher level (a bridge) drops to the tier of its own level, below that level
+    public int Tier { get; set; } = TopTier;
+
+    public const int TopTier = int.MaxValue;
 
     #endregion
 }

@@ -1,4 +1,5 @@
 ﻿using GameEngine.Models;
+using GameEngine.Pages;
 using GameEngine.Services.GameState;
 using GameEngine.Services.Input;
 using GameLibrary.Enumerations;
@@ -15,7 +16,8 @@ public class MovementSystem(
     IGameDataService gameDataService,
     IGameStateService gameStateService,
     IInputService inputService,
-    HitboxSystem hitboxSystem) : IEntitySystem
+    HitboxSystem hitboxSystem,
+    PageTouches pageTouches) : IEntitySystem
 {
     #region Update
 
@@ -34,6 +36,9 @@ public class MovementSystem(
         position.Y += Math.Sign(movement.IncrementY) * moveY;
         movement.DistanceX -= moveX;
         movement.DistanceY -= moveY;
+
+        // stairs: stepping into a level change moves the entity to its level
+        if (entity.GetModule<EntityHitboxModule>() is { } hitboxModule) hitboxSystem.ChangeLevel(hitboxModule, position);
     }
 
     #endregion
@@ -69,7 +74,7 @@ public class MovementSystem(
             _ => throw new ArgumentException($"Invalid direction: {direction}", nameof(direction))
         };
 
-        var reach = Reach(entity, position, unitX, unitY, Math.Max(distance, increment), distance);
+        var reach = Reach(entity, position, direction, unitX, unitY, Math.Max(distance, increment), distance);
         if (reach <= 0)
         {
             movement.MoveInterrupted = true;
@@ -89,17 +94,18 @@ public class MovementSystem(
 
     // how far this step can go. A dash covers more than one grid step in an update, so all of it is checked and it is
     // shortened to what fits: running at a wall stops against it instead of inside it, 0 when nothing fits
-    private double Reach(MapEntity entity, PositionModule position, double unitX, double unitY, double farthest, double step)
+    private double Reach(MapEntity entity, PositionModule position, Direction direction, double unitX, double unitY, double farthest, double step)
     {
         for (var reach = farthest; reach > 0; reach -= step)
         {
-            if (CanWalk(entity, position, unitX * reach, unitY * reach)) return reach;
+            if (CanWalk(entity, position, direction, unitX * reach, unitY * reach)) return reach;
         }
 
         return 0;
     }
 
-    private bool CanWalk(MapEntity entity, PositionModule position, double stepX, double stepY)
+    // the direction is the way the entity moves, not the way it faces, a fixed direction entity can walk backwards
+    private bool CanWalk(MapEntity entity, PositionModule position, Direction direction, double stepX, double stepY)
     {
         if (entity.GetModule<EntityHitboxModule>() is not { } hitboxModule) return true;
 
@@ -110,10 +116,26 @@ public class MovementSystem(
             return false;
         }
 
+        var current = hitboxSystem.Project(hitboxModule, position, 0, 0);
+        Touch(entity, position, current, hitboxes);
         if (!hitboxModule.Collide) return true;
 
-        // TODO - start page execution of whatever was walked into
-        return !hitboxSystem.Collides(hitboxes);
+        return !hitboxSystem.Collides(position, current, hitboxes, direction);
+    }
+
+    // the player walking into an entity touches it, an entity with an event touch page walking into the player touches
+    // the player for itself. The page runner starts the touch pages
+    private void Touch(MapEntity entity, PositionModule position, MapHitbox[] current, MapHitbox[] projected)
+    {
+        var touched = hitboxSystem.Touched(entity, position, current, projected);
+        if (entity == gameStateService.Player)
+        {
+            foreach (var other in touched) pageTouches.Touch(other);
+        }
+        else if (entity.ActivePage?.PageTrigger == PageTrigger.EventTouch && touched.Contains(gameStateService.Player))
+        {
+            pageTouches.Touch(entity);
+        }
     }
 
     // stops at the map edge and snaps the entity flush against it, the side is the edge that was walked into

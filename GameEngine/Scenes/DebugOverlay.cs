@@ -107,7 +107,7 @@ public partial class DebugOverlay(
         var scale = gameDataService.ScaleFactor;
         var shown = gameStateService.MapAreas.Where(x => x.AreaType == MapAreaType.Collision ? configuration.ShowCollisions : configuration.ShowAreas).ToArray();
         var areas = shown.Where(x => x.AreaType != MapAreaType.Collision).Select(x => ToShape(x, scale)).ToArray();
-        var collisions = shown.Where(x => x.AreaType == MapAreaType.Collision).Select(x => ToShape(x, scale)).ToArray();
+        var collisions = shown.Where(x => x.AreaType == MapAreaType.Collision).SelectMany(x => WithBars(x, scale)).ToArray();
         _dispatcherQueue.TryEnqueue(() =>
         {
             Areas = [.. areas.Select(x => new DebugBox(x))];
@@ -137,12 +137,29 @@ public partial class DebugOverlay(
         return new DebugShape(area.OffsetX * scale, area.OffsetY * scale, area.Width * scale, area.Height * scale, AreaColor(area.AreaType));
     }
 
+    // a collision and a bar on each side it's walled off from, like the editor: moving up onto it comes in through its bottom
+    private static IEnumerable<DebugShape> WithBars(MapArea area, double scale)
+    {
+        var box = ToShape(area, scale);
+        yield return box;
+
+        var color = AreaColor(MapAreaType.Collision);
+        if (area.BlocksUp) yield return new DebugShape(box.X, box.Y + box.Height - BarSize, box.Width, BarSize, color);
+        if (area.BlocksDown) yield return new DebugShape(box.X, box.Y, box.Width, BarSize, color);
+        if (area.BlocksLeft) yield return new DebugShape(box.X + box.Width - BarSize, box.Y, BarSize, box.Height, color);
+        if (area.BlocksRight) yield return new DebugShape(box.X, box.Y, BarSize, box.Height, color);
+    }
+
+    // how thick a collision's blocked side is drawn, in scaled map pixels
+    private const double BarSize = 6.0;
+
     // the same colors the editor draws them in
     private static Color AreaColor(MapAreaType type) => type switch
     {
         MapAreaType.Collision => ColorHelper.FromArgb(255, 230, 60, 60),
         MapAreaType.Water => ColorHelper.FromArgb(255, 40, 90, 220),
         MapAreaType.Footstep => ColorHelper.FromArgb(255, 80, 200, 110),
+        MapAreaType.LevelChange => ColorHelper.FromArgb(255, 240, 170, 40),
         _ => ColorHelper.FromArgb(255, 120, 190, 255)
     };
 
