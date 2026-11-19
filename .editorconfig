@@ -20,3 +20,6 @@ resharper_blank_lines_around_single_line_auto_property = 1
 
 [*.{py,cs,csproj}]
 indent_size = 4
+
+
+dotnet_diagnostic.CA1416.severity = none

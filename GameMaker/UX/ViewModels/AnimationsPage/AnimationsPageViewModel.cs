@@ -463,9 +463,9 @@ public class AnimationsPageViewModel(
         if (actor is null) return;
 
         var image = await graphicsService.GetCharacter(actor.CharacterName!, actor.CharacterIndex, Direction.Down);
-        if (image.Rect is not { Width: > 0, Height: > 0 } viewport) return;
+        if (image is not { ImagePath: { } path, Rect: { Width: > 0, Height: > 0 } viewport }) return;
 
-        _actorSprite = new PictureBox { ImagePath = image.ImagePath, Viewport = viewport, Z = 0 };
+        _actorSprite = new PictureBox { ImagePath = path, Viewport = viewport, Z = 0 };
         AnchorWidth = viewport.Width;
         AnchorHeight = viewport.Height;
         TintActor();
@@ -572,7 +572,7 @@ public class AnimationsPageViewModel(
             return;
         }
 
-        if (info.Properties.IsLeftButtonPressed) _ = PlaceCell(position);
+        if (info.Properties.IsLeftButtonPressed) _ = PlaceCell();
     }
 
     private void OnCanvasPointerMoved(PointerEventInfo? info)
@@ -669,7 +669,8 @@ public class AnimationsPageViewModel(
         _ = RebuildSprites();
     }
 
-    private async Task PlaceCell(Point position)
+    // a new cell always starts at 0,0 (the middle of the target), where nearly every cell goes. Drag it to move it
+    private async Task PlaceCell()
     {
         if (SelectedEntity is null) return;
         if (SelectedAnimationImageFilesIndex < 0 || SelectedAnimationImageFilesIndex >= AnimationImageFiles.Length) return;
