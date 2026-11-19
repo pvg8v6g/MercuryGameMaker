@@ -1,5 +1,6 @@
-﻿using Windows.Foundation;
+using Windows.Foundation;
 using GameEngine.Models;
+using GameEngine.Navigation;
 using GameEngine.Pages;
 using GameEngine.Services.GameState;
 using GameEngine.Services.Input;
@@ -34,6 +35,8 @@ public class MapScene(
     MapAudio mapAudio,
     DebugOverlay debugOverlay,
     PageRunner pageRunner,
+    NavigationService navigationService,
+    BalloonSystem balloonSystem,
     Renderer renderer)
 {
     #region Constants
@@ -77,18 +80,28 @@ public class MapScene(
     public async Task Load(GameMap map, SpawnPoint spawn, Point? at = null)
     {
         lock (_lock) gameStateService.IsTransferring = true;
+        RememberPlaces();
 
         var entities = map.Entities.Select(x => new MapEntity(jsonService.Copy(x)!)).ToList();
-        var player = await playerSpawner.Create(spawn, at) is { } leader ? new MapEntity(leader) : null;
-        if (player is not null) entities.Add(player);
         foreach (var entity in entities) ScalePositions(entity);
+        foreach (var entity in entities) PutBack(map, entity);
+        var player = await playerSpawner.Create(spawn, at) is { } leader ? new MapEntity(leader) : null;
+        if (player is not null)
+        {
+            ScalePositions(player);
+            entities.Add(player);
+        }
 
         var mapImages = await LoadMapImages(map);
         var (propSprites, footprints) = await LoadProps(map);
         mapImages.AddRange(propSprites);
         var environments = await LoadEnvironments(map);
-        renderer.Preload(mapImages.Concat(environments.SelectMany(x => x.Frames)).Select(x => x.Picture.ImagePath));
         foreach (var system in _systems) await system.Load(entities);
+
+        // the balloon sheet loads with the map so the first balloon shows straight away
+        var preload = mapImages.Concat(environments.SelectMany(x => x.Frames)).Select(x => x.Picture.ImagePath);
+        if (balloonSystem.SheetPath is { } balloons) preload = preload.Append(balloons);
+        renderer.Preload(preload);
 
         lock (_lock)
         {
@@ -117,6 +130,37 @@ public class MapScene(
 
         // not waited for, the map never holds up on a track loading
         _ = mapAudio.Play(map, FadeSeconds);
+    }
+
+    // the map being left: each entity whose page remembers its position keeps where it stands, the others forget
+    private void RememberPlaces()
+    {
+        if (gameStateService.ActiveMap is not { } left) return;
+
+        foreach (var entity in gameStateService.MapEntities.Where(x => x != gameStateService.Player))
+        {
+            var key = (left.Guid, entity.Entity.Guid);
+            if (entity is { IsErased: false, ActivePage.RemembersPosition: true } && entity.GetModule<PositionModule>() is { } position)
+            {
+                gameStateService.EntityPlaces[key] = new EntityPlace(position.X, position.Y, position.Z, position.SortZ, position.Direction);
+            }
+            else gameStateService.EntityPlaces.Remove(key);
+        }
+    }
+
+    // the page isn't picked until the first update, so every page that remembers gets the place, the active one uses it
+    private void PutBack(GameMap map, MapEntity entity)
+    {
+        if (!gameStateService.EntityPlaces.TryGetValue((map.Guid, entity.Entity.Guid), out var place)) return;
+
+        foreach (var position in entity.Entity.Pages.Where(x => x.RemembersPosition).SelectMany(x => x.Modules).OfType<PositionModule>())
+        {
+            position.X = place.X;
+            position.Y = place.Y;
+            position.Z = place.Z;
+            position.SortZ = place.SortZ;
+            position.Direction = place.Direction;
+        }
     }
 
     // the editor saves positions in unscaled map pixels, the game plays in scaled ones
@@ -148,7 +192,7 @@ public class MapScene(
             var (width, height) = await graphicsService.GetImageDimensions(path);
             var left = placed.X - width / 2.0;
             var top = placed.Y - height;
-            var level = SurfaceLevel(map, placed.X, placed.Y);
+            var level = placed.Level ?? SurfaceLevel(map, placed.X, placed.Y);
             sprites.Add(new SceneSprite(new PictureBox
             {
                 // a flipped prop draws a mirrored copy of the picture, same size, so it stays where it was placed
@@ -295,6 +339,7 @@ public class MapScene(
 
     private void UpdateMap(GameMap map, bool paused)
     {
+        navigationService.NewUpdate();
         foreach (var system in _systems.Where(x => !paused || x.RunsWhilePaused))
         {
             foreach (var entity in gameStateService.MapEntities) system.Update(entity);
@@ -310,7 +355,7 @@ public class MapScene(
             foreach (var environment in _environments) environment.Update();
         }
 
-        renderer.Render(_mapImages.Concat(_environments.SelectMany(x => x.Current)).Concat(CharacterSprites()), Camera);
+        renderer.Render(_mapImages.Concat(_environments.SelectMany(x => x.Current)).Concat(CharacterSprites()).Concat(BalloonSprites()), Camera);
         debugOverlay.Update(map, Camera);
         if (paused) return;
 
@@ -395,6 +440,13 @@ public class MapScene(
         return gameStateService.MapEntities
             .Where(x => x.HasModule<CharacterImageModule>())
             .Select(x => x.State<CharacterImageState>().Sprite)
+            .OfType<SceneSprite>();
+    }
+
+    private IEnumerable<SceneSprite> BalloonSprites()
+    {
+        return gameStateService.MapEntities
+            .Select(x => x.State<BalloonState>().Sprite)
             .OfType<SceneSprite>();
     }
 

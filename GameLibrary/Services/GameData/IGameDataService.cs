@@ -1,7 +1,8 @@
-﻿using GameLibrary.Models.Props;
+using GameLibrary.Models.Props;
 using System.Collections.ObjectModel;
 using GameLibrary.Models.Animations;
 using GameLibrary.Models.Artes;
+using GameLibrary.Models.Balloons;
 using GameLibrary.Models.Disciplines;
 using GameLibrary.Models.Fighter;
 using GameLibrary.Models.GameMaps;
@@ -82,4 +83,6 @@ public interface IGameDataService
     ObservableCollection<Attribute> Elements { get; }
 
     ObservableCollection<Growth> Growths { get; }
+
+    ObservableCollection<BalloonIcon> BalloonIcons { get; }
 }

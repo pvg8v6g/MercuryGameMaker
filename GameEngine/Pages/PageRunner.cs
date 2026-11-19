@@ -88,7 +88,8 @@ public class PageRunner(
     {
         if (gameStateService.IsPlayerBusy || entity.IsErased || _runs.ContainsKey(entity) || entity.ActivePage is not { } page || !triggers.Contains(page.PageTrigger)) return;
 
-        if (page.FacePlayer) FacePlayer(entity);
+        // every entity turns to the player when they start its page, unless its direction is fixed
+        FacePlayer(entity);
         _runs[entity] = new PageRun(entity, page);
         gameStateService.IsPlayerBusy = true;
     }

@@ -1,4 +1,4 @@
-﻿using GameLibrary.Models;
+using GameLibrary.Models;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Json;
 using GameLibrary.Services.Location;
@@ -38,7 +38,8 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
         "Animations",
         "Maps",
         "Props",
-        "FillSets"
+        "FillSets",
+        Path.Combine("Settings", "BalloonIcons")
     ];
 
     private static readonly string GameStartFile = Path.Combine("Settings", "GameStart.data");
@@ -94,6 +95,7 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
             Add(files, gameDirectory, DataFolders[12], gameDataService.GameMaps);
             Add(files, gameDirectory, DataFolders[13], gameDataService.Props);
             Add(files, gameDirectory, DataFolders[14], gameDataService.FillSets);
+            Add(files, gameDirectory, DataFolders[15], gameDataService.BalloonIcons);
             files[Path.Combine(gameDirectory, GameStartFile)] = jsonService.Serialize(gameDataService.GameStart);
         }
         catch (Exception exception)

@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="GameMaker.UX.Views.Popups.MovementRouteEditor.MovementRouteEditorPopup"
+<UserControl x:Class="GameMaker.UX.Views.Popups.MovementRouteEditor.MovementRouteEditorPopup"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -39,7 +39,7 @@
                                    CopiedModel="{x:Bind ViewModel.CopiedMovement, Mode=OneWay}">
       <engineListView:EngineListView.ItemTemplate>
         <DataTemplate x:DataType="movements:Movement">
-          <TextBlock Text="{x:Bind ToString()}" TextTrimming="CharacterEllipsis" />
+          <TextBlock Text="{x:Bind DisplayText, Mode=OneWay}" TextTrimming="CharacterEllipsis" />
         </DataTemplate>
       </engineListView:EngineListView.ItemTemplate>
     </engineListView:EngineListView>

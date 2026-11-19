@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="GameMaker.UX.Views.Popups.ActionEditor.ActionEditorPopup"
+<UserControl x:Class="GameMaker.UX.Views.Popups.ActionEditor.ActionEditorPopup"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -340,10 +340,20 @@
 
       <!-- Entity Balloon Icon -->
       <StackPanel x:Name="EntityBalloonIconPanel" x:Load="{x:Bind ViewModel.IsEntityBalloonIcon}" Spacing="10">
-        <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
-                                     Text="{x:Bind ViewModel.AsEntityBalloonIcon.EntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
-        <engineTextBox:EngineTextBox Header="Balloon Icon Index" InputType="Integer"
-                                     Text="{x:Bind ViewModel.AsEntityBalloonIcon.BalloonIconIndex, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="Entity"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.BalloonTargets}"
+                  SelectedItem="{x:Bind ViewModel.BalloonTarget, Mode=TwoWay}"
+                  DisplayMemberPath="Name" />
+        <ComboBox Header="Balloon"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.BalloonChoices}"
+                  SelectedItem="{x:Bind ViewModel.BalloonIcon, Mode=TwoWay}"
+                  DisplayMemberPath="Name"
+                  ToolTipService.ToolTip="Balloons are made in Settings, Balloon Icons" />
+        <CheckBox Content="Wait For Completion"
+                  IsChecked="{x:Bind ViewModel.AsEntityBalloonIcon.WaitForCompletion, Mode=TwoWay, FallbackValue=False}"
+                  ToolTipService.ToolTip="The page waits until the balloon has played through and gone" />
       </StackPanel>
 
       <!-- Entity Erase -->

@@ -1,4 +1,4 @@
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using Windows.Foundation;
 using GameLibrary.Models.GameMaps;
 using GameLibrary.Models.Props;
@@ -47,6 +47,30 @@ public partial class MapPropModel(MapProp placed, Prop prop, string imagePath, d
     {
         get;
         set => SetField(ref field, value);
+    }
+
+    // the level is worked out from the surface under the prop's base unless it's set by hand (a crate under a bridge)
+    public bool HasLevel
+    {
+        get => placed.Level is not null;
+        set
+        {
+            if (value == HasLevel) return;
+            placed.Level = value ? 0 : null;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(Level));
+        }
+    }
+
+    public int Level
+    {
+        get => placed.Level ?? 0;
+        set
+        {
+            if (placed.Level is null || placed.Level == value) return;
+            placed.Level = value;
+            OnPropertyChanged();
+        }
     }
 
     #endregion

@@ -1,4 +1,4 @@
-using Windows.Foundation;
+﻿using Windows.Foundation;
 
 namespace GameMaker.UX.ViewModels.MainPage.Tools;
 
@@ -20,6 +20,9 @@ public interface IMapTool
     void Moved(Point world, bool inside);
 
     void Released();
+
+    // opens the editor of what was double-clicked (a new entity on an empty tile)
+    Task DoubleTapped(Point world);
 
     // shown next to the toolbar while the cursor is over the map
     string CursorText(Point world);

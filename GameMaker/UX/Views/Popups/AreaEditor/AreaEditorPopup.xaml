@@ -25,6 +25,26 @@
                   ItemTemplate="{StaticResource EnumDisplayNameTemplate}"
                   SelectedItem="{x:Bind ViewModel.SelectedArea.AreaType, Mode=TwoWay}" />
       </Grid>
+      <ComboBox Header="Color"
+                HorizontalAlignment="Stretch"
+                ItemsSource="{x:Bind ViewModel.AreaColors}"
+                SelectedItem="{x:Bind ViewModel.SelectedArea.ColorOption, Mode=TwoWay, FallbackValue={x:Null}}"
+                ToolTipService.ToolTip="The color the area is drawn in, here and in a test. Default is its type's color.">
+        <ComboBox.ItemTemplate>
+          <DataTemplate x:DataType="mainPageModels:AreaColorOption">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <Rectangle Width="16"
+                         Height="16"
+                         RadiusX="3"
+                         RadiusY="3"
+                         Fill="{x:Bind Swatch}"
+                         Stroke="{StaticResource LightGreyBrush}"
+                         StrokeThickness="1" />
+              <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
+            </StackPanel>
+          </DataTemplate>
+        </ComboBox.ItemTemplate>
+      </ComboBox>
       <Grid ColumnSpacing="10">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="*" />

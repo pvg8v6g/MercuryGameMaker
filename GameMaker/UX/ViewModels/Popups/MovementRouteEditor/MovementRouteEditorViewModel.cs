@@ -1,6 +1,7 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using GameLibrary.Commands;
+using GameLibrary.Models;
 using GameLibrary.Models.Actions;
 using GameLibrary.Models.Movements;
 using GameLibrary.Services.GameData;
@@ -15,6 +16,7 @@ namespace GameMaker.UX.ViewModels.Popups.MovementRouteEditor;
 
 public class MovementRouteEditorViewModel(
     EntityMovementAction action,
+    IReadOnlyList<Entity> mapEntities,
     IGameDataService gameDataService,
     INavigationService navigationService) : PropertyChangedUpdater
 {
@@ -81,7 +83,6 @@ public class MovementRouteEditorViewModel(
             Children =
             [
                 new() { Text = "Move Once", Command = AddMovementCommand, CommandParameter = "Move" },
-                new() { Text = "Move Random", Command = AddMovementCommand, CommandParameter = "MoveRandom" },
                 new() { Text = "Move Toward", Command = AddMovementCommand, CommandParameter = "MoveToward" },
                 new() { Text = "Move Away", Command = AddMovementCommand, CommandParameter = "MoveAway" },
                 new() { Text = "1 Step Forward", Command = AddMovementCommand, CommandParameter = "StepForward" },
@@ -94,7 +95,6 @@ public class MovementRouteEditorViewModel(
             Children =
             [
                 new() { Text = "Turn", Command = AddMovementCommand, CommandParameter = "Turn" },
-                new() { Text = "Turn Random", Command = AddMovementCommand, CommandParameter = "TurnRandom" },
                 new() { Text = "Turn 180", Command = AddMovementCommand, CommandParameter = "Turn180" },
                 new() { Text = "Turn Toward", Command = AddMovementCommand, CommandParameter = "TurnToward" },
                 new() { Text = "Turn Away", Command = AddMovementCommand, CommandParameter = "TurnAway" }
@@ -109,6 +109,7 @@ public class MovementRouteEditorViewModel(
                 new() { Text = "Set Opacity", Command = AddMovementCommand, CommandParameter = "Opacity" },
                 new() { Text = "Set Blend Mode", Command = AddMovementCommand, CommandParameter = "Blend" },
                 new() { Text = "Set Character Image", Command = AddMovementCommand, CommandParameter = "CharacterImage" },
+                new() { Text = "Balloon Icon", Command = AddMovementCommand, CommandParameter = "Balloon" },
                 new() { Text = "Stepping Animation", Command = AddMovementCommand, CommandParameter = "Stepping" },
                 new() { Text = "Direction Fix", Command = AddMovementCommand, CommandParameter = "DirectionFix" },
                 new() { Text = "Through", Command = AddMovementCommand, CommandParameter = "Through" }
@@ -142,7 +143,8 @@ public class MovementRouteEditorViewModel(
         var movement = CreateMovement(key);
         if (movement is null) return;
 
-        if (IsParameterized(movement))
+        // anything with settings or an entity to pick opens its editor, the rest is added as it is
+        if (IsEditable(movement))
         {
             var result = await ShowEditor(movement);
             if (result != ContentDialogResult.Primary) return;
@@ -156,7 +158,7 @@ public class MovementRouteEditorViewModel(
     {
         var movement = SelectedMovement();
         if (movement is null) return;
-        if (!IsParameterized(movement)) return;
+        if (!IsEditable(movement)) return;
 
         await ShowEditor(movement);
     }
@@ -212,11 +214,16 @@ public class MovementRouteEditorViewModel(
 
     private async Task<ContentDialogResult> ShowEditor(Movement movement)
     {
-        var viewModel = new MovementEditorViewModel(movement, gameDataService.Artes);
+        var viewModel = new MovementEditorViewModel(movement, gameDataService.Artes, mapEntities, gameDataService.BalloonIcons);
         return await navigationService.ShowMovementEditorPopup(viewModel);
     }
 
+    private static bool IsEditable(Movement movement) => movement.HasEntityTarget || IsParameterized(movement);
+
     private static bool IsParameterized(Movement movement) => movement is
+        BalloonMovement or
+        TurnTowardEntityMovement or
+        TurnAwayEntityMovement or
         MoveMovement or
         MoveTowardMovement or
         MoveAwayMovement or
@@ -231,14 +238,12 @@ public class MovementRouteEditorViewModel(
     private static Movement? CreateMovement(string key) => key switch
     {
         "Move" => new MoveMovement(),
-        "MoveRandom" => new MoveRandomMovement(),
         "MoveToward" => new MoveTowardMovement(),
         "MoveAway" => new MoveAwayMovement(),
         "StepForward" => new StepForwardMovement(),
         "StepAway" => new StepAwayMovement(),
         "Speed" => new SpeedMovement(),
         "Turn" => new TurnMovement(),
-        "TurnRandom" => new TurnRandomMovement(),
         "Turn180" => new Turn180Movement(),
         "TurnToward" => new TurnTowardEntityMovement(),
         "TurnAway" => new TurnAwayEntityMovement(),
@@ -248,6 +253,7 @@ public class MovementRouteEditorViewModel(
         "Through" => new ThroughMovement(),
         "Blend" => new BlendModeMovement(),
         "CharacterImage" => new CharacterImageMovement(),
+        "Balloon" => new BalloonMovement(),
         "Wait" => new WaitMovement(),
         "Detonate" => new DetonateMovement(),
         "ActivateArte" => new ActivateArteMovement(),

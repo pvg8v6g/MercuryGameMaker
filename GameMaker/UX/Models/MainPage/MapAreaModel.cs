@@ -143,7 +143,24 @@ public partial class MapAreaModel(MapArea area, int cellSize) : PropertyChangedU
         }
     }
 
-    public Brush Fill => area.AreaType switch
+    // the color picked for the area, Default is its type's color
+    public AreaColorOption ColorOption
+    {
+        get => AreaColorOption.All.FirstOrDefault(x => x.Color == area.Color) ?? AreaColorOption.All[0];
+        set
+        {
+            if (value is null || area.Color == value.Color) return;
+            area.Color = value.Color;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(Fill));
+        }
+    }
+
+    public Brush Fill => area.Color?.GetHex()?.ToColor() is { } picked
+        ? new SolidColorBrush(ColorHelper.FromArgb(110, picked.R, picked.G, picked.B))
+        : TypeFill;
+
+    private Brush TypeFill => area.AreaType switch
     {
         MapAreaType.Collision => CollisionBrush,
         MapAreaType.Water => WaterBrush,

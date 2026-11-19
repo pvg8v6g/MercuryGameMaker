@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using GameLibrary.Models;
 using GameLibrary.Models.GameData;
 using GameLibrary.Services.GameData;
@@ -24,6 +24,7 @@ public class LoadDataTask(ILocationService locationService, IJsonService jsonSer
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Settings", "Attributes")).Length; // attributes
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Settings", "Elements")).Length; // elements
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Settings", "Growths")).Length; // growths
+        MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Settings", "BalloonIcons")).Length; // balloon icons
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Fighters", "Actors")).Length; // actors
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Disciplines")).Length; // disciplines
         MaxWork += Directory.GetFiles(Path.Combine(locationService.GameDirectory!, "Artes")).Length; // artes
@@ -43,6 +44,7 @@ public class LoadDataTask(ILocationService locationService, IJsonService jsonSer
         DecryptData(Path.Combine("Settings", "Attributes"), gameDataService.Attributes);
         DecryptData(Path.Combine("Settings", "Elements"), gameDataService.Elements);
         DecryptData(Path.Combine("Settings", "Growths"), gameDataService.Growths);
+        DecryptData(Path.Combine("Settings", "BalloonIcons"), gameDataService.BalloonIcons);
         DecryptData(Path.Combine("Fighters", "Actors"), gameDataService.Actors);
         DecryptData(Path.Combine("Disciplines"), gameDataService.Disciplines);
         DecryptData(Path.Combine("Artes"), gameDataService.Artes);

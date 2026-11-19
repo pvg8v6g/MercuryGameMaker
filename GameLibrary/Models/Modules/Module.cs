@@ -8,5 +8,6 @@ namespace GameLibrary.Models.Modules;
 [JsonDerivedType(typeof(FaceModule), "face")]
 [JsonDerivedType(typeof(InputModule), "input")]
 [JsonDerivedType(typeof(MovementModule), "movement")]
+[JsonDerivedType(typeof(PatrolModule), "patrol")]
 [JsonDerivedType(typeof(PositionModule), "position")]
 public abstract partial class Module : BaseModel;

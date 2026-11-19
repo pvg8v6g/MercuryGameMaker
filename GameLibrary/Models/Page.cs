@@ -28,8 +28,8 @@ public partial class Page : BaseModel
 
     public ObservableCollection<Condition> Conditions { get; init; } = [];
 
-    // the entity turns to the player when the player starts the page (action button or touch), off for things like chests
-    public bool FacePlayer
+    // leaving the map and coming back finds the entity where it was (and facing the same way), off: back where it was placed
+    public bool RemembersPosition
     {
         get;
         set => SetField(ref field, value);

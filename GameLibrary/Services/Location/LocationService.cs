@@ -1,4 +1,4 @@
-﻿using GameLibrary.Configuration;
+using GameLibrary.Configuration;
 using GameLibrary.Services.Json;
 using MercuryLibrary.Extensions;
 using Windows.Storage.Pickers;
@@ -114,10 +114,14 @@ public class LocationService(IJsonService jsonService) : ILocationService
         // the fill sets: ways of filling a map with props (Forest, Desert, Snow)
         Directory.CreateDirectory(Path.Combine(GameDirectory, "FillSets"));
         Directory.CreateDirectory(Path.Combine(GameDirectory, "Settings"));
+        Directory.CreateDirectory(Path.Combine(GameDirectory, "Settings", "BalloonIcons"));
         Directory.CreateDirectory(Path.Combine(GameDirectory, "States"));
         Directory.CreateDirectory(Path.Combine(GameDirectory, "Troops"));
 
         Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Animations"));
+
+        // the balloon icon sheet: a row per balloon, its frames left to right
+        Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Balloons"));
         Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Characters"));
         Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Enemies"));
         Directory.CreateDirectory(Path.Combine(GraphicsDirectory, "Faces"));

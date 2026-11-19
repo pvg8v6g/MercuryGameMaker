@@ -1,4 +1,4 @@
-﻿namespace GameLibrary.Models.Movements;
+namespace GameLibrary.Models.Movements;
 
 public partial class TurnAwayEntityMovement : Movement
 {
@@ -16,5 +16,5 @@ public partial class TurnAwayEntityMovement : Movement
         set => SetField(ref field, value);
     }
 
-    public override string ToString() => TargetPlayer ? "Turn Away From Player" : "Turn Away From Entity";
+    public override string ToString() => TargetPlayer ? "Turn Away From Player" : $"Turn Away From Entity {TargetEntityId:000}";
 }

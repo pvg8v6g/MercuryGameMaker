@@ -1,4 +1,4 @@
-using MercuryLibrary.WinUI3Components;
+﻿using MercuryLibrary.WinUI3Components;
 
 namespace GameLibrary.Models.GameMaps;
 
@@ -31,6 +31,13 @@ public partial class MapProp : PropertyChangedUpdater
 
     // mirrored left to right, so one tree can look like two
     public bool Flip
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    // the level the prop stands on, none: the level of the surface under its base (a crate under a bridge needs 0)
+    public int? Level
     {
         get;
         set => SetField(ref field, value);

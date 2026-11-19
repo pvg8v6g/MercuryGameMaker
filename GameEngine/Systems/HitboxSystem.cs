@@ -60,6 +60,27 @@ public class HitboxSystem(IGameDataService gameDataService, IGameStateService ga
         if (change is not null) position.Z = change.Level;
     }
 
+    // the level a level change area under the feet moves an entity to, none when the feet aren't on one
+    public int? LevelChangeAt(MapHitbox feet)
+    {
+        return gameStateService.MapAreas.FirstOrDefault(x => x.AreaType == MapAreaType.LevelChange && Overlaps(feet, x))?.Level;
+    }
+
+    // the hitboxes an entity would have standing at x, y (scaled map pixels) facing a direction
+    public MapHitbox[] PlaceAt(EntityHitboxModule hitboxModule, double x, double y, Direction direction)
+    {
+        var scale = gameDataService.ScaleFactor;
+        return Areas(hitboxModule, direction).Select(area => new MapHitbox(area)
+        {
+            OriginX = x,
+            OriginY = y,
+            OffsetX = area.OffsetX * scale,
+            OffsetY = area.OffsetY * scale,
+            Width = area.Width * scale,
+            Height = area.Height * scale
+        }).ToArray();
+    }
+
     // the draw tier: the entity's own level when its feet are on a surface of a higher level (underneath a bridge),
     // otherwise the top tier with everything else on the map
     public int Tier(MapEntity entity, PositionModule position)
@@ -122,7 +143,8 @@ public class HitboxSystem(IGameDataService gameDataService, IGameStateService ga
 
     #region Private Methods
 
-    private static IEnumerable<Area> Areas(EntityHitboxModule hitboxModule, Direction direction)
+    // the hitboxes used facing a direction: the ones for every direction plus that direction's
+    public static IEnumerable<Area> Areas(EntityHitboxModule hitboxModule, Direction direction)
     {
         var none = hitboxModule.Hitboxes.GetValueOrDefault(Direction.None) ?? [];
         if (direction == Direction.None) return none;
@@ -144,7 +166,7 @@ public class HitboxSystem(IGameDataService gameDataService, IGameStateService ga
 
     // the collision areas painted on the map in the editor and the prop footprints. One only stops moving onto it in the
     // directions it blocks, an entity already standing on it moves freely, so a raised platform can be left from inside
-    private bool HitsCollisionArea(MapHitbox[] current, MapHitbox[] projected, Direction direction, int level)
+    public bool HitsCollisionArea(MapHitbox[] current, MapHitbox[] projected, Direction direction, int level)
     {
         foreach (var area in gameStateService.MapAreas)
         {
@@ -157,7 +179,7 @@ public class HitboxSystem(IGameDataService gameDataService, IGameStateService ga
     }
 
     // map areas are saved in unscaled map pixels like entity positions
-    private bool Overlaps(MapHitbox box, MapArea area)
+    public bool Overlaps(MapHitbox box, MapArea area)
     {
         var scale = gameDataService.ScaleFactor;
         return box.Collide(area.OffsetX * scale, area.OffsetY * scale, area.Width * scale, area.Height * scale);

@@ -1,6 +1,7 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Linq;
 using GameLibrary.Commands;
+using GameLibrary.Models;
 using GameLibrary.Models.Actions;
 using GameLibrary.Models.Animations;
 using GameLibrary.Models.Artes;
@@ -10,12 +11,13 @@ using GameLibrary.Models.Items;
 using GameLibrary.Models.States;
 using GameLibrary.Models.Troops;
 using GameLibrary.Services.GameData;
+using GameMaker.UX.Models.Choices;
 using MercuryLibrary.WinUI3Components;
 using Attribute = GameLibrary.Models.Attributes.Attribute;
 
 namespace GameMaker.UX.ViewModels.Popups.ActionEditor;
 
-public class ActionEditorViewModel(PageAction action, IGameDataService gameDataService) : PropertyChangedUpdater
+public class ActionEditorViewModel(PageAction action, IGameDataService gameDataService, IEnumerable<Entity>? mapEntities = null) : PropertyChangedUpdater
 {
     #region Properties
 
@@ -377,6 +379,36 @@ public class ActionEditorViewModel(PageAction action, IGameDataService gameDataS
             if (AsEntityAnimation is null) return;
             AsEntityAnimation.AnimationId = value;
             AsEntityAnimation.AnimationName = Animations.FirstOrDefault(x => x.Guid == value)?.Name;
+        }
+    }
+
+    // the balloon command: over this entity, the player or another entity on the map
+    public TargetChoice[] BalloonTargets { get; } = TargetChoice.List(mapEntities ?? []);
+
+    public TargetChoice? BalloonTarget
+    {
+        get => AsEntityBalloonIcon is { } balloon ? TargetChoice.Find(BalloonTargets, balloon.TargetsPlayer, balloon.EntityId) : null;
+        set
+        {
+            if (value is null || value == BalloonTarget || AsEntityBalloonIcon is not { } balloon) return;
+            balloon.TargetsPlayer = value.Player;
+            balloon.EntityId = value.Id;
+            OnPropertyChanged();
+        }
+    }
+
+    // the balloons from the Balloon Icons settings, None first
+    public NamedChoice[] BalloonChoices { get; } = NamedChoice.List("None", gameDataService.BalloonIcons.AsEnumerable().OrderBy(x => x.Id));
+
+    public NamedChoice? BalloonIcon
+    {
+        get => AsEntityBalloonIcon is { } balloon ? NamedChoice.Find(BalloonChoices, balloon.BalloonIconId) : null;
+        set
+        {
+            if (value is null || value == BalloonIcon || AsEntityBalloonIcon is not { } balloon) return;
+            balloon.BalloonIconId = value.Id;
+            balloon.BalloonIconName = value.Id is null ? null : value.Name;
+            OnPropertyChanged();
         }
     }
 

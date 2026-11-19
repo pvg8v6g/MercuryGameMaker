@@ -1,4 +1,4 @@
-﻿using GameLibrary.Enumerations;
+using GameLibrary.Enumerations;
 
 namespace GameLibrary.Models.Movements;
 
@@ -61,6 +61,9 @@ public partial class FlowMovement : Movement
         get;
         set => SetField(ref field, value);
     }
+
+    // nothing on the map is affected, so there is no entity to pick
+    public override bool HasEntityTarget => false;
 
     public override string ToString() => "Flow Control";
 }

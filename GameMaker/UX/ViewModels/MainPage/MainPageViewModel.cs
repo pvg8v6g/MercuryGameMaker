@@ -116,10 +116,13 @@ public partial class MainPageViewModel(
 
     public PropTool PropTool => field ??= new PropTool(this, gameDataService, graphicsService, locationService);
 
+    public PathTool PathTool => field ??= new PathTool(this);
+
     private IMapTool ActiveTool => EditMode switch
     {
         MapEditMode.Areas => AreaTool,
         MapEditMode.Props => PropTool,
+        MapEditMode.Paths => PathTool,
         _ => EntityTool
     };
 
@@ -133,6 +136,11 @@ public partial class MainPageViewModel(
             OnPropertyChanged(nameof(IsEntityMode));
             OnPropertyChanged(nameof(IsAreaMode));
             OnPropertyChanged(nameof(IsPropMode));
+            OnPropertyChanged(nameof(IsPathMode));
+            OnPropertyChanged(nameof(PathsVisible));
+            DeleteSelectionCommand.RaiseCanExecuteChanged();
+            EditSelectionCommand.RaiseCanExecuteChanged();
+            ApplyFocus();
             PropTool.OnModeChanged();
             Select(null);
             OnSnapSizeChanged();
@@ -167,6 +175,15 @@ public partial class MainPageViewModel(
         set
         {
             if (value) EditMode = MapEditMode.Props;
+        }
+    }
+
+    public bool IsPathMode
+    {
+        get => EditMode == MapEditMode.Paths;
+        set
+        {
+            if (value) EditMode = MapEditMode.Paths;
         }
     }
 
@@ -207,6 +224,19 @@ public partial class MainPageViewModel(
         get;
         set => SetField(ref field, value);
     } = true;
+
+    public bool ShowPaths
+    {
+        get;
+        set
+        {
+            SetField(ref field, value);
+            OnPropertyChanged(nameof(PathsVisible));
+        }
+    } = true;
+
+    // patrol paths are always drawn while drawing them
+    public bool PathsVisible => ShowPaths || IsPathMode;
 
     public bool ShowParallax
     {
@@ -367,7 +397,35 @@ public partial class MainPageViewModel(
         }
     }
 
+    public AreaColorOption[] AreaColors => AreaColorOption.All;
+
+    // how solid what the current tool doesn't work on is drawn
+    private const double UnfocusedOpacity = 0.3;
+
+    public double AreasOpacity => IsAreaMode ? 1.0 : UnfocusedOpacity;
+
+    public double PropsOverlayOpacity => IsPropMode ? 1.0 : UnfocusedOpacity;
+
+    public double PathsOpacity => IsPathMode ? 1.0 : UnfocusedOpacity;
+
+    // the side panels fold away to a small arrow, kept in config.json. The arrow points the way the panel will go
+    public bool IsToolRailExpanded => !(locationService.Configuration?.ToolRailCollapsed ?? false);
+
+    public string ToolRailGlyph => IsToolRailExpanded ? "" : "";
+
+    public bool IsMapsPanelExpanded => !(locationService.Configuration?.MapsPanelCollapsed ?? false);
+
+    public string MapsPanelGlyph => IsMapsPanelExpanded ? "" : "";
+
     public bool HasNoSelection => SelectedEntity is null && SelectedArea is null && SelectedProp is null;
+
+    // the status bar: what's selected and the grid the cursor snaps to
+    public string SelectionText => SelectedEntity is { } entity ? $"Entity: {entity.Name}"
+        : SelectedArea is { } area ? $"Area: {area.Label}"
+        : SelectedProp is { } prop ? $"Prop: {prop.Prop.Name}"
+        : "Nothing selected";
+
+    public string SnapText => $"Grid {SnapSize} px";
 
     #endregion
 
@@ -407,15 +465,20 @@ public partial class MainPageViewModel(
 
     public AsyncRelayCommand TestMapCommand => field ??= new AsyncRelayCommand(TestMap, () => IsMapSelected && testLaunchService.CanLaunch);
 
-    public AsyncRelayCommand EditSelectionCommand => field ??= new AsyncRelayCommand(EditSelection, () => SelectedEntity is not null || SelectedArea is not null);
+    public AsyncRelayCommand EditSelectionCommand => field ??= new AsyncRelayCommand(EditSelection, () => !HasNoSelection || IsPathMode);
 
     public RelayCommand CopySelectionCommand => field ??= new RelayCommand(CopySelection, () => !HasNoSelection);
 
     public RelayCommand PasteSelectionCommand => field ??= new RelayCommand(() => ActiveTool.Paste(_lastWorld), () => IsMapSelected && ActiveTool.CanPaste);
 
-    public RelayCommand DeleteSelectionCommand => field ??= new RelayCommand(() => ActiveTool.Delete(), () => !HasNoSelection);
+    // the paths tool keeps its own picked point
+    public RelayCommand DeleteSelectionCommand => field ??= new RelayCommand(() => ActiveTool.Delete(), () => !HasNoSelection || IsPathMode);
 
     public RelayCommand ClearSelectionCommand => field ??= new RelayCommand(() => Select(null));
+
+    public RelayCommand ToggleToolRailCommand => field ??= new RelayCommand(ToggleToolRail);
+
+    public RelayCommand ToggleMapsPanelCommand => field ??= new RelayCommand(ToggleMapsPanel);
 
     public AsyncRelayCommand FillPropsCommand => field ??= new AsyncRelayCommand(FillProps, () => IsMapSelected);
 
@@ -583,6 +646,26 @@ public partial class MainPageViewModel(
         RefreshMapState();
     }
 
+    private void ToggleToolRail()
+    {
+        if (locationService.Configuration is not { } configuration) return;
+
+        configuration.ToolRailCollapsed = !configuration.ToolRailCollapsed;
+        locationService.SaveConfiguration();
+        OnPropertyChanged(nameof(IsToolRailExpanded));
+        OnPropertyChanged(nameof(ToolRailGlyph));
+    }
+
+    private void ToggleMapsPanel()
+    {
+        if (locationService.Configuration is not { } configuration) return;
+
+        configuration.MapsPanelCollapsed = !configuration.MapsPanelCollapsed;
+        locationService.SaveConfiguration();
+        OnPropertyChanged(nameof(IsMapsPanelExpanded));
+        OnPropertyChanged(nameof(MapsPanelGlyph));
+    }
+
     private void SetTestSetting(bool value, bool current, Action<MercuryGameMakerConfiguration> apply)
     {
         if (value == current || locationService.Configuration is not { } configuration) return;
@@ -623,17 +706,36 @@ public partial class MainPageViewModel(
         }
 
         PropTool.RefreshFootprints();
+        ApplyFocus();
         Scene.ApplyCamera(Camera);
+    }
+
+    // what the current tool works on is drawn as it is, everything else on the map fades back a little so the
+    // tool's things stand out. The map images themselves never fade
+    private void ApplyFocus()
+    {
+        foreach (var entity in Entities) entity.Picture?.Opacity = IsEntityMode ? 1.0f : (float) UnfocusedOpacity;
+        foreach (var prop in PropTool.Props) prop.Picture?.Opacity = IsPropMode ? 1.0f : (float) UnfocusedOpacity;
+
+        OnPropertyChanged(nameof(AreasOpacity));
+        OnPropertyChanged(nameof(PropsOverlayOpacity));
+        OnPropertyChanged(nameof(PathsOpacity));
+        PathTool.Refresh();
     }
 
     private void RebuildModels()
     {
         Entities.Clear();
         Areas.Clear();
-        if (!IsMapSelected || SelectedMap is not { } map) return;
+        if (!IsMapSelected || SelectedMap is not { } map)
+        {
+            PathTool.Load(null);
+            return;
+        }
 
         foreach (var entity in map.Entities) Entities.Add(new MapEntityModel(entity, TileSize));
         foreach (var area in map.Areas) Areas.Add(new MapAreaModel(area, AreaTool.GridSize));
+        PathTool.Load(map);
     }
 
     // the grid shows what the cursor snaps to
@@ -651,6 +753,7 @@ public partial class MainPageViewModel(
     public void OnSnapSizeChanged()
     {
         OnPropertyChanged(nameof(SnapSize));
+        OnPropertyChanged(nameof(SnapText));
         RebuildGrid();
     }
 
@@ -744,12 +847,13 @@ public partial class MainPageViewModel(
         OnCameraChanged();
     }
 
+    // double-clicking opens the editor of what's under the cursor, whichever tool is in use
     private async Task OnCanvasDoubleTapped(Point position)
     {
-        if (!IsMapSelected || !IsEntityMode) return;
+        if (!IsMapSelected) return;
 
         var world = EditorGrid.ToWorld(position, Camera);
-        if (EditorGrid.IsInside(world, MapPixelWidth, MapPixelHeight)) await EntityTool.DoubleTapped(world);
+        if (EditorGrid.IsInside(world, MapPixelWidth, MapPixelHeight)) await ActiveTool.DoubleTapped(world);
     }
 
     #endregion
@@ -766,6 +870,7 @@ public partial class MainPageViewModel(
     private void OnSelectionChanged()
     {
         OnPropertyChanged(nameof(HasNoSelection));
+        OnPropertyChanged(nameof(SelectionText));
         EditSelectionCommand.RaiseCanExecuteChanged();
         CopySelectionCommand.RaiseCanExecuteChanged();
         DeleteSelectionCommand.RaiseCanExecuteChanged();
@@ -774,10 +879,12 @@ public partial class MainPageViewModel(
         FlipSelectionCommand.RaiseCanExecuteChanged();
     }
 
-    private async Task EditSelection()
+    public async Task EditSelection()
     {
         if (SelectedEntity is not null) await EntityTool.EditSelected();
         else if (SelectedArea is not null) await navigationService.ShowAreaEditorPopup(this);
+        else if (SelectedProp is not null) await navigationService.ShowPropEditorPopup(this);
+        else if (IsPathMode && PathTool.HasSelectedPath) await navigationService.ShowPathEditorPopup(this);
     }
 
     // fills the map with props by a fill set (Forest, Desert, Snow), made and edited in the popup

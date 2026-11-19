@@ -1,4 +1,4 @@
-﻿using GameLibrary.Models.Movements;
+using GameLibrary.Models.Movements;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
@@ -26,6 +26,10 @@ public partial class MovementEditorTemplateSelector : DataTemplateSelector
 
     public DataTemplate? ActivateArte { get; set; }
 
+    public DataTemplate? Balloon { get; set; }
+
+    public DataTemplate? TurnTarget { get; set; }
+
     public DataTemplate? Empty { get; set; }
 
     protected override DataTemplate? SelectTemplateCore(object item)
@@ -42,6 +46,8 @@ public partial class MovementEditorTemplateSelector : DataTemplateSelector
             BlendModeMovement => Blend,
             CharacterImageMovement => CharacterImage,
             ActivateArteMovement => ActivateArte,
+            BalloonMovement => Balloon,
+            TurnTowardEntityMovement or TurnAwayEntityMovement => TurnTarget,
             _ => Empty
         };
     }

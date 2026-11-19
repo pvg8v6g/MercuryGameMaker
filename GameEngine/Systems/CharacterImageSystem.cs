@@ -3,7 +3,9 @@ using Windows.Foundation;
 using GameEngine.Models;
 using GameEngine.Services.GameState;
 using GameLibrary.Enumerations;
+using GameLibrary.Models.Actions;
 using GameLibrary.Models.Modules;
+using GameLibrary.Models.Movements;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Graphics;
 using MercuryLibrary.ImageComponents;
@@ -51,10 +53,19 @@ public class CharacterImageSystem(
     // every page is measured, not just the active one, so a page change never waits on an image
     public async Task Load(IReadOnlyList<MapEntity> entities)
     {
+        // movement routes can change a character's image, those are measured too
+        var routeImages = entities
+            .SelectMany(x => x.Entity.Pages)
+            .SelectMany(x => AllActions(x.Actions))
+            .OfType<EntityMovementAction>()
+            .SelectMany(x => x.Route)
+            .OfType<CharacterImageMovement>()
+            .Select(x => new CharacterImageModule { ImageName = x.CharacterName });
         var paths = entities
             .SelectMany(x => x.Entity.Pages)
             .SelectMany(x => x.Modules)
             .OfType<CharacterImageModule>()
+            .Concat(routeImages)
             .Select(SheetPath)
             .OfType<string>()
             .Distinct()
@@ -89,6 +100,11 @@ public class CharacterImageSystem(
 
         var viewport = Viewport(sheet, image.ImageName!, state, position.Direction);
         sprite.Picture.Viewport = viewport;
+
+        // routes can fade a character or change how it blends
+        var appearance = entity.State<AppearanceState>();
+        sprite.Picture.Opacity = (float) appearance.Opacity;
+        if (appearance.BlendMode is { } blendMode) sprite.Picture.BlendMode = blendMode;
         // the level (position z) doesn't lift a character over the map, it sorts by its feet like everyone else
         sprite.Picture.Z = (int) position.SortZ;
         sprite.Tier = hitboxSystem.Tier(entity, position);
@@ -102,6 +118,18 @@ public class CharacterImageSystem(
     #endregion
 
     #region Private Methods
+
+    // a page's actions and the actions inside its branches
+    private static IEnumerable<PageAction> AllActions(IEnumerable<PageAction> actions)
+    {
+        foreach (var action in actions)
+        {
+            yield return action;
+            if (action is not BranchAction branch) continue;
+
+            foreach (var inner in AllActions(branch.BranchActions.Concat(branch.ElseActions))) yield return inner;
+        }
+    }
 
     // a new sprite whenever the active page shows a different character
     private SceneSprite NewSprite(CharacterImageState state, CharacterImageModule image, string path)
@@ -131,12 +159,11 @@ public class CharacterImageSystem(
         position.Direction = (Direction) ((int) position.Direction % 4);
     }
 
-    // standing shows the middle frame, walking cycles step, stand, other step, stand
+    // standing shows the middle frame, walking (or stepping in place) cycles step, stand, other step, stand
     private static void Animate(CharacterImageState state, MovementModule movementModule, MovementState movement)
     {
-        if (!movementModule.Stepping) return;
-
-        if (movement.Stepped)
+        // steps in place animates the feet standing still too, no stepping slides when it walks
+        if (movementModule.AutoStepping || (movementModule.Stepping && movement.Stepped))
         {
             state.NotMovingTimer = 0;
 

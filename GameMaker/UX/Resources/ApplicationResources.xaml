@@ -7,6 +7,87 @@
   <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" Invert="False" />
   <converters:EnumDisplayNameConverter x:Key="EnumDisplayNameConverter" />
 
+  <!-- the small arrow that folds a side panel away and brings it back -->
+  <Style x:Key="PanelFoldButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+    <Setter Property="Width" Value="18" />
+    <Setter Property="Height" Value="28" />
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="VerticalAlignment" Value="Top" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <!-- a tool on the map editor's tool rail: a radio button drawn as an icon button, the picked tool is highlighted
+       with a bar down its left side. It's as wide as its content, so the rail narrows when the names are hidden -->
+  <Style x:Key="ToolRailButtonStyle" TargetType="RadioButton">
+    <Setter Property="MinHeight" Value="40" />
+    <Setter Property="MinWidth" Value="44" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RadioButton">
+          <Grid x:Name="Root"
+                Background="Transparent"
+                CornerRadius="6">
+            <VisualStateManager.VisualStateGroups>
+              <VisualStateGroup x:Name="CommonStates">
+                <VisualState x:Name="Normal" />
+                <VisualState x:Name="PointerOver">
+                  <VisualState.Setters>
+                    <Setter Target="Hover.Opacity" Value="1" />
+                  </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Pressed">
+                  <VisualState.Setters>
+                    <Setter Target="Hover.Opacity" Value="0.6" />
+                  </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Disabled">
+                  <VisualState.Setters>
+                    <Setter Target="Root.Opacity" Value="0.4" />
+                  </VisualState.Setters>
+                </VisualState>
+              </VisualStateGroup>
+              <VisualStateGroup x:Name="CheckStates">
+                <VisualState x:Name="Checked">
+                  <VisualState.Setters>
+                    <Setter Target="Picked.Opacity" Value="1" />
+                    <Setter Target="Indicator.Opacity" Value="1" />
+                  </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Unchecked" />
+                <VisualState x:Name="Indeterminate" />
+              </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+            <Border x:Name="Picked"
+                    Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                    CornerRadius="6"
+                    Opacity="0" />
+            <Border x:Name="Hover"
+                    Background="{ThemeResource SubtleFillColorTertiaryBrush}"
+                    CornerRadius="6"
+                    Opacity="0" />
+            <Rectangle x:Name="Indicator"
+                       Width="3"
+                       Height="24"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center"
+                       RadiusX="1.5"
+                       RadiusY="1.5"
+                       Fill="{ThemeResource AccentFillColorDefaultBrush}"
+                       Opacity="0" />
+            <ContentPresenter Margin="10,6"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Content="{TemplateBinding Content}" />
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
   <!-- a drop down item that shows an enum value by its Display name -->
   <DataTemplate x:Key="EnumDisplayNameTemplate">
     <TextBlock Text="{Binding Converter={StaticResource EnumDisplayNameConverter}}" />

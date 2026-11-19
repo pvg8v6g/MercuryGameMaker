@@ -1,0 +1,67 @@
+<UserControl x:Class="GameMaker.UX.Components.BalloonIconView.BalloonIconView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:behaviors="using:GameLibrary.Behaviors"
+             xmlns:componentModels="using:GameLibrary.Utilities.ComponentModels"
+             mc:Ignorable="d"
+             behaviors:PointerCursorBehavior.CursorType="Hand">
+  <Grid Tapped="OnTapped" Background="Transparent">
+    <FlyoutBase.AttachedFlyout>
+      <Flyout x:Name="RowsFlyout">
+        <Flyout.FlyoutPresenterStyle>
+          <Style TargetType="FlyoutPresenter">
+            <Setter Property="Padding" Value="5" />
+            <Setter Property="MinWidth" Value="0" />
+          </Style>
+        </Flyout.FlyoutPresenterStyle>
+        <!-- the first frame of every row on the balloon sheet, one row is one balloon -->
+        <ListView x:Name="RowsList"
+                  MaxHeight="500"
+                  SelectionMode="Single"
+                  IsItemClickEnabled="True"
+                  ItemClick="RowsList_OnItemClick">
+          <ListView.ItemTemplate>
+            <DataTemplate x:DataType="componentModels:CroppedImage">
+              <Viewbox Width="64" Height="64" Margin="0,2">
+                <Canvas Width="48"
+                        Height="48">
+                  <Canvas.Clip>
+                    <RectangleGeometry Rect="0,0,48,48" />
+                  </Canvas.Clip>
+                  <Image Source="{x:Bind ImageSource}"
+                         Stretch="None"
+                         Canvas.Left="{x:Bind Rect, Converter={StaticResource RectNegativeXConverter}}"
+                         Canvas.Top="{x:Bind Rect, Converter={StaticResource RectNegativeYConverter}}" />
+                </Canvas>
+              </Viewbox>
+            </DataTemplate>
+          </ListView.ItemTemplate>
+        </ListView>
+      </Flyout>
+    </FlyoutBase.AttachedFlyout>
+
+    <!-- the picked balloon, playing through its row the way it plays in the game -->
+    <Border Background="{StaticResource MediumGreenBrush}"
+            BorderBrush="{StaticResource DarkBlueBrush}"
+            BorderThickness="2"
+            CornerRadius="4"
+            Width="100"
+            Height="100">
+      <Viewbox Width="96" Height="96">
+        <Canvas Width="48"
+                Height="48"
+                DataContext="{x:Bind Frame}">
+          <Canvas.Clip>
+            <RectangleGeometry Rect="0,0,48,48" />
+          </Canvas.Clip>
+          <Image Source="{Binding ImageSource}"
+                 Stretch="None"
+                 Canvas.Left="{Binding Rect, Converter={StaticResource RectNegativeXConverter}}"
+                 Canvas.Top="{Binding Rect, Converter={StaticResource RectNegativeYConverter}}" />
+        </Canvas>
+      </Viewbox>
+    </Border>
+  </Grid>
+</UserControl>

@@ -146,5 +146,8 @@ public partial class GameMap : BaseModel
     // the trees, rocks and the like placed on this map, each one points at a prop in the catalogue
     public ObservableCollection<MapProp> Props { get; init; } = [];
 
+    // the lines patrolling entities walk, drawn with the paths tool
+    public ObservableCollection<PatrolPath> PatrolPaths { get; init; } = [];
+
     #endregion
 }

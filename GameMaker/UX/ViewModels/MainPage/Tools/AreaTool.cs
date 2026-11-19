@@ -1,4 +1,4 @@
-using Windows.Foundation;
+﻿using Windows.Foundation;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.Areas;
 using GameLibrary.Utilities.Calculations;
@@ -109,6 +109,12 @@ public partial class AreaTool(MainPageViewModel editor) : PropertyChangedUpdater
         _drawStart = null;
         IsDrawing = false;
         CreateArea(DrawPreview);
+    }
+
+    // a press picks what's under the cursor first, so a double-click edits the picked one
+    public async Task DoubleTapped(Point world)
+    {
+        await editor.EditSelection();
     }
 
     public string CursorText(Point world)

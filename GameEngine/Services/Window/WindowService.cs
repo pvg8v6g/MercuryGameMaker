@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 using System.Collections.ObjectModel;
 using GameLibrary.Models;
 using GameLibrary.Models.GameData;
@@ -55,6 +55,7 @@ public partial class WindowService(
         Load(Path.Combine(locationService.GameDirectory!, "Maps"), gameDataService.GameMaps);
         Load(Path.Combine(locationService.GameDirectory!, "Fighters", "Actors"), gameDataService.Actors);
         Load(Path.Combine(locationService.GameDirectory!, "Props"), gameDataService.Props);
+        Load(Path.Combine(locationService.GameDirectory!, "Settings", "BalloonIcons"), gameDataService.BalloonIcons);
 
         var gameStart = Path.Combine(locationService.GameDirectory!, "Settings", "GameStart.data");
         if (File.Exists(gameStart) && jsonService.DecryptFile<GameStart>(gameStart) is { } start) gameDataService.GameStart = start;

@@ -7,20 +7,25 @@
       xmlns:mainPageModels="using:GameMaker.UX.Models.MainPage"
       xmlns:behaviors="using:GameLibrary.Behaviors"
       xmlns:enginePanel="using:GameMaker.UX.Components.EnginePanel"
+      xmlns:engineGlyphButton="using:GameMaker.UX.Components.EngineGlyphButton"
       xmlns:gridArea="using:GameMaker.UX.Components.GridArea"
       xmlns:mercury="using:MercuryLibrary.CanvasComponents"
       xmlns:foundation="using:Windows.Foundation"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance mainPage:MainPageViewModel}"
       behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
-  <Grid ColumnSpacing="10" Padding="5">
+  <Grid ColumnSpacing="6" Padding="5">
     <Grid.ColumnDefinitions>
-      <ColumnDefinition Width="280" />
+      <ColumnDefinition Width="Auto" />
+      <ColumnDefinition Width="Auto" />
       <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
 
-    <!-- Map Tree -->
-    <enginePanel:EnginePanel x:Name="MapsPanel" Title="Maps">
+    <!-- Map Tree: folds away completely, the small arrow next to it brings it back -->
+    <enginePanel:EnginePanel x:Name="MapsPanel"
+                             Title="Maps"
+                             Width="280"
+                             Visibility="{x:Bind ViewModel.IsMapsPanelExpanded, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
       <TreeView SelectionMode="Single"
                 CanDragItems="False"
                 AllowDrop="False"
@@ -86,42 +91,100 @@
       </TreeView>
     </enginePanel:EnginePanel>
 
-    <!-- Map Editor -->
-    <Grid Grid.Column="1" RowSpacing="10">
+    <engineGlyphButton:EngineGlyphButton Grid.Column="1"
+                                         Style="{StaticResource PanelFoldButtonStyle}"
+                                         Glyph="{x:Bind ViewModel.MapsPanelGlyph, Mode=OneWay}"
+                                         GlyphSize="10"
+                                         Command="{x:Bind ViewModel.ToggleMapsPanelCommand}"
+                                         ToolTipService.ToolTip="Show or hide the maps" />
+
+    <!-- Map Editor: the tool rail on the right (it folds away to its arrow), the current tool's options and the fixed buttons on top, the status bar below -->
+    <Grid Grid.Column="2"
+          ColumnSpacing="8"
+          RowSpacing="8">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
+        <RowDefinition Height="Auto" />
       </Grid.RowDefinitions>
 
-      <Grid ColumnSpacing="20"
+      <!-- Tool rail: one button per tool, a new tool is one more button. The arrow on top folds it away -->
+      <StackPanel Grid.Row="1"
+                  Grid.Column="1"
+                  Spacing="6"
+                  Visibility="{x:Bind ViewModel.IsMapSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <engineGlyphButton:EngineGlyphButton HorizontalAlignment="Right"
+                                             Style="{StaticResource PanelFoldButtonStyle}"
+                                             Glyph="{x:Bind ViewModel.ToolRailGlyph, Mode=OneWay}"
+                                             GlyphSize="10"
+                                             Command="{x:Bind ViewModel.ToggleToolRailCommand}"
+                                             ToolTipService.ToolTip="Show or hide the tools" />
+        <StackPanel Spacing="6"
+                    Visibility="{x:Bind ViewModel.IsToolRailExpanded, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <RadioButton Style="{StaticResource ToolRailButtonStyle}"
+                     GroupName="MapEditMode"
+                     IsChecked="{x:Bind ViewModel.IsEntityMode, Mode=TwoWay}"
+                     ToolTipService.ToolTip="Double-click a tile to add an entity, double-click an entity to edit it, drag to move it.">
+          <StackPanel Spacing="2">
+            <SymbolIcon Symbol="Contact" />
+            <TextBlock Text="Entities"
+                       FontSize="10"
+                       HorizontalAlignment="Center" />
+          </StackPanel>
+        </RadioButton>
+        <RadioButton Style="{StaticResource ToolRailButtonStyle}"
+                     GroupName="MapEditMode"
+                     IsChecked="{x:Bind ViewModel.IsAreaMode, Mode=TwoWay}"
+                     ToolTipService.ToolTip="Click or drag on empty tiles to draw an area, drag an area to move it.">
+          <StackPanel Spacing="2">
+            <SymbolIcon Symbol="ViewAll" />
+            <TextBlock Text="Areas"
+                       FontSize="10"
+                       HorizontalAlignment="Center" />
+          </StackPanel>
+        </RadioButton>
+        <RadioButton Style="{StaticResource ToolRailButtonStyle}"
+                     GroupName="MapEditMode"
+                     IsChecked="{x:Bind ViewModel.IsPropMode, Mode=TwoWay}"
+                     IsEnabled="{x:Bind ViewModel.HasProps, Mode=OneWay}"
+                     ToolTipService.ToolTip="Pick a prop, click the map to stamp it (its base goes where you click). Props sit on the character step grid. Click a prop to select it, drag to move. Delete removes, F flips, arrows nudge one character step (Shift: a tile), Ctrl+C / Ctrl+V copy and paste.">
+          <StackPanel Spacing="2">
+            <SymbolIcon Symbol="Pictures" />
+            <TextBlock Text="Props"
+                       FontSize="10"
+                       HorizontalAlignment="Center" />
+          </StackPanel>
+        </RadioButton>
+        <RadioButton Style="{StaticResource ToolRailButtonStyle}"
+                     GroupName="MapEditMode"
+                     IsChecked="{x:Bind ViewModel.IsPathMode, Mode=TwoWay}"
+                     ToolTipService.ToolTip="Patrol paths: click a tile to add a point to the picked path (after the picked point), click a point to pick it, drag to move it. Delete removes the picked point.">
+          <StackPanel Spacing="2">
+            <SymbolIcon Symbol="Directions" />
+            <TextBlock Text="Paths"
+                       FontSize="10"
+                       HorizontalAlignment="Center" />
+          </StackPanel>
+        </RadioButton>
+        </StackPanel>
+      </StackPanel>
+
+      <!-- Tool options: only the current tool's, then layers, view and test on the right -->
+      <Grid Grid.ColumnSpan="2"
+            ColumnSpacing="15"
             Visibility="{x:Bind ViewModel.IsMapSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
-        <!-- the mode tools take what they need, the view toggles sit in the middle of what is left -->
         <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-        <StackPanel Orientation="Horizontal" Spacing="15">
-          <RadioButton Content="Entities"
-                       GroupName="MapEditMode"
-                       MinWidth="0"
-                       behaviors:PointerCursorBehavior.CursorType="Hand"
-                       IsChecked="{x:Bind ViewModel.IsEntityMode, Mode=TwoWay}"
-                       ToolTipService.ToolTip="Double-click a tile to add an entity, double-click an entity to edit it, drag to move it." />
-          <RadioButton Content="Areas"
-                       GroupName="MapEditMode"
-                       MinWidth="0"
-                       behaviors:PointerCursorBehavior.CursorType="Hand"
-                       IsChecked="{x:Bind ViewModel.IsAreaMode, Mode=TwoWay}"
-                       ToolTipService.ToolTip="Click or drag on empty tiles to draw an area, drag an area to move it." />
-          <RadioButton Content="Props"
-                       GroupName="MapEditMode"
-                       MinWidth="0"
-                       behaviors:PointerCursorBehavior.CursorType="Hand"
-                       IsChecked="{x:Bind ViewModel.IsPropMode, Mode=TwoWay}"
-                       IsEnabled="{x:Bind ViewModel.HasProps, Mode=OneWay}"
-                       ToolTipService.ToolTip="Pick a prop, click the map to stamp it (its base goes where you click). Props sit on the character step grid. Click a prop to select it, drag to move. Delete removes, F flips, arrows nudge one character step (Shift: a tile), Ctrl+C / Ctrl+V copy and paste." />
+        <StackPanel Orientation="Horizontal"
+                    Spacing="15"
+                    MinHeight="36">
           <ComboBox MinWidth="200"
                     VerticalAlignment="Center"
                     ItemsSource="{x:Bind ViewModel.PropTool.Choices}"
@@ -186,16 +249,68 @@
                     SelectedItem="{x:Bind ViewModel.AreaTool.GridSize, Mode=TwoWay}"
                     Visibility="{x:Bind ViewModel.IsAreaMode, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
                     ToolTipService.ToolTip="Area grid in pixels: what areas snap to while drawing and moving. 48 is a tile, smaller makes finer collisions." />
+
+          <!-- Paths: the path to edit, the rest is in its popup (Edit or double-click a point) -->
+          <StackPanel Orientation="Horizontal"
+                      Spacing="10"
+                      Visibility="{x:Bind ViewModel.IsPathMode, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <ComboBox MinWidth="150"
+                      VerticalAlignment="Center"
+                      PlaceholderText="No paths"
+                      DisplayMemberPath="Name"
+                      ItemsSource="{x:Bind ViewModel.PathTool.Paths}"
+                      SelectedItem="{x:Bind ViewModel.PathTool.SelectedPath, Mode=TwoWay}"
+                      ToolTipService.ToolTip="The path clicks add points to." />
+            <Button Content="New"
+                    VerticalAlignment="Center"
+                    Command="{x:Bind ViewModel.PathTool.NewPathCommand}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="Start a new path, then click tiles to add its points" />
+            <Button Content="Edit..."
+                    VerticalAlignment="Center"
+                    Command="{x:Bind ViewModel.EditSelectionCommand}"
+                    Visibility="{x:Bind ViewModel.PathTool.HasSelectedPath, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="The path's name and style, and the picked point's pause and looks (or double-click a point)" />
+            <Button Content="Delete Path"
+                    VerticalAlignment="Center"
+                    Command="{x:Bind ViewModel.PathTool.DeletePathCommand}"
+                    Visibility="{x:Bind ViewModel.PathTool.HasSelectedPath, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand" />
+          </StackPanel>
         </StackPanel>
 
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="15" HorizontalAlignment="Center">
-          <Button Padding="8,4"
-                  VerticalAlignment="Center"
-                  behaviors:PointerCursorBehavior.CursorType="Hand"
-                  Command="{x:Bind ViewModel.LayersCommand}"
-                  ToolTipService.ToolTip="Layers: z, opacity and blend of the map images, and which environments are on.">
-            <FontIcon Glyph="&#xE81E;" FontSize="16" />
-          </Button>
+        <StackPanel Grid.Column="1"
+                    Orientation="Horizontal"
+                    Spacing="10">
+          <engineGlyphButton:EngineGlyphButton Padding="8,4"
+                                               VerticalAlignment="Center"
+                                               behaviors:PointerCursorBehavior.CursorType="Hand"
+                                               Glyph="&#xE81E;"
+                                               Command="{x:Bind ViewModel.LayersCommand}"
+                                               ToolTipService.ToolTip="Layers: z, opacity and blend of the map images, and which environments are on." />
+          <DropDownButton Padding="8,4"
+                          VerticalAlignment="Center"
+                          behaviors:PointerCursorBehavior.CursorType="Hand"
+                          ToolTipService.ToolTip="View: what the editor draws over the map">
+            <SymbolIcon Symbol="View" />
+            <DropDownButton.Flyout>
+              <MenuFlyout Placement="Bottom">
+                <ToggleMenuFlyoutItem Text="Grid"
+                                      IsChecked="{x:Bind ViewModel.ShowGrid, Mode=TwoWay}" />
+                <ToggleMenuFlyoutItem Text="Areas"
+                                      IsChecked="{x:Bind ViewModel.ShowAreas, Mode=TwoWay}" />
+                <ToggleMenuFlyoutItem Text="Paths"
+                                      IsChecked="{x:Bind ViewModel.ShowPaths, Mode=TwoWay}" />
+                <ToggleMenuFlyoutItem Text="Parallax"
+                                      IsChecked="{x:Bind ViewModel.ShowParallax, Mode=TwoWay}" />
+                <ToggleMenuFlyoutItem Text="Light"
+                                      IsChecked="{x:Bind ViewModel.ShowLight, Mode=TwoWay}" />
+                <ToggleMenuFlyoutItem Text="Environment"
+                                      IsChecked="{x:Bind ViewModel.ShowEnvironments, Mode=TwoWay}" />
+              </MenuFlyout>
+            </DropDownButton.Flyout>
+          </DropDownButton>
           <SplitButton Padding="8,4"
                        VerticalAlignment="Center"
                        behaviors:PointerCursorBehavior.CursorType="Hand"
@@ -216,40 +331,11 @@
               </MenuFlyout>
             </SplitButton.Flyout>
           </SplitButton>
-          <CheckBox Content="Grid"
-                    MinWidth="0"
-                    behaviors:PointerCursorBehavior.CursorType="Hand"
-                    IsChecked="{x:Bind ViewModel.ShowGrid, Mode=TwoWay}" />
-          <CheckBox Content="Areas"
-                    MinWidth="0"
-                    behaviors:PointerCursorBehavior.CursorType="Hand"
-                    IsChecked="{x:Bind ViewModel.ShowAreas, Mode=TwoWay}" />
-          <CheckBox Content="Parallax"
-                    MinWidth="0"
-                    behaviors:PointerCursorBehavior.CursorType="Hand"
-                    IsChecked="{x:Bind ViewModel.ShowParallax, Mode=TwoWay}" />
-          <CheckBox Content="Light"
-                    MinWidth="0"
-                    behaviors:PointerCursorBehavior.CursorType="Hand"
-                    IsChecked="{x:Bind ViewModel.ShowLight, Mode=TwoWay}" />
-          <CheckBox Content="Environment"
-                    MinWidth="0"
-                    behaviors:PointerCursorBehavior.CursorType="Hand"
-                    IsChecked="{x:Bind ViewModel.ShowEnvironments, Mode=TwoWay}" />
         </StackPanel>
-
-        <!-- fixed width so the changing numbers never move the rest of the bar -->
-        <TextBlock Grid.Column="2"
-                   Width="150"
-                   TextAlignment="Right"
-                   HorizontalAlignment="Right"
-                   VerticalAlignment="Center"
-                   Foreground="{StaticResource LightGreyBrush}"
-                   Text="{x:Bind ViewModel.CursorText, Mode=OneWay}"
-                   ToolTipService.ToolTip="Scroll to pan, shift-scroll to pan sideways, middle-drag to pan freely." />
       </Grid>
 
       <Border Grid.Row="1"
+              Grid.Column="0"
               BorderBrush="White"
               BorderThickness="2"
               CornerRadius="8"
@@ -410,6 +496,7 @@
 
               <!-- Areas -->
               <gridArea:CanvasItemsControl ItemsSource="{x:Bind ViewModel.Areas}"
+                                           Opacity="{x:Bind ViewModel.AreasOpacity, Mode=OneWay}"
                                            LeftPropertyName="X"
                                            TopPropertyName="Y"
                                            Visibility="{x:Bind ViewModel.ShowAreas, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -454,6 +541,7 @@
 
               <!-- Prop footprints (what blocks movement), shown with the areas -->
               <ItemsControl ItemsSource="{x:Bind ViewModel.PropTool.Footprints}"
+                            Opacity="{x:Bind ViewModel.PropsOverlayOpacity, Mode=OneWay}"
                             Visibility="{x:Bind ViewModel.ShowAreas, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <ItemsControl.ItemsPanel>
                   <ItemsPanelTemplate>
@@ -474,6 +562,63 @@
                   </DataTemplate>
                 </ItemsControl.ItemTemplate>
               </ItemsControl>
+
+              <!-- Patrol paths: lines in walking order and a numbered dot on each point, the picked path in orange -->
+              <Canvas IsHitTestVisible="False"
+                      Opacity="{x:Bind ViewModel.PathsOpacity, Mode=OneWay}"
+                      Visibility="{x:Bind ViewModel.PathsVisible, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <ItemsControl ItemsSource="{x:Bind ViewModel.PathTool.Segments}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <Canvas />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="mainPageModels:PathSegment">
+                      <Line X1="{x:Bind X1}"
+                            Y1="{x:Bind Y1}"
+                            X2="{x:Bind X2}"
+                            Y2="{x:Bind Y2}"
+                            Stroke="{x:Bind Stroke}"
+                            StrokeThickness="3"
+                            StrokeDashArray="3,2" />
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <ItemsControl ItemsSource="{x:Bind ViewModel.PathTool.Markers}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <Canvas />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="mainPageModels:PathMarker">
+                      <Canvas>
+                        <Grid Canvas.Left="{x:Bind Left}"
+                              Canvas.Top="{x:Bind Top}"
+                              Width="{x:Bind Diameter}"
+                              Height="{x:Bind Diameter}">
+                          <Ellipse Fill="{x:Bind Fill}"
+                                   Stroke="{x:Bind Ring}"
+                                   StrokeThickness="2" />
+                          <TextBlock Text="{x:Bind Number}"
+                                     FontSize="11"
+                                     FontWeight="SemiBold"
+                                     Foreground="Black"
+                                     HorizontalAlignment="Center"
+                                     VerticalAlignment="Center" />
+                        </Grid>
+                        <TextBlock Canvas.Left="{x:Bind Left}"
+                                   Canvas.Top="{x:Bind Top}"
+                                   Margin="26,2,0,0"
+                                   FontSize="11"
+                                   Text="{x:Bind Name}"
+                                   Visibility="{x:Bind HasName, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                      </Canvas>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </Canvas>
 
               <!-- Props (the picture is drawn by the canvas): a box round the selected one -->
               <ItemsControl ItemsSource="{x:Bind ViewModel.PropTool.Props}">
@@ -595,6 +740,22 @@
                      Visibility="{x:Bind ViewModel.SelectedMap, Mode=OneWay, Converter={StaticResource NullToVisibleConverter}}" />
         </Grid>
       </Border>
+
+      <!-- Status bar: where the cursor is, what's selected and the grid -->
+      <StackPanel Grid.Row="2"
+                  Grid.Column="0"
+                  Orientation="Horizontal"
+                  Spacing="20"
+                  Visibility="{x:Bind ViewModel.IsMapSelected, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <TextBlock MinWidth="150"
+                   Foreground="{StaticResource LightGreyBrush}"
+                   Text="{x:Bind ViewModel.CursorText, Mode=OneWay}"
+                   ToolTipService.ToolTip="Scroll to pan, shift-scroll to pan sideways, middle-drag to pan freely." />
+        <TextBlock Foreground="{StaticResource LightGreyBrush}"
+                   Text="{x:Bind ViewModel.SelectionText, Mode=OneWay}" />
+        <TextBlock Foreground="{StaticResource LightGreyBrush}"
+                   Text="{x:Bind ViewModel.SnapText, Mode=OneWay}" />
+      </StackPanel>
     </Grid>
   </Grid>
 </Page>

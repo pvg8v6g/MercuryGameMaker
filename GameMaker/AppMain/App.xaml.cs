@@ -1,4 +1,4 @@
-﻿using GameMaker.Services.Maps;
+using GameMaker.Services.Maps;
 using GameMaker.Services.Testing;
 using GameLibrary.Utilities;
 using GameLibrary.Services.GameData;
@@ -14,6 +14,7 @@ using GameMaker.UX.ViewModels.AnimationsPage;
 using GameMaker.UX.ViewModels.ArtesPage;
 using GameMaker.UX.ViewModels.AttributesPage;
 using GameMaker.UX.ViewModels.DisciplinesPage;
+using GameMaker.UX.ViewModels.BalloonIconsPage;
 using GameMaker.UX.ViewModels.ElementsPage;
 using GameMaker.UX.ViewModels.EnemiesPage;
 using GameMaker.UX.ViewModels.EquipmentPage;
@@ -31,6 +32,7 @@ using GameMaker.UX.Views.AnimationsPage;
 using GameMaker.UX.Views.ArtesPage;
 using GameMaker.UX.Views.AttributesPage;
 using GameMaker.UX.Views.DisciplinesPage;
+using GameMaker.UX.Views.BalloonIconsPage;
 using GameMaker.UX.Views.ElementsPage;
 using GameMaker.UX.Views.EnemiesPage;
 using GameMaker.UX.Views.EquipmentPage;
@@ -72,6 +74,7 @@ public partial class App
         services.AddSingleton<AttributesPageViewModel>();
         services.AddSingleton<ElementsPageViewModel>();
         services.AddSingleton<GrowthsPageViewModel>();
+        services.AddSingleton<BalloonIconsPageViewModel>();
         services.AddSingleton<DisciplinesPageViewModel>();
         services.AddSingleton<ArtesPageViewModel>();
         services.AddSingleton<EquipmentPageViewModel>();
@@ -95,6 +98,7 @@ public partial class App
         services.AddSingleton<AttributesPage>();
         services.AddSingleton<ElementsPage>();
         services.AddSingleton<GrowthsPage>();
+        services.AddSingleton<BalloonIconsPage>();
         services.AddSingleton<DisciplinesPage>();
         services.AddSingleton<ArtesPage>();
         services.AddSingleton<EquipmentPage>();

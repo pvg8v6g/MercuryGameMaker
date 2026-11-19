@@ -1,4 +1,4 @@
-﻿namespace GameLibrary.Models.Movements;
+namespace GameLibrary.Models.Movements;
 
 public partial class PlayMediaMovement : Movement
 {
@@ -25,6 +25,9 @@ public partial class PlayMediaMovement : Movement
         get;
         set => SetField(ref field, value);
     } = 1.0;
+
+    // nothing on the map is affected, so there is no entity to pick
+    public override bool HasEntityTarget => false;
 
     public override string ToString() => $"Play Media: {MediaName}";
 }

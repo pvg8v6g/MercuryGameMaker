@@ -1,7 +1,8 @@
-﻿using GameLibrary.Models.Props;
+using GameLibrary.Models.Props;
 using System.Collections.ObjectModel;
 using GameLibrary.Models.Animations;
 using GameLibrary.Models.Artes;
+using GameLibrary.Models.Balloons;
 using GameLibrary.Models.Disciplines;
 using GameLibrary.Models.Fighter;
 using GameLibrary.Models.GameData;
@@ -106,6 +107,8 @@ public partial class GameDataService : PropertyChangedUpdater, IGameDataService
     public ObservableCollection<Attribute> Elements { get; } = [];
 
     public ObservableCollection<Growth> Growths { get; } = [];
+
+    public ObservableCollection<BalloonIcon> BalloonIcons { get; } = [];
 
     #endregion
 }

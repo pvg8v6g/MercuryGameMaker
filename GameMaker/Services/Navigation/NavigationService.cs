@@ -18,6 +18,8 @@ using GameMaker.UX.ViewModels.Popups.MovementRouteEditor;
 using GameMaker.UX.Views.MainWindow;
 using GameMaker.UX.Views.Popups.ActionEditor;
 using GameMaker.UX.Views.Popups.AreaEditor;
+using GameMaker.UX.Views.Popups.PathEditor;
+using GameMaker.UX.Views.Popups.PropEditor;
 using GameMaker.UX.Views.Popups.BranchActionEditor;
 using GameMaker.UX.Views.Popups.AnimationEffects;
 using GameMaker.UX.Views.Popups.ConditionEditor;
@@ -154,6 +156,18 @@ public partial class NavigationService(Func<Type, EngineTask> engineTaskFactory)
     {
         if (PopupHost.Current is null) return;
         await PopupHost.Current.ShowAsync(new AreaEditorPopup(viewModel));
+    }
+
+    public async Task ShowPropEditorPopup(MainPageViewModel viewModel)
+    {
+        if (PopupHost.Current is null) return;
+        await PopupHost.Current.ShowAsync(new PropEditorPopup(viewModel));
+    }
+
+    public async Task ShowPathEditorPopup(MainPageViewModel viewModel)
+    {
+        if (PopupHost.Current is null) return;
+        await PopupHost.Current.ShowAsync(new PathEditorPopup(viewModel));
     }
 
     public async Task<ContentDialogResult> ShowMapIdConflictPopup(MapIdConflictViewModel viewModel)

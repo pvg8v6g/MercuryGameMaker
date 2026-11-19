@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Text.Json;
 using GameLibrary.Commands;
 using GameLibrary.Enumerations;
@@ -15,6 +15,7 @@ using GameLibrary.Utilities.Calculations;
 using GameLibrary.Utilities.ComponentModels;
 using GameMaker.Services.Navigation;
 using GameMaker.UX.Components.EngineListView;
+using GameMaker.UX.Models.Choices;
 using GameMaker.UX.Models.Hitboxes;
 using GameMaker.UX.ViewModels.Popups.ActionEditor;
 using GameMaker.UX.ViewModels.Popups.BranchActionEditor;
@@ -68,6 +69,11 @@ public class EntityEditorViewModel : BaseViewModel<Page>
     private readonly IGraphicsService _graphicsService;
     private readonly INavigationService _navigationService;
     private bool _insertAbove;
+    private const string NoneText = "None";
+    private readonly string[] _pathNames;
+    private readonly string[] _zoneNames;
+    private readonly NamedChoice[] _balloonChoices;
+    private readonly IReadOnlyList<Entity> _mapEntities;
 
     public EntityEditorViewModel(
         Entity entity,
@@ -86,6 +92,12 @@ public class EntityEditorViewModel : BaseViewModel<Page>
         NameHeader = $"{kind} Name";
         _gameDataService = gameDataService;
         _navigationService = navigationService;
+        // the patrol picks from the paths and named areas on the entity's own map, None first
+        var map = gameDataService.GameMaps.FirstOrDefault(x => x.Guid == entity.MapId);
+        _pathNames = [NoneText, .. map?.PatrolPaths.Select(x => x.Name).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct() ?? []];
+        _zoneNames = [NoneText, .. map?.Areas.Select(x => x.Name).Where(x => !string.IsNullOrWhiteSpace(x)).Distinct() ?? []];
+        _balloonChoices = NamedChoice.List(NoneText, gameDataService.BalloonIcons.AsEnumerable().OrderBy(x => x.Id));
+        _mapEntities = [.. map?.Entities ?? []];
 
         if (Entity.Pages.Count == 0)
         {
@@ -107,6 +119,9 @@ public class EntityEditorViewModel : BaseViewModel<Page>
     public string Title { get; }
 
     public string NameHeader { get; }
+
+    // the id move routes and pages pick it by ("001"), set by the map, not editable
+    public string EntityIdText => $"{Entity.Id:000}";
 
     public string EntityName
     {
@@ -190,6 +205,85 @@ public class EntityEditorViewModel : BaseViewModel<Page>
         {
             if (SelectedPage is null || value == FaceIndex) return;
             PageModule<FaceModule>().FaceIndex = value;
+            OnPropertyChanged();
+        }
+    }
+
+    // patrol and chase is a module the page has or doesn't, its settings are edited on the module itself
+    public bool Patrols
+    {
+        get => Patrol is not null;
+        set
+        {
+            if (SelectedPage is null || value == Patrols) return;
+            if (value) SelectedPage.Modules.Add(new PatrolModule());
+            else SelectedPage.Modules.Remove(Patrol!);
+            OnPropertyChanged();
+            RefreshPatrol();
+
+            // a patroller has to be able to walk
+            if (value) Moves = true;
+        }
+    }
+
+    // movement is a module the page has or doesn't: without it the entity never walks (no routes, no patrol)
+    public bool Moves
+    {
+        get => Movement is not null;
+        set
+        {
+            if (SelectedPage is null || value == Moves) return;
+            if (value) SelectedPage.Modules.Add(new MovementModule { Speed = 4, Dashing = false });
+            else SelectedPage.Modules.Remove(Movement!);
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(Movement));
+        }
+    }
+
+    public MovementModule? Movement => SelectedPage?.Modules.OfType<MovementModule>().FirstOrDefault();
+
+    public PatrolModule? Patrol => SelectedPage?.Modules.OfType<PatrolModule>().FirstOrDefault();
+
+    // the paths on the entity's map, to pick the one it patrols. None first
+    public string[] PathNames => _pathNames;
+
+    // a dropdown clears its pick (null) when it reloads, that never wipes the patrol's path
+    public string PatrolPathName
+    {
+        get => Choice(_pathNames, Patrol?.PathName);
+        set
+        {
+            // the dropdown echoes the pick back when it's told about it, only a real change goes through
+            if (value is null || Patrol is null || value == PatrolPathName) return;
+            Patrol.PathName = value == NoneText ? null : value;
+            OnPropertyChanged();
+        }
+    }
+
+    // the named areas on the entity's map, to wander in when it has no path. None first
+    public string[] ZoneNames => _zoneNames;
+
+    public string PatrolZoneName
+    {
+        get => Choice(_zoneNames, Patrol?.ZoneName);
+        set
+        {
+            if (value is null || Patrol is null || value == PatrolZoneName) return;
+            Patrol.ZoneName = value == NoneText ? null : value;
+            OnPropertyChanged();
+        }
+    }
+
+    // the balloons from the Balloon Icons settings, None first
+    public NamedChoice[] BalloonChoices => _balloonChoices;
+
+    public NamedChoice SpotBalloon
+    {
+        get => NamedChoice.Find(_balloonChoices, Patrol?.SpotBalloonId);
+        set
+        {
+            if (value is null || Patrol is null || value == SpotBalloon) return;
+            Patrol.SpotBalloonId = value.Id;
             OnPropertyChanged();
         }
     }
@@ -431,6 +525,24 @@ public class EntityEditorViewModel : BaseViewModel<Page>
         var hitboxes = CharacterName is { Length: > 0 } ? PageHitboxes() : PageHitbox;
         _ = Hitboxes.Show(hitboxes?.Hitboxes, CharacterName, image?.Index ?? 0);
         OnPropertyChanged(nameof(Collide));
+        OnPropertyChanged(nameof(Patrols));
+        RefreshPatrol();
+        OnPropertyChanged(nameof(Moves));
+        OnPropertyChanged(nameof(Movement));
+    }
+
+    // the dropdown's own string for a saved name (a new string the dropdown can't match loops forever), None when it's gone
+    private static string Choice(string[] choices, string? name)
+    {
+        return choices.FirstOrDefault(x => x == name) ?? choices[0];
+    }
+
+    private void RefreshPatrol()
+    {
+        OnPropertyChanged(nameof(Patrol));
+        OnPropertyChanged(nameof(PatrolPathName));
+        OnPropertyChanged(nameof(PatrolZoneName));
+        OnPropertyChanged(nameof(SpotBalloon));
     }
 
     private Direction PageDirection => SelectedPage?.Modules.OfType<PositionModule>().FirstOrDefault()?.Direction is { } direction and not Direction.None
@@ -651,7 +763,7 @@ public class EntityEditorViewModel : BaseViewModel<Page>
 
     private async Task<ContentDialogResult> ShowActionEditor(PageAction action)
     {
-        var viewModel = new ActionEditorViewModel(action, _gameDataService);
+        var viewModel = new ActionEditorViewModel(action, _gameDataService, _mapEntities);
         return await _navigationService.ShowActionEditorPopup(viewModel);
     }
 
@@ -684,7 +796,7 @@ public class EntityEditorViewModel : BaseViewModel<Page>
 
     private async Task ShowMovementRoute(EntityMovementAction action)
     {
-        var viewModel = new MovementRouteEditorViewModel(action, _gameDataService, _navigationService);
+        var viewModel = new MovementRouteEditorViewModel(action, _mapEntities, _gameDataService, _navigationService);
         await _navigationService.ShowMovementRouteEditorPopup(viewModel);
     }
 

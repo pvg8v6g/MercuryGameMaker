@@ -1,4 +1,5 @@
-﻿using GameLibrary.Utilities;
+using GameLibrary.Utilities;
+using GameEngine.Navigation;
 using GameEngine.Pages;
 using GameEngine.Pages.Handlers;
 using GameEngine.Scenes;
@@ -61,6 +62,8 @@ public partial class App
         services.AddSingleton<IInputService, InputService>();
         services.AddSingleton<IConditionService, ConditionService>();
         services.AddSingleton<IStartService, StartService>();
+        services.AddSingleton<NavigationService>();
+        services.AddSingleton<PathWalker>();
 
         #endregion
 
@@ -69,9 +72,12 @@ public partial class App
         // systems run in this order every update
         AddSystem<ActivePageSystem>(services);
         AddSystem<InputSystem>(services);
+        AddSystem<MovementRouteSystem>(services);
+        AddSystem<PatrolSystem>(services);
         AddSystem<MovementSystem>(services);
         AddSystem<HitboxSystem>(services);
         AddSystem<CharacterImageSystem>(services);
+        AddSystem<BalloonSystem>(services);
 
         #endregion
 
@@ -91,6 +97,8 @@ public partial class App
         services.AddSingleton<IActionHandler, WaitHandler>();
         services.AddSingleton<IActionHandler, ExitProcessingHandler>();
         services.AddSingleton<IActionHandler, EntityEraseHandler>();
+        services.AddSingleton<IActionHandler, EntityMovementHandler>();
+        services.AddSingleton<IActionHandler, EntityBalloonIconHandler>();
 
         #endregion
 

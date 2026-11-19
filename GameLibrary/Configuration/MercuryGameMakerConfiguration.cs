@@ -13,4 +13,9 @@ public class MercuryGameMakerConfiguration
 
     // a test opens in a window unless this is on
     public bool TestFullScreen { get; set; }
+
+    // the map editor's side panels folded away to their arrows
+    public bool ToolRailCollapsed { get; set; }
+
+    public bool MapsPanelCollapsed { get; set; }
 }

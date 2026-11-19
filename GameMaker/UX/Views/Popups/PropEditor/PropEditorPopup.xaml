@@ -1,0 +1,24 @@
+<UserControl x:Class="GameMaker.UX.Views.Popups.PropEditor.PropEditorPopup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+             xmlns:popup="using:GameMaker.UX.Components.Popup"
+             mc:Ignorable="d">
+  <popup:PopupShell Title="{x:Bind ViewModel.SelectedProp.Prop.Name, FallbackValue='Prop'}"
+                    PrimaryButtonText="Done">
+    <StackPanel Width="320" Spacing="15">
+      <Button Content="Flip"
+              Command="{x:Bind ViewModel.FlipSelectionCommand}"
+              ToolTipService.ToolTip="Mirror the picture and its footprint (F on the map)" />
+      <CheckBox Content="Set Level By Hand"
+                IsChecked="{x:Bind ViewModel.SelectedProp.HasLevel, Mode=TwoWay, FallbackValue=False}"
+                ToolTipService.ToolTip="Off: the prop is on the level of the surface under its base. On: pick it, like 0 for a crate under a bridge." />
+      <engineTextBox:EngineTextBox Header="Level"
+                                   InputType="Integer"
+                                   Visibility="{x:Bind ViewModel.SelectedProp.HasLevel, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Collapsed}"
+                                   Text="{x:Bind ViewModel.SelectedProp.Level, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+    </StackPanel>
+  </popup:PopupShell>
+</UserControl>

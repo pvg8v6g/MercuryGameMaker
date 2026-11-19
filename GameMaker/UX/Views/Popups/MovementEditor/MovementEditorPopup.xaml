@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="GameMaker.UX.Views.Popups.MovementEditor.MovementEditorPopup"
+<UserControl x:Class="GameMaker.UX.Views.Popups.MovementEditor.MovementEditorPopup"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -15,11 +15,9 @@
              x:Name="Root"
              mc:Ignorable="d">
   <UserControl.Resources>
-    <DataTemplate x:Key="MoveTemplate" x:DataType="movements:MoveMovement">
-      <ComboBox Header="Direction"
-                HorizontalAlignment="Stretch"
-                ItemsSource="{extensions:EnumValues EnumType=enums:Direction}"
-                SelectedItem="{x:Bind Direction, Mode=TwoWay}" />
+    <!-- picked in the popup itself, so the template has nothing of its own -->
+    <DataTemplate x:Key="MoveTemplate">
+      <Grid />
     </DataTemplate>
 
     <DataTemplate x:Key="MoveTowardTemplate" x:DataType="movements:MoveTowardMovement">
@@ -28,9 +26,6 @@
                   HorizontalAlignment="Stretch"
                   ItemsSource="{extensions:EnumValues EnumType=enums:MovementTarget}"
                   SelectedItem="{x:Bind TargetType, Mode=TwoWay}" />
-        <engineTextBox:EngineTextBox Header="Target Entity Id" InputType="Integer" PlaceholderText="None"
-                                     Visibility="{x:Bind TargetType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Entity}"
-                                     Text="{x:Bind TargetEntityId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         <engineTextBox:EngineTextBox Header="Target X" InputType="Integer"
                                      Visibility="{x:Bind TargetType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Location}"
                                      Text="{x:Bind TargetX, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
@@ -46,15 +41,15 @@
                   HorizontalAlignment="Stretch"
                   ItemsSource="{extensions:EnumValues EnumType=enums:MovementTarget}"
                   SelectedItem="{x:Bind TargetType, Mode=TwoWay}" />
-        <engineTextBox:EngineTextBox Header="Target Entity Id" InputType="Integer" PlaceholderText="None"
-                                     Visibility="{x:Bind TargetType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Entity}"
-                                     Text="{x:Bind TargetEntityId, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
         <engineTextBox:EngineTextBox Header="Target X" InputType="Integer"
                                      Visibility="{x:Bind TargetType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Location}"
                                      Text="{x:Bind TargetX, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
         <engineTextBox:EngineTextBox Header="Target Y" InputType="Integer"
                                      Visibility="{x:Bind TargetType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=Location}"
                                      Text="{x:Bind TargetY, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+        <engineTextBox:EngineTextBox Header="Distance (tiles)" InputType="Integer"
+                                     Text="{x:Bind Distance, Mode=TwoWay, FallbackValue='5', UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTipService.ToolTip="How far to get from the target. Stops sooner when it can't get any farther." />
       </StackPanel>
     </DataTemplate>
 
@@ -77,11 +72,9 @@
                                    Text="{x:Bind Wait, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
     </DataTemplate>
 
-    <DataTemplate x:Key="TurnTemplate" x:DataType="movements:TurnMovement">
-      <ComboBox Header="Direction"
-                HorizontalAlignment="Stretch"
-                ItemsSource="{extensions:EnumValues EnumType=enums:Direction}"
-                SelectedItem="{x:Bind Direction, Mode=TwoWay}" />
+    <!-- picked in the popup itself, so the template has nothing of its own -->
+    <DataTemplate x:Key="TurnTemplate">
+      <Grid />
     </DataTemplate>
 
     <DataTemplate x:Key="BlendTemplate" x:DataType="movements:BlendModeMovement">
@@ -108,27 +101,24 @@
       </StackPanel>
     </DataTemplate>
 
-    <DataTemplate x:Key="ActivateArteTemplate" x:DataType="movements:ActivateArteMovement">
-      <ComboBox Header="Arte"
-                PlaceholderText="None"
-                HorizontalAlignment="Stretch"
-                MinHeight="48"
-                ItemsSource="{Binding ElementName=Root, Path=ViewModel.Artes}"
-                SelectedValue="{x:Bind ArteId, Mode=TwoWay, FallbackValue={x:Null}}"
-                SelectedValuePath="Guid">
-        <ComboBox.ItemTemplate>
-          <DataTemplate x:DataType="artes:Arte">
-            <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
-              <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
-              <TextBlock Text="{x:Bind Name, Mode=OneWay}" VerticalAlignment="Center" />
-            </StackPanel>
-          </DataTemplate>
-        </ComboBox.ItemTemplate>
-      </ComboBox>
+    <!-- picked in the popup itself, so the template has nothing of its own -->
+    <DataTemplate x:Key="ActivateArteTemplate">
+      <Grid />
+    </DataTemplate>
+
+    <DataTemplate x:Key="BalloonTemplate" x:DataType="movements:BalloonMovement">
+      <CheckBox Content="Wait For Completion"
+                IsChecked="{x:Bind WaitForCompletion, Mode=TwoWay}"
+                ToolTipService.ToolTip="The route waits until the balloon has played through and gone" />
+    </DataTemplate>
+
+    <!-- picked in the popup itself, so the template has nothing of its own -->
+    <DataTemplate x:Key="TurnTargetTemplate">
+      <Grid />
     </DataTemplate>
 
     <DataTemplate x:Key="EmptyTemplate">
-      <TextBlock Text="This command has no options to configure." TextWrapping="Wrap" />
+      <TextBlock Text="Nothing else to set for this command." TextWrapping="Wrap" Opacity="0.8" />
     </DataTemplate>
 
     <movementEditor:MovementEditorTemplateSelector x:Key="MovementEditorTemplateSelector"
@@ -142,6 +132,8 @@
                                                     Blend="{StaticResource BlendTemplate}"
                                                     CharacterImage="{StaticResource CharacterImageTemplate}"
                                                     ActivateArte="{StaticResource ActivateArteTemplate}"
+                                                    Balloon="{StaticResource BalloonTemplate}"
+                                                    TurnTarget="{StaticResource TurnTargetTemplate}"
                                                     Empty="{StaticResource EmptyTemplate}" />
   </UserControl.Resources>
 
@@ -150,10 +142,64 @@
                     SecondaryButtonText="Cancel">
     <Grid Width="420"
           MinHeight="160">
-      <ContentControl HorizontalContentAlignment="Stretch"
-                      VerticalContentAlignment="Top"
-                      Content="{x:Bind ViewModel.Movement, Mode=OneWay}"
-                      ContentTemplateSelector="{StaticResource MovementEditorTemplateSelector}" />
+      <StackPanel Spacing="10">
+        <!-- who the step acts on: the route's own entity, the player or another entity on the map -->
+        <ComboBox Header="Entity"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.TargetChoices}"
+                  SelectedItem="{x:Bind ViewModel.SelectedTarget, Mode=TwoWay}"
+                  DisplayMemberPath="Name"
+                  Visibility="{x:Bind ViewModel.ShowsTarget, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        <!-- the choices that come from the editor (directions, the map's entities, balloons, artes) live here, not in
+             the templates: a template only sees its own step -->
+        <ComboBox Header="Direction"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.DirectionChoices}"
+                  SelectedItem="{x:Bind ViewModel.SelectedDirection, Mode=TwoWay}"
+                  Visibility="{x:Bind ViewModel.ShowsDirection, Converter={StaticResource BooleanToVisibilityConverter}}"
+                  ToolTipService.ToolTip="Random picks one of the four ways each time the step runs" />
+        <ComboBox Header="Target"
+                  HorizontalAlignment="Stretch"
+                  PlaceholderText="Pick the player or an entity"
+                  ItemsSource="{x:Bind ViewModel.TurnTargets}"
+                  SelectedItem="{x:Bind ViewModel.SelectedTurnTarget, Mode=TwoWay}"
+                  DisplayMemberPath="Name"
+                  Visibility="{x:Bind ViewModel.ShowsTurnTarget, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        <ComboBox Header="Balloon"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.BalloonChoices}"
+                  SelectedItem="{x:Bind ViewModel.SelectedBalloon, Mode=TwoWay}"
+                  DisplayMemberPath="Name"
+                  Visibility="{x:Bind ViewModel.ShowsBalloon, Converter={StaticResource BooleanToVisibilityConverter}}"
+                  ToolTipService.ToolTip="Balloons are made in Settings, Balloon Icons" />
+        <ComboBox Header="Arte"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  MinHeight="48"
+                  ItemsSource="{x:Bind ViewModel.Artes}"
+                  SelectedItem="{x:Bind ViewModel.SelectedArte, Mode=TwoWay}"
+                  Visibility="{x:Bind ViewModel.ShowsArte, Converter={StaticResource BooleanToVisibilityConverter}}">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="artes:Arte">
+              <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
+                <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
+                <TextBlock Text="{x:Bind Name, Mode=OneWay}" VerticalAlignment="Center" />
+              </StackPanel>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+        <ContentControl HorizontalContentAlignment="Stretch"
+                        VerticalContentAlignment="Top"
+                        Content="{x:Bind ViewModel.Movement, Mode=OneWay}"
+                        ContentTemplateSelector="{StaticResource MovementEditorTemplateSelector}" />
+        <ComboBox Header="Target Entity"
+                  HorizontalAlignment="Stretch"
+                  PlaceholderText="Pick an entity"
+                  ItemsSource="{x:Bind ViewModel.OtherEntities}"
+                  SelectedItem="{x:Bind ViewModel.SelectedOtherEntity, Mode=TwoWay}"
+                  DisplayMemberPath="Name"
+                  Visibility="{x:Bind ViewModel.ShowsOtherEntity, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+      </StackPanel>
     </Grid>
   </popup:PopupShell>
 </UserControl>

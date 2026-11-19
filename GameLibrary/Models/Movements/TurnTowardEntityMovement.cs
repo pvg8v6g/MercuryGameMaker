@@ -1,4 +1,4 @@
-﻿namespace GameLibrary.Models.Movements;
+namespace GameLibrary.Models.Movements;
 
 public partial class TurnTowardEntityMovement : Movement
 {
@@ -16,5 +16,5 @@ public partial class TurnTowardEntityMovement : Movement
         set => SetField(ref field, value);
     }
 
-    public override string ToString() => TargetPlayer ? "Turn Toward Player" : "Turn Toward Entity";
+    public override string ToString() => TargetPlayer ? "Turn Toward Player" : $"Turn Toward Entity {TargetEntityId:000}";
 }

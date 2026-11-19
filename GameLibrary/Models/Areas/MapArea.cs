@@ -16,6 +16,13 @@ public partial class MapArea : Area
         set => SetField(ref field, value);
     }
 
+    // the color the area is drawn in (editor and test overlay), none is its type's color
+    public GameColor? Color
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     // the sound played when walking inside a footstep area
     public AudioFile? Footstep
     {

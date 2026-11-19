@@ -1,0 +1,57 @@
+<UserControl x:Class="GameMaker.UX.Views.Popups.PathEditor.PathEditorPopup"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:popup="using:GameMaker.UX.Components.Popup"
+             mc:Ignorable="d">
+  <popup:PopupShell Title="Patrol Path"
+                    PrimaryButtonText="Done">
+    <StackPanel Width="380" Spacing="15">
+      <Grid ColumnSpacing="10">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <TextBox Header="Name"
+                 Text="{x:Bind ViewModel.PathTool.SelectedPath.Name, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
+                 ToolTipService.ToolTip="Entities pick the path they patrol by this name" />
+        <ComboBox Grid.Column="1"
+                  Header="Style"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.PathTool.Styles}"
+                  ItemTemplate="{StaticResource EnumDisplayNameTemplate}"
+                  SelectedItem="{x:Bind ViewModel.PathTool.SelectedPath.Style, Mode=TwoWay}"
+                  ToolTipService.ToolTip="Loop: 1, 2, 3, 1... Back and Forth: 1, 2, 3, 2, 1... Wander: any point next, picked at random." />
+      </Grid>
+
+      <!-- the picked point: how long to stand there and where to look -->
+      <StackPanel Spacing="10"
+                  Visibility="{x:Bind ViewModel.PathTool.HasSelectedPoint, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <TextBlock Text="{x:Bind ViewModel.PathTool.SelectedPointTitle, Mode=OneWay}" />
+        <NumberBox Header="Pause (ms)"
+                   SpinButtonPlacementMode="Inline"
+                   Minimum="0"
+                   SmallChange="250"
+                   Value="{x:Bind ViewModel.PathTool.SelectedPointPause, Mode=TwoWay}"
+                   ToolTipService.ToolTip="How long to stand on this point, the looks are spread over it" />
+        <TextBlock Text="Look Around" />
+        <StackPanel Orientation="Horizontal"
+                    Spacing="6">
+          <ToggleButton Content="&#x2191;"
+                        MinWidth="44"
+                        IsChecked="{x:Bind ViewModel.PathTool.SelectedPoint.LookUp, Mode=TwoWay, FallbackValue=False}" />
+          <ToggleButton Content="&#x2192;"
+                        MinWidth="44"
+                        IsChecked="{x:Bind ViewModel.PathTool.SelectedPoint.LookRight, Mode=TwoWay, FallbackValue=False}" />
+          <ToggleButton Content="&#x2193;"
+                        MinWidth="44"
+                        IsChecked="{x:Bind ViewModel.PathTool.SelectedPoint.LookDown, Mode=TwoWay, FallbackValue=False}" />
+          <ToggleButton Content="&#x2190;"
+                        MinWidth="44"
+                        IsChecked="{x:Bind ViewModel.PathTool.SelectedPoint.LookLeft, Mode=TwoWay, FallbackValue=False}" />
+        </StackPanel>
+      </StackPanel>
+    </StackPanel>
+  </popup:PopupShell>
+</UserControl>

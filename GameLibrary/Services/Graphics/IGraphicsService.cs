@@ -1,4 +1,4 @@
-﻿using Windows.Foundation;
+using Windows.Foundation;
 using GameLibrary.Enumerations;
 using GameLibrary.Utilities.ComponentModels;
 using Microsoft.UI.Xaml.Media.Imaging;
@@ -8,6 +8,12 @@ namespace GameLibrary.Services.Graphics;
 public interface IGraphicsService
 {
     string GetIconsPath();
+
+    string GetBalloonsPath();
+
+    Task<CroppedImage> GetBalloonFrame(int row, int column);
+
+    Task<(int columns, int rows)> GetBalloonDivisions();
     Task<CroppedImage> GetIcon(int index);
     Task<CroppedImage> GetEngineIcon(int index);
     string GetCharacterPath();

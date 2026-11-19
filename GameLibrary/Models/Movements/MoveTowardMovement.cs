@@ -1,4 +1,4 @@
-﻿using GameLibrary.Enumerations;
+using GameLibrary.Enumerations;
 
 namespace GameLibrary.Models.Movements;
 
@@ -33,7 +33,7 @@ public partial class MoveTowardMovement : Movement
     public override string ToString() => TargetType switch
     {
         MovementTarget.Player => "Move Toward Player",
-        MovementTarget.Entity => "Move Toward Entity",
+        MovementTarget.Entity => $"Move Toward Entity {TargetEntityId:000}",
         _ => $"Move Toward Location: {TargetX}, {TargetY}"
     };
 }

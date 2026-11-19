@@ -53,6 +53,10 @@ public interface INavigationService
 
     Task ShowAreaEditorPopup(MainPageViewModel viewModel);
 
+    Task ShowPropEditorPopup(MainPageViewModel viewModel);
+
+    Task ShowPathEditorPopup(MainPageViewModel viewModel);
+
     Task<ContentDialogResult> ShowMapIdConflictPopup(MapIdConflictViewModel viewModel);
 
     Task ShowGameStartPopup(GameStartViewModel viewModel);

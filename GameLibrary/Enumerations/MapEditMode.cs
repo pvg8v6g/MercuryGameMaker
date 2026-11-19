@@ -4,5 +4,6 @@ public enum MapEditMode
 {
     Entities,
     Areas,
-    Props
+    Props,
+    Paths
 }

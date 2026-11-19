@@ -1,4 +1,4 @@
-﻿using Windows.Foundation;
+using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using GameLibrary.Enumerations;
@@ -30,6 +30,41 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
         var viewport = new Rect(x, y, w, h);
         return new CroppedImage { ImagePath = path, ImageSource = source, Rect = viewport };
     }
+
+    #endregion
+
+    #region Balloon
+
+    public string GetBalloonsPath()
+    {
+        return Path.Combine(locationService.GameDirectory!, "Graphics", "Balloons", "~Balloons.png");
+    }
+
+    // a frame of a balloon: the row is the balloon, the column the frame. Empty when the sheet isn't there yet
+    public async Task<CroppedImage> GetBalloonFrame(int row, int column)
+    {
+        var path = GetBalloonsPath();
+        if (!File.Exists(path)) return new CroppedImage { ImagePath = path };
+
+        var source = await GetImage(path);
+        var size = Models.Balloons.BalloonIcon.CellSize;
+        return new CroppedImage { ImagePath = path, ImageSource = source, Rect = new Rect(column * size, row * size, size, size) };
+    }
+
+    // how many frames (columns) and balloons (rows) the sheet has
+    public async Task<(int columns, int rows)> GetBalloonDivisions()
+    {
+        var path = GetBalloonsPath();
+        if (!File.Exists(path)) return (0, 0);
+
+        var (width, height) = await GetImageDimensions(path);
+        var size = Models.Balloons.BalloonIcon.CellSize;
+        return ((int) (width / size), (int) (height / size));
+    }
+
+    #endregion
+
+    #region Engine Icon
 
     public async Task<CroppedImage> GetEngineIcon(int index)
     {

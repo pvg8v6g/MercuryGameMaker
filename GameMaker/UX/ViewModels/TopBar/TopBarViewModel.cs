@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using GameLibrary.Commands;
 using GameLibrary.Services.Graphics;
 using GameMaker.Services.Navigation;
@@ -127,6 +127,7 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
                     new MenuItemModel { Header = "Attributes", CommandIndex = "10.1" },
                     new MenuItemModel { Header = "Elements", CommandIndex = "10.2" },
                     new MenuItemModel { Header = "Growths", CommandIndex = "10.3" },
+                    new MenuItemModel { Header = "Balloon Icons", CommandIndex = "10.4" },
                 ]
             }
         ];
@@ -194,6 +195,10 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
             case "10.3": // growths
                 EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;
                 navigationService.NavigateTo<Views.GrowthsPage.GrowthsPage>();
+                break;
+            case "10.4": // balloon icons
+                EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;
+                navigationService.NavigateTo<Views.BalloonIconsPage.BalloonIconsPage>();
                 break;
             case "11": // media
                 navigationService.NavigateTo<Views.MediaPlayerPage.MediaPlayerPage>();

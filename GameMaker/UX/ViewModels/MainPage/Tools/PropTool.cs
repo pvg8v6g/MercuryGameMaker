@@ -201,6 +201,12 @@ public partial class PropTool(
         editor.RebuildScene();
     }
 
+    // a press picks what's under the cursor first, so a double-click edits the picked one
+    public async Task DoubleTapped(Point world)
+    {
+        await editor.EditSelection();
+    }
+
     public string CursorText(Point world)
     {
         var basePoint = Base(world);

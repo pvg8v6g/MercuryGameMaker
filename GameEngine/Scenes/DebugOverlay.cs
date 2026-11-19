@@ -134,7 +134,8 @@ public partial class DebugOverlay(
 
     private static DebugShape ToShape(MapArea area, double scale)
     {
-        return new DebugShape(area.OffsetX * scale, area.OffsetY * scale, area.Width * scale, area.Height * scale, AreaColor(area.AreaType));
+        var color = area.Color?.GetHex()?.ToColor() ?? AreaColor(area.AreaType);
+        return new DebugShape(area.OffsetX * scale, area.OffsetY * scale, area.Width * scale, area.Height * scale, color);
     }
 
     // a collision and a bar on each side it's walled off from, like the editor: moving up onto it comes in through its bottom

@@ -1,4 +1,4 @@
-﻿using GameLibrary.Enumerations;
+using GameLibrary.Enumerations;
 
 namespace GameLibrary.Models.Movements;
 
@@ -30,10 +30,17 @@ public partial class MoveAwayMovement : Movement
         set => SetField(ref field, value);
     }
 
+    /// <summary>How far to get from the target in tiles. The entity stops sooner when it can't get any farther.</summary>
+    public int Distance
+    {
+        get;
+        set => SetField(ref field, value);
+    } = 5;
+
     public override string ToString() => TargetType switch
     {
-        MovementTarget.Player => "Move Away From Player",
-        MovementTarget.Entity => "Move Away From Entity",
-        _ => $"Move Away From Location: {TargetX}, {TargetY}"
+        MovementTarget.Player => $"Move Away From Player: {Distance} tiles",
+        MovementTarget.Entity => $"Move Away From Entity {TargetEntityId:000}: {Distance} tiles",
+        _ => $"Move Away From Location: {TargetX}, {TargetY}, {Distance} tiles"
     };
 }

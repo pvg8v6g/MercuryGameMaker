@@ -1,4 +1,4 @@
-﻿namespace GameLibrary.Models.Movements;
+namespace GameLibrary.Models.Movements;
 
 public partial class WaitMovement : Movement
 {
@@ -8,6 +8,9 @@ public partial class WaitMovement : Movement
         get;
         set => SetField(ref field, value);
     }
+
+    // nothing on the map is affected, so there is no entity to pick
+    public override bool HasEntityTarget => false;
 
     public override string ToString() => $"Wait: {Wait}ms";
 }
