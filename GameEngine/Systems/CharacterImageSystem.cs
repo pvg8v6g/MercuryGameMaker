@@ -78,6 +78,15 @@ public class CharacterImageSystem(
         }
     }
 
+    // a sheet a page brought in after the map loaded (a new leader, an actor's new image), drawn once it's measured
+    public async Task Measure(string? imageName)
+    {
+        if (SheetPath(new CharacterImageModule { ImageName = imageName }) is not { } path || _sheets.ContainsKey(path) || !File.Exists(path)) return;
+
+        var (width, height) = await graphicsService.GetImageDimensions(path);
+        _sheets[path] = new Size(width, height);
+    }
+
     #endregion
 
     #region Update
@@ -105,6 +114,7 @@ public class CharacterImageSystem(
         var appearance = entity.State<AppearanceState>();
         sprite.Picture.Opacity = (float) appearance.Opacity;
         if (appearance.BlendMode is { } blendMode) sprite.Picture.BlendMode = blendMode;
+        appearance.Tint.ApplyTo(sprite.Picture);
         // the level (position z) doesn't lift a character over the map, it sorts by its feet like everyone else
         sprite.Picture.Z = (int) position.SortZ;
         sprite.Tier = hitboxSystem.Tier(entity, position);

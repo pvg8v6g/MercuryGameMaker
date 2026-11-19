@@ -24,6 +24,7 @@ namespace GameLibrary.Models.Actions;
 [JsonDerivedType(typeof(EntityOpacityAction), "entity_opacity_action")]
 [JsonDerivedType(typeof(EntityStateAction), "entity_state_action")]
 [JsonDerivedType(typeof(EntityTransferAction), "entity_transfer_action")]
+[JsonDerivedType(typeof(EntityTintAction), "entity_tint_action")]
 [JsonDerivedType(typeof(ExitProcessingAction), "exit_processing_action")]
 [JsonDerivedType(typeof(FadeMediaAction), "fade_media_action")]
 [JsonDerivedType(typeof(FlowAction), "flow_action")]

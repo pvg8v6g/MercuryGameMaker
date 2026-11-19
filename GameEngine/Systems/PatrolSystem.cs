@@ -145,7 +145,7 @@ public class PatrolSystem(
         {
             // next to the player: walking into them is what runs the event touch page
             case WalkResult.Done:
-                movementSystem.Move(entity, Facing(position, player));
+                movementSystem.Move(entity, Facing(entity, position, player));
                 break;
 
             case WalkResult.Stuck:
@@ -406,21 +406,16 @@ public class PatrolSystem(
         if (entity.GetModule<MovementModule>() is { } movement && speed > 0) movement.Speed = speed;
     }
 
-    private static void Face(MapEntity entity, PositionModule position, MapEntity other)
+    private void Face(MapEntity entity, PositionModule position, MapEntity other)
     {
         if (entity.GetModule<MovementModule>() is { FixDirection: true }) return;
-        position.Direction = Facing(position, other);
+        position.Direction = Facing(entity, position, other);
     }
 
-    private static Direction Facing(PositionModule position, MapEntity other)
+    // toward the other by where their feet are, the way it already faces when they're on the same spot
+    private Direction Facing(MapEntity entity, PositionModule position, MapEntity other)
     {
-        if (other.GetModule<PositionModule>() is not { } to) return position.Direction;
-
-        var dx = to.X - position.X;
-        var dy = to.Y - position.Y;
-        return Math.Abs(dx) > Math.Abs(dy)
-            ? dx > 0 ? Direction.Right : Direction.Left
-            : dy > 0 ? Direction.Down : Direction.Up;
+        return hitboxSystem.Toward(entity, other) is var way and not Direction.None ? way : position.Direction;
     }
 
     #endregion

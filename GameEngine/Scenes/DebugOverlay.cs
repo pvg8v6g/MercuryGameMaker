@@ -161,6 +161,7 @@ public partial class DebugOverlay(
         MapAreaType.Water => ColorHelper.FromArgb(255, 40, 90, 220),
         MapAreaType.Footstep => ColorHelper.FromArgb(255, 80, 200, 110),
         MapAreaType.LevelChange => ColorHelper.FromArgb(255, 240, 170, 40),
+        MapAreaType.HeatHaze => ColorHelper.FromArgb(255, 240, 90, 30),
         _ => ColorHelper.FromArgb(255, 120, 190, 255)
     };
 

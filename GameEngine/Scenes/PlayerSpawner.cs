@@ -8,6 +8,9 @@ using GameLibrary.Models.Modules;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Services.Json;
+using GameEngine.Models;
+using GameEngine.Services.Party;
+using GameEngine.Systems;
 
 namespace GameEngine.Scenes;
 
@@ -15,16 +18,21 @@ namespace GameEngine.Scenes;
 /// Builds the player: the party leader walking around the map. It is an entity like any other, the input module
 /// is what the player controls, so another entity can be handed control later (puzzles, cutscenes).
 /// </summary>
-public class PlayerSpawner(IGameDataService gameDataService, IGraphicsService graphicsService, IJsonService jsonService)
+public class PlayerSpawner(
+    IGameDataService gameDataService,
+    IGraphicsService graphicsService,
+    IJsonService jsonService,
+    PartyService partyService,
+    CharacterImageSystem characterImageSystem)
 {
     #region Methods
 
     // the leader standing on the spawn tile (or at the exact spot, coming in from another map), null when the game has no actors yet
     public async Task<Entity?> Create(SpawnPoint spawn, Point? at = null)
     {
-        var party = gameDataService.GameStart.Party;
-        var leader = party.Select(guid => gameDataService.Actors.FirstOrDefault(x => x.Guid == guid)).FirstOrDefault(x => x is not null)
-                     ?? gameDataService.Actors.MinBy(x => x.Id);
+        // the party's first actor as it is in this game (pages may have changed its look), the first actor made
+        // when the party is empty
+        var leader = partyService.Leader ?? partyService.Actor(gameDataService.Actors.MinBy(x => x.Id)?.Guid);
         if (leader is null) return null;
 
         var player = new Entity { Name = leader.Name };
@@ -54,8 +62,24 @@ public class PlayerSpawner(IGameDataService gameDataService, IGraphicsService gr
         return player;
     }
 
+    // the leader changed (the party or the leader's look): the player becomes the new leader where it stands
+    public void Refresh(MapEntity? player)
+    {
+        if (player?.GetModule<CharacterImageModule>() is not { } image || player.GetModule<PositionModule>() is not { } position) return;
+        if (partyService.Leader is not { } leader) return;
+
+        player.Entity.Name = leader.Name;
+        image.ImageName = leader.CharacterName;
+        image.Index = leader.CharacterIndex;
+
+        // the row picks the character on the sheet like at the spawn, the way it faces stays
+        var characterRow = Math.Max(0, (int) leader.CharacterDirection) / 4 * 4;
+        position.Direction = (Direction) (characterRow + (Math.Max(0, (int) position.Direction) % 4));
+        _ = characterImageSystem.Measure(leader.CharacterName);
+    }
+
     // the top left that puts the bottom middle of one frame of the sheet on the bottom middle of the tile
-    private async Task<(double x, double y)> StandOnTile(string? characterName, int tileX, int tileY)
+    public async Task<(double x, double y)> StandOnTile(string? characterName, int tileX, int tileY)
     {
         var tile = gameDataService.GridSize;
         var (x, y) = ((double) tileX * tile, (double) tileY * tile);

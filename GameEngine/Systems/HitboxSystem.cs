@@ -112,6 +112,27 @@ public class HitboxSystem(IGameDataService gameDataService, IGameStateService ga
         return entity.State<HitboxState>().Get(area);
     }
 
+    // from the middle of one entity's feet to the other's (their main hitboxes), their positions when either has none.
+    // Feet, not pictures: a tall character's picture starts a tile higher than a short one's
+    public (double X, double Y) Between(MapEntity from, MapEntity to)
+    {
+        if (Main(from) is { } a && Main(to) is { } b) return (b.X + (b.Width / 2.0) - (a.X + (a.Width / 2.0)), b.Y + (b.Height / 2.0) - (a.Y + (a.Height / 2.0)));
+
+        if (from.GetModule<PositionModule>() is not { } start || to.GetModule<PositionModule>() is not { } end) return (0, 0);
+        return (end.X - start.X, end.Y - start.Y);
+    }
+
+    // the way from one entity to the other along whichever way the other is farther, none when they're on the same spot
+    public Direction Toward(MapEntity from, MapEntity to)
+    {
+        var (dx, dy) = Between(from, to);
+        if (dx == 0 && dy == 0) return Direction.None;
+
+        return Math.Abs(dx) > Math.Abs(dy)
+            ? dx > 0 ? Direction.Right : Direction.Left
+            : dy > 0 ? Direction.Down : Direction.Up;
+    }
+
     // every entity's hitboxes where they are right now
     public IEnumerable<MapHitbox> AllPlaced() => Placed(_ => true);
 

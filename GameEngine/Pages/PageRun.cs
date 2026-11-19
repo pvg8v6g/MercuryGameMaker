@@ -44,6 +44,9 @@ public class PageRun
 
     public bool IsFinished => Lists.Count == 0 && Busy is null;
 
+    // the page transferred the player, it carries on running on the new map
+    public bool CarriesOver { get; set; }
+
     #endregion
 
     #region Methods

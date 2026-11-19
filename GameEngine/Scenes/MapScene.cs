@@ -4,6 +4,7 @@ using GameEngine.Navigation;
 using GameEngine.Pages;
 using GameEngine.Services.GameState;
 using GameEngine.Services.Input;
+using GameEngine.Services.Party;
 using GameEngine.Systems;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.GameMaps;
@@ -37,6 +38,11 @@ public class MapScene(
     PageRunner pageRunner,
     NavigationService navigationService,
     BalloonSystem balloonSystem,
+    AnimationSystem animationSystem,
+    GameCamera camera,
+    ScreenFade screenFade,
+    MapWeather mapWeather,
+    PartyService partyService,
     Renderer renderer)
 {
     #region Constants
@@ -57,12 +63,13 @@ public class MapScene(
     private TransferPhase _phase;
     private EdgeTransfer? _transfer;
     private int _fadeTimer;
+    private bool _followsLeader;
 
     #endregion
 
     #region Properties
 
-    public GameCamera Camera { get; } = new();
+    public GameCamera Camera => camera;
 
     // what the canvas draws
     public Renderer Renderer => renderer;
@@ -81,8 +88,15 @@ public class MapScene(
     {
         lock (_lock) gameStateService.IsTransferring = true;
         RememberPlaces();
+        FollowLeader();
 
-        var entities = map.Entities.Select(x => new MapEntity(jsonService.Copy(x)!)).ToList();
+        // the map's own entities, less those a page sent away or put somewhere else, then those a page sent here
+        var visitors = gameStateService.VisitingEntities.GetValueOrDefault(map.Guid) ?? [];
+        var entities = map.Entities
+            .Where(x => !gameStateService.DepartedEntities.Contains((map.Guid, x.Guid)) && visitors.All(visitor => visitor.Entity.Guid != x.Guid))
+            .Select(x => new MapEntity(jsonService.Copy(x)!))
+            .ToList();
+        foreach (var visitor in visitors) entities.Add(await Arrive(visitor));
         foreach (var entity in entities) ScalePositions(entity);
         foreach (var entity in entities) PutBack(map, entity);
         var player = await playerSpawner.Create(spawn, at) is { } leader ? new MapEntity(leader) : null;
@@ -101,7 +115,9 @@ public class MapScene(
         // the balloon sheet loads with the map so the first balloon shows straight away
         var preload = mapImages.Concat(environments.SelectMany(x => x.Frames)).Select(x => x.Picture.ImagePath);
         if (balloonSystem.SheetPath is { } balloons) preload = preload.Append(balloons);
+        preload = preload.Concat(animationSystem.SheetPaths(entities));
         renderer.Preload(preload);
+        mapImages.AddRange(LoadHeatHazes(map));
 
         lock (_lock)
         {
@@ -122,6 +138,7 @@ public class MapScene(
             _environments.Clear();
             _environments.AddRange(environments);
             Camera.Follow(null);
+            mapWeather.Enter(map);
 
             // a transfer stays paused until the new map has faded in, the first map of the game starts straight away
             if (_phase == TransferPhase.Loading) _phase = TransferPhase.FadingIn;
@@ -130,6 +147,34 @@ public class MapScene(
 
         // not waited for, the map never holds up on a track loading
         _ = mapAudio.Play(map, FadeSeconds);
+    }
+
+    // the player's sprite follows whoever leads the party, listened to once
+    private void FollowLeader()
+    {
+        if (_followsLeader) return;
+
+        _followsLeader = true;
+        partyService.LeaderChanged += (_, _) => playerSpawner.Refresh(gameStateService.Player);
+    }
+
+    // an entity a page sent to this map, standing on the tile it was sent to (unscaled, the scene scales it)
+    private async Task<MapEntity> Arrive(VisitingEntity visitor)
+    {
+        var entity = jsonService.Copy(visitor.Entity)!;
+        foreach (var page in entity.Pages)
+        {
+            if (page.Modules.OfType<PositionModule>().FirstOrDefault() is not { } position) continue;
+
+            var image = page.Modules.OfType<CharacterImageModule>().FirstOrDefault();
+            var (x, y) = await playerSpawner.StandOnTile(image?.ImageName, visitor.TileX, visitor.TileY);
+            position.X = x;
+            position.Y = y;
+            // the saved direction's row says which character on the sheet it is, only the way it faces changes
+            if (visitor.Direction is not Direction.None) position.Direction = (Direction) ((int) position.Direction / 4 * 4 + (int) visitor.Direction);
+        }
+
+        return new MapEntity(entity);
     }
 
     // the map being left: each entity whose page remembers its position keeps where it stands, the others forget
@@ -236,6 +281,34 @@ public class MapScene(
             .Select(area => area.Level)
             .DefaultIfEmpty(0)
             .Max();
+    }
+
+    // heat haze areas shimmer just over the ground layer: the ground bends, the props and characters on it don't
+    private IEnumerable<SceneSprite> LoadHeatHazes(GameMap map)
+    {
+        var scale = gameDataService.ScaleFactor;
+        var groundZ = (int) (map.LayerOptions.FirstOrDefault(x => x.Type == MapLayerType.Ground)?.Z ?? MapLayer.Defaults(MapLayerType.Ground).Z);
+        foreach (var area in map.Areas.Where(x => x.AreaType == MapAreaType.HeatHaze && x.Width > 0 && x.Height > 0))
+        {
+            var haze = new HeatHaze
+            {
+                Z = groundZ,
+                Width = (float) (area.Width * scale),
+                Height = (float) (area.Height * scale),
+                Strength = (float) (area.HazeStrength * scale),
+                Scale = (float) (area.HazeRippleSize * scale),
+                Speed = (float) (area.HazeSpeed * scale),
+                Feather = (float) (Math.Min(16.0, Math.Min(area.Width, area.Height) / 4.0) * scale)
+            };
+
+            // no picture to size, it goes exactly where the area is. Sorted after the ground on the ground's z
+            yield return new SceneSprite(haze)
+            {
+                X = area.OffsetX * scale,
+                Y = area.OffsetY * scale,
+                SortY = double.MaxValue
+            };
+        }
     }
 
     // a layer is drawn when its image exists for the map id, the map's layer options change its defaults
@@ -350,12 +423,13 @@ public class MapScene(
         // pages start after the systems picked the active pages and movement found what was touched
         if (!paused) pageRunner.Update();
         UpdateCamera(map);
+        mapWeather.Update(Camera);
         if (!paused)
         {
             foreach (var environment in _environments) environment.Update();
         }
 
-        renderer.Render(_mapImages.Concat(_environments.SelectMany(x => x.Current)).Concat(CharacterSprites()).Concat(BalloonSprites()), Camera);
+        renderer.Render(_mapImages.Concat(_environments.SelectMany(x => x.Current)).Concat(CharacterSprites()).Concat(mapWeather.Sprites()).Concat(animationSystem.Sprites(gameStateService.MapEntities)).Concat(BalloonSprites()), Camera);
         debugOverlay.Update(map, Camera);
         if (paused) return;
 
@@ -371,32 +445,34 @@ public class MapScene(
         mapAudio.Leave(requested.Map, FadeSeconds);
     }
 
-    // moves the fade along, gives back the transfer to load once the screen is fully black
+    // moves the fades along (the map change's and a page's screen fade, the darker one shows), gives back the
+    // transfer to load once the screen is fully black
     private EdgeTransfer? UpdateFade()
     {
+        screenFade.Update();
+        EdgeTransfer? transfer = null;
         switch (_phase)
         {
             case TransferPhase.FadingOut:
-                renderer.SetFade((double) ++_fadeTimer / FadeUpdates);
-                if (_fadeTimer < FadeUpdates) return null;
+                if (++_fadeTimer < FadeUpdates) break;
 
-                var transfer = _transfer;
+                transfer = _transfer;
                 _transfer = null;
                 _phase = TransferPhase.Loading;
-                return transfer;
+                break;
 
             // the new map is drawn paused while it fades in, then everything carries on
             case TransferPhase.FadingIn:
-                renderer.SetFade((double) --_fadeTimer / FadeUpdates);
-                if (_fadeTimer > 0) return null;
+                if (--_fadeTimer > 0) break;
 
                 _phase = TransferPhase.None;
                 gameStateService.IsTransferring = false;
-                return null;
-
-            default:
-                return null;
+                break;
         }
+
+        var transferFade = _phase == TransferPhase.None ? 0.0 : (double) _fadeTimer / FadeUpdates;
+        renderer.SetFade(Math.Max(transferFade, screenFade.Level));
+        return transfer;
     }
 
     // a map that fails to load fades back in on the map the player was on instead of freezing the game
@@ -404,7 +480,8 @@ public class MapScene(
     {
         try
         {
-            await Load(transfer.Map, new SpawnPoint { Direction = transfer.Direction }, new Point(transfer.X, transfer.Y));
+            if (transfer.OnTile) await Load(transfer.Map, new SpawnPoint { TileX = (int) transfer.X, TileY = (int) transfer.Y, Direction = transfer.Direction });
+            else await Load(transfer.Map, new SpawnPoint { Direction = transfer.Direction }, new Point(transfer.X, transfer.Y));
         }
         catch
         {

@@ -3,9 +3,23 @@ using MercuryLibrary.Extensions;
 
 namespace GameLibrary.Models.Actions;
 
-public partial class EntityTransferAction : PageAction
+public partial class EntityTransferAction : PageAction, IEntityTargetAction
 {
     public Guid? EntityId
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    // the player (the party leader) instead of an entity
+    public bool TargetsPlayer
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    // the picked entity as "001: name" for the action list, none for the page's own entity
+    public string? TargetName
     {
         get;
         set => SetField(ref field, value);
@@ -43,7 +57,7 @@ public partial class EntityTransferAction : PageAction
 
     public override string ToString()
     {
-        var result = "Transfer Entity";
+        var result = $"Transfer Entity: {this.TargetText()}";
         if (!MapName.IsNullOrEmpty()) result += $"\n    Map: {MapName}";
         result += $"\n    To: {X}, {Y}\n    Facing: {Direction}";
         return result;

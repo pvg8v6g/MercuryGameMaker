@@ -1,5 +1,6 @@
 ﻿using GameEngine.Services.GameState;
 using GameEngine.Models;
+using GameEngine.Services.Party;
 using GameLibrary.Models.Conditions;
 
 namespace GameEngine.Services.Conditions;
@@ -7,7 +8,7 @@ namespace GameEngine.Services.Conditions;
 /// <summary>
 /// Checks a page condition against the game state. Self switches are checked against the entity the page belongs to.
 /// </summary>
-public class ConditionService(IGameStateService gameStateService) : IConditionService
+public class ConditionService(IGameStateService gameStateService, PartyService partyService) : IConditionService
 {
     #region Methods
 
@@ -19,11 +20,11 @@ public class ConditionService(IGameStateService gameStateService) : IConditionSe
         SwitchCondition @switch => @switch.SwitchName is { } name && (!gameStateService.Switches.TryGetValue(name, out var value) || value == @switch.Value),
         VariableCondition variable => variable.VariableName is { } name && (!gameStateService.Variables.TryGetValue(name, out var value) || value == variable.Value),
 
-        ItemCondition item => Owns(gameStateService.OwnedItems, item.OwnItem, item.DoNotOwnItem),
+        ItemCondition item => Owns(gameStateService.Items.Keys.ToHashSet(), item.OwnItem, item.DoNotOwnItem),
         ActorCondition actor => Owns(gameStateService.OwnedParty, actor.OwnActor, actor.DoNotOwnActor),
 
-        // party levels aren't tracked by the engine yet
-        LevelCondition => true,
+        // the party leader's level
+        LevelCondition level => partyService.Leader is not { } leader || leader.Level >= level.Level,
 
         _ => false
     };

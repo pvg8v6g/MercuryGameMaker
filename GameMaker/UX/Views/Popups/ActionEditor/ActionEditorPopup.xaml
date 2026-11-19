@@ -15,6 +15,8 @@
              xmlns:enums="using:GameLibrary.Enumerations"
              xmlns:extensions="using:GameLibrary.MarkupExtensions"
              xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+             xmlns:tintEditor="using:GameMaker.UX.Components.TintEditor"
+             xmlns:weatherEditor="using:GameMaker.UX.Components.WeatherEditor"
              xmlns:popup="using:GameMaker.UX.Components.Popup"
              x:Name="Root"
              mc:Ignorable="d">
@@ -324,8 +326,11 @@
 
       <!-- Entity Animation -->
       <StackPanel x:Name="EntityAnimationPanel" x:Load="{x:Bind ViewModel.IsEntityAnimation}" Spacing="10">
-        <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
-                                     Text="{x:Bind ViewModel.AsEntityAnimation.EntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="Entity"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.EntityTargets}"
+                  SelectedItem="{x:Bind ViewModel.EntityTarget, Mode=TwoWay}"
+                  DisplayMemberPath="Name" />
         <ComboBox Header="Animation" PlaceholderText="None" HorizontalAlignment="Stretch"
                   ItemsSource="{x:Bind ViewModel.Animations, Mode=OneWay}"
                   SelectedValue="{x:Bind ViewModel.EntityAnimationAnimationId, Mode=TwoWay, FallbackValue={x:Null}}"
@@ -336,14 +341,17 @@
             </DataTemplate>
           </ComboBox.ItemTemplate>
         </ComboBox>
+        <CheckBox Content="Wait For Completion"
+                  IsChecked="{x:Bind ViewModel.AsEntityAnimation.WaitForCompletion, Mode=TwoWay, FallbackValue=False}"
+                  ToolTipService.ToolTip="The page waits until the animation has played through" />
       </StackPanel>
 
       <!-- Entity Balloon Icon -->
       <StackPanel x:Name="EntityBalloonIconPanel" x:Load="{x:Bind ViewModel.IsEntityBalloonIcon}" Spacing="10">
         <ComboBox Header="Entity"
                   HorizontalAlignment="Stretch"
-                  ItemsSource="{x:Bind ViewModel.BalloonTargets}"
-                  SelectedItem="{x:Bind ViewModel.BalloonTarget, Mode=TwoWay}"
+                  ItemsSource="{x:Bind ViewModel.EntityTargets}"
+                  SelectedItem="{x:Bind ViewModel.EntityTarget, Mode=TwoWay}"
                   DisplayMemberPath="Name" />
         <ComboBox Header="Balloon"
                   HorizontalAlignment="Stretch"
@@ -358,14 +366,38 @@
 
       <!-- Entity Erase -->
       <StackPanel x:Name="EntityErasePanel" x:Load="{x:Bind ViewModel.IsEntityErase}" Spacing="10">
-        <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
-                                     Text="{x:Bind ViewModel.AsEntityErase.EntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="Entity"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.EntityTargets}"
+                  SelectedItem="{x:Bind ViewModel.EntityTarget, Mode=TwoWay}"
+                  DisplayMemberPath="Name" />
+      </StackPanel>
+
+      <!-- Entity Tint -->
+      <StackPanel x:Name="EntityTintPanel" x:Load="{x:Bind ViewModel.IsEntityTint}" Spacing="10">
+        <ComboBox Header="Entity"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.EntityTargets}"
+                  SelectedItem="{x:Bind ViewModel.EntityTarget, Mode=TwoWay}"
+                  DisplayMemberPath="Name" />
+        <tintEditor:TintEditor Color="{x:Bind ViewModel.AsEntityTint.Color, Mode=TwoWay}"
+                               Strength="{x:Bind ViewModel.AsEntityTint.Strength, Mode=TwoWay}"
+                               BlendMode="{x:Bind ViewModel.AsEntityTint.BlendMode, Mode=TwoWay}" />
+        <engineTextBox:EngineTextBox Header="Fade Time (ms)" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsEntityTint.FadeTime, Mode=TwoWay, FallbackValue='500', UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTipService.ToolTip="How long the tint takes to fade to the strength, 0 is straight away" />
+        <CheckBox Content="Wait For Completion"
+                  IsChecked="{x:Bind ViewModel.AsEntityTint.WaitForCompletion, Mode=TwoWay, FallbackValue=False}"
+                  ToolTipService.ToolTip="The page waits until the fade is done" />
       </StackPanel>
 
       <!-- Entity Opacity -->
       <StackPanel x:Name="EntityOpacityPanel" x:Load="{x:Bind ViewModel.IsEntityOpacity}" Spacing="10">
-        <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
-                                     Text="{x:Bind ViewModel.AsEntityOpacity.EntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="Entity"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.EntityTargets}"
+                  SelectedItem="{x:Bind ViewModel.EntityTarget, Mode=TwoWay}"
+                  DisplayMemberPath="Name" />
         <engineTextBox:EngineTextBox Header="Opacity (0 - 1)" InputType="Double"
                                      Text="{x:Bind ViewModel.AsEntityOpacity.Opacity, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}" />
         <engineTextBox:EngineTextBox Header="Transition Time (ms)" InputType="Integer"
@@ -374,8 +406,11 @@
 
       <!-- Entity State -->
       <StackPanel x:Name="EntityStatePanel" x:Load="{x:Bind ViewModel.IsEntityState}" Spacing="10">
-        <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
-                                     Text="{x:Bind ViewModel.AsEntityState.EntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="Entity"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.EntityTargets}"
+                  SelectedItem="{x:Bind ViewModel.EntityTarget, Mode=TwoWay}"
+                  DisplayMemberPath="Name" />
         <ComboBox Header="State" PlaceholderText="None" HorizontalAlignment="Stretch"
                   ItemsSource="{x:Bind ViewModel.States, Mode=OneWay}"
                   SelectedValue="{x:Bind ViewModel.EntityStateStateId, Mode=TwoWay, FallbackValue={x:Null}}"
@@ -391,8 +426,11 @@
 
       <!-- Entity Transfer -->
       <StackPanel x:Name="EntityTransferPanel" x:Load="{x:Bind ViewModel.IsEntityTransfer}" Spacing="10">
-        <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
-                                     Text="{x:Bind ViewModel.AsEntityTransfer.EntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="Entity"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.EntityTargets}"
+                  SelectedItem="{x:Bind ViewModel.EntityTarget, Mode=TwoWay}"
+                  DisplayMemberPath="Name" />
         <ComboBox Header="Map" PlaceholderText="None" HorizontalAlignment="Stretch"
                   ItemsSource="{x:Bind ViewModel.GameMaps, Mode=OneWay}"
                   SelectedValue="{x:Bind ViewModel.EntityTransferMapId, Mode=TwoWay, FallbackValue={x:Null}}"
@@ -424,7 +462,16 @@
 
       <!-- Weather -->
       <StackPanel x:Name="WeatherPanel" x:Load="{x:Bind ViewModel.IsWeather}" Spacing="10">
-        <TextBlock Text="Sets the current weather." TextWrapping="Wrap" />
+        <TextBlock Foreground="{StaticResource LightGreyBrush}"
+                   TextWrapping="Wrap"
+                   Text="Changes the world's weather, which stays on from map to map. None clears it. A map with its own weather keeps showing that." />
+        <weatherEditor:WeatherEditor Model="{x:Bind ViewModel.WeatherModel}" />
+        <engineTextBox:EngineTextBox Header="Fade Time (ms)" InputType="Integer"
+                                     Text="{x:Bind ViewModel.AsWeather.FadeTime, Mode=TwoWay, FallbackValue='2000', UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTipService.ToolTip="How long the old weather takes to fade out and the new one to fade in" />
+        <CheckBox Content="Wait For Completion"
+                  IsChecked="{x:Bind ViewModel.AsWeather.WaitForCompletion, Mode=TwoWay, FallbackValue=False}"
+                  ToolTipService.ToolTip="The page waits until the fade is done" />
       </StackPanel>
 
       <!-- Fade Media -->
@@ -530,8 +577,11 @@
       <StackPanel x:Name="PlayMediaPanel" x:Load="{x:Bind ViewModel.IsPlayMedia}" Spacing="10">
         <engineTextBox:EngineTextBox Header="Media Name" PlaceholderText="None"
                                      Text="{x:Bind ViewModel.AsPlayMedia.MediaName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-        <engineTextBox:EngineTextBox Header="Path" PlaceholderText="None"
-                                     Text="{x:Bind ViewModel.AsPlayMedia.Path, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="Folder"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.MediaFolders}"
+                  SelectedItem="{x:Bind ViewModel.AsPlayMedia.Path, Mode=TwoWay}"
+                  ToolTipService.ToolTip="BGM and BGS replace the map's music or background sound, ME plays once over the music, SFX is a sound effect." />
         <engineTextBox:EngineTextBox Header="Volume" InputType="Double"
                                      Text="{x:Bind ViewModel.AsPlayMedia.Volume, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}" />
         <engineTextBox:EngineTextBox Header="Pitch" InputType="Double"
@@ -540,9 +590,12 @@
 
       <!-- Scroll Map -->
       <StackPanel x:Name="ScrollMapPanel" x:Load="{x:Bind ViewModel.IsScrollMap}" Spacing="10">
-        <CheckBox Content="Target Player" IsChecked="{x:Bind ViewModel.AsScrollMap.TargetPlayer, Mode=TwoWay}" />
-        <engineTextBox:EngineTextBox Header="Target Entity Id" PlaceholderText="None"
-                                     Text="{x:Bind ViewModel.AsScrollMap.TargetEntityId, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+        <ComboBox Header="Scroll To"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.ScrollTargets}"
+                  SelectedItem="{x:Bind ViewModel.ScrollTarget, Mode=TwoWay}"
+                  DisplayMemberPath="Name"
+                  ToolTipService.ToolTip="Tile: the middle of the X, Y tile below. An entity: the camera follows it until it scrolls back to the player." />
         <engineTextBox:EngineTextBox Header="Target X" InputType="Integer"
                                      Text="{x:Bind ViewModel.AsScrollMap.TargetX, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
         <engineTextBox:EngineTextBox Header="Target Y" InputType="Integer"

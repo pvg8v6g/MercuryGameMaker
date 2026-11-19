@@ -23,6 +23,7 @@ public class MovementRouteSystem(
     IAudioService audioService,
     NavigationService navigationService,
     PathWalker pathWalker,
+    HitboxSystem hitboxSystem,
     BalloonSystem balloonSystem) : IEntitySystem
 {
     #region Constants
@@ -142,11 +143,11 @@ public class MovementRouteSystem(
                 return StepResult.Done;
 
             case TurnTowardEntityMovement toward:
-                if (Other(toward.TargetPlayer, toward.TargetEntityId) is { } towardOther) Turn(entity, position, Facing(position, towardOther));
+                if (Other(toward.TargetPlayer, toward.TargetEntityId) is { } towardOther) Turn(entity, position, Facing(entity, position, towardOther));
                 return StepResult.Done;
 
             case TurnAwayEntityMovement away:
-                if (Other(away.TargetPlayer, away.TargetEntityId) is { } awayOther) Turn(entity, position, Opposite(Facing(position, awayOther)));
+                if (Other(away.TargetPlayer, away.TargetEntityId) is { } awayOther) Turn(entity, position, Opposite(Facing(entity, position, awayOther)));
                 return StepResult.Done;
 
             case SpeedMovement speed:
@@ -286,19 +287,14 @@ public class MovementRouteSystem(
         position.Direction = direction;
     }
 
-    // the way from the entity to the other along whichever way the other is farther
-    private static Direction Facing(PositionModule position, MapEntity other)
+    // the way from the entity to the other by where their feet are, the way it already faces on the same spot
+    private Direction Facing(MapEntity entity, PositionModule position, MapEntity other)
     {
-        if (other.GetModule<PositionModule>() is not { } to) return position.Direction;
-
-        var dx = to.X - position.X;
-        var dy = to.Y - position.Y;
-        return Math.Abs(dx) > Math.Abs(dy)
-            ? dx > 0 ? Direction.Right : Direction.Left
-            : dy > 0 ? Direction.Down : Direction.Up;
+        return hitboxSystem.Toward(entity, other) is var way and not Direction.None ? way : position.Direction;
     }
 
-    private void FadeTo(MapEntity entity, double opacity, int milliseconds)
+    // fades the entity to the opacity over the time, the update steps it along
+    public void FadeTo(MapEntity entity, double opacity, int milliseconds)
     {
         var appearance = entity.State<AppearanceState>();
         var updates = Math.Max(1, gameDataService.Updates(milliseconds));
@@ -309,6 +305,7 @@ public class MovementRouteSystem(
     private static void UpdateAppearance(MapEntity entity)
     {
         var appearance = entity.State<AppearanceState>();
+        appearance.Tint.Step();
         if (appearance.Opacity == appearance.TargetOpacity) return;
 
         var step = Math.Max(appearance.OpacityPerUpdate, 0.0001);

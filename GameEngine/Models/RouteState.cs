@@ -1,6 +1,7 @@
 using GameEngine.Navigation;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.Actions;
+using GameLibrary.Models.Animations;
 using MercuryLibrary.Enumerations;
 
 namespace GameEngine.Models;
@@ -27,8 +28,8 @@ public class RouteState
 }
 
 /// <summary>
-/// How an entity is drawn on top of its character image: see-through and blend, changed by routes.
-/// Opacity slides to its target a little every update.
+/// How an entity is drawn on top of its character image: see-through, blend and a color tint, changed by routes,
+/// pages and animations. Opacity and the tint's strength slide to their targets a little every update.
 /// </summary>
 public class AppearanceState
 {
@@ -39,4 +40,7 @@ public class AppearanceState
     public double OpacityPerUpdate { get; set; }
 
     public BlendMode? BlendMode { get; set; }
+
+    // the color tint, faded by pages and animations
+    public TintFade Tint { get; } = new();
 }

@@ -71,6 +71,11 @@
       </Canvas>
     </Grid>
 
+    <!-- a lightning flash, under the fade so a black screen stays black -->
+    <Rectangle Fill="White"
+               IsHitTestVisible="False"
+               Opacity="{x:Bind ViewModel.Renderer.Flash, Mode=OneWay}" />
+
     <!-- fades the screen to black and back while changing maps -->
     <Rectangle Fill="Black"
                IsHitTestVisible="False"

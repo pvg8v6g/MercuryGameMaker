@@ -2,6 +2,7 @@
 using System.Text.Json.Serialization;
 using GameLibrary.Models.Areas;
 using GameLibrary.Models.Media;
+using GameLibrary.Models.Weathers;
 
 namespace GameLibrary.Models.GameMaps;
 
@@ -59,8 +60,15 @@ public partial class GameMap : BaseModel
         set => SetField(ref field, value);
     }
 
-    // do weather effects show up on this map
+    // indoors: the world's rain and snow don't show (their sound carries on, muffled), ash still drifts in
     public bool Interior
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    // the map's own weather (ash over a volcano), it shows here whatever the world's weather is. None uses the world's
+    public WeatherSettings? Weather
     {
         get;
         set => SetField(ref field, value);

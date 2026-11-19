@@ -6,6 +6,7 @@ using GameEngine.Scenes;
 using GameEngine.Services.Conditions;
 using GameEngine.Services.GameState;
 using GameEngine.Services.Input;
+using GameEngine.Services.Party;
 using GameEngine.Services.Start;
 using GameEngine.Services.Window;
 using GameEngine.Systems;
@@ -62,6 +63,7 @@ public partial class App
         services.AddSingleton<IInputService, InputService>();
         services.AddSingleton<IConditionService, ConditionService>();
         services.AddSingleton<IStartService, StartService>();
+        services.AddSingleton<PartyService>();
         services.AddSingleton<NavigationService>();
         services.AddSingleton<PathWalker>();
 
@@ -77,6 +79,7 @@ public partial class App
         AddSystem<MovementSystem>(services);
         AddSystem<HitboxSystem>(services);
         AddSystem<CharacterImageSystem>(services);
+        AddSystem<AnimationSystem>(services);
         AddSystem<BalloonSystem>(services);
 
         #endregion
@@ -99,14 +102,45 @@ public partial class App
         services.AddSingleton<IActionHandler, EntityEraseHandler>();
         services.AddSingleton<IActionHandler, EntityMovementHandler>();
         services.AddSingleton<IActionHandler, EntityBalloonIconHandler>();
+        services.AddSingleton<IActionHandler, EntityOpacityHandler>();
+        services.AddSingleton<IActionHandler, EntityAnimationHandler>();
+        services.AddSingleton<IActionHandler, EntityTintHandler>();
+        services.AddSingleton<IActionHandler, WeatherHandler>();
+        services.AddSingleton<IActionHandler, EntityTransferHandler>();
+
+        // party and actors
+        services.AddSingleton<IActionHandler, MoneyHandler>();
+        services.AddSingleton<IActionHandler, ChangeItemHandler>();
+        services.AddSingleton<IActionHandler, PartyHandler>();
+        services.AddSingleton<IActionHandler, RecoverHandler>();
+        services.AddSingleton<IActionHandler, ActorNameHandler>();
+        services.AddSingleton<IActionHandler, ActorDescriptionHandler>();
+        services.AddSingleton<IActionHandler, ActorImageHandler>();
+        services.AddSingleton<IActionHandler, ActorAttributeHandler>();
+        services.AddSingleton<IActionHandler, ActorLifeHandler>();
+        services.AddSingleton<IActionHandler, ActorManaHandler>();
+        services.AddSingleton<IActionHandler, ActorExperienceHandler>();
+        services.AddSingleton<IActionHandler, ActorLevelHandler>();
+        services.AddSingleton<IActionHandler, ActorArteHandler>();
+        services.AddSingleton<IActionHandler, ActorStateHandler>();
+        services.AddSingleton<IActionHandler, ActorEquipmentHandler>();
+
+        // screen and media
+        services.AddSingleton<IActionHandler, ScreenFadeHandler>();
+        services.AddSingleton<IActionHandler, ScrollMapHandler>();
+        services.AddSingleton<IActionHandler, PlayMediaHandler>();
+        services.AddSingleton<IActionHandler, FadeMediaHandler>();
 
         #endregion
 
         #region Register Scenes
 
         services.AddSingleton<Renderer>();
+        services.AddSingleton<GameCamera>();
+        services.AddSingleton<ScreenFade>();
         services.AddSingleton<PlayerSpawner>();
         services.AddSingleton<MapAudio>();
+        services.AddSingleton<MapWeather>();
         services.AddSingleton<DebugOverlay>();
         services.AddSingleton<MapScene>();
 

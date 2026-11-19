@@ -18,6 +18,7 @@ public partial class MapAreaModel(MapArea area, int cellSize) : PropertyChangedU
     private static readonly Brush AreaBrush = new SolidColorBrush(ColorHelper.FromArgb(90, 120, 190, 255));
     private static readonly Brush CollisionBrush = new SolidColorBrush(ColorHelper.FromArgb(110, 230, 60, 60));
     private static readonly Brush WaterBrush = new SolidColorBrush(ColorHelper.FromArgb(110, 40, 90, 220));
+    private static readonly Brush HeatHazeBrush = new SolidColorBrush(ColorHelper.FromArgb(110, 240, 90, 30));
     private static readonly Brush FootstepBrush = new SolidColorBrush(ColorHelper.FromArgb(110, 80, 200, 110));
     private static readonly Brush LevelChangeBrush = new SolidColorBrush(ColorHelper.FromArgb(120, 240, 170, 40));
 
@@ -59,6 +60,7 @@ public partial class MapAreaModel(MapArea area, int cellSize) : PropertyChangedU
             OnPropertyChanged(nameof(Label));
             OnPropertyChanged(nameof(IsFootstep));
             OnPropertyChanged(nameof(IsCollision));
+            OnPropertyChanged(nameof(IsHeatHaze));
             OnBlocksChanged();
         }
     }
@@ -66,6 +68,8 @@ public partial class MapAreaModel(MapArea area, int cellSize) : PropertyChangedU
     public bool IsFootstep => area.AreaType == MapAreaType.Footstep;
 
     public bool IsCollision => area.AreaType == MapAreaType.Collision;
+
+    public bool IsHeatHaze => area.AreaType == MapAreaType.HeatHaze;
 
     // the level the area is on, a level change area moves whoever steps into it to this level
     public int Level
@@ -166,6 +170,7 @@ public partial class MapAreaModel(MapArea area, int cellSize) : PropertyChangedU
         MapAreaType.Water => WaterBrush,
         MapAreaType.Footstep => FootstepBrush,
         MapAreaType.LevelChange => LevelChangeBrush,
+        MapAreaType.HeatHaze => HeatHazeBrush,
         _ => AreaBrush
     };
 

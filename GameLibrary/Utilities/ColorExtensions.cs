@@ -39,6 +39,24 @@ public static class ColorExtensions
         return ColorHelper.FromArgb(a, r, g, b);
     }
 
+    /// <summary>The color as a <c>#RRGGBB</c> hex string, the way colors are saved (alpha is left out).</summary>
+    public static string ToHex(this Color color) => $"#{color.R:X2}{color.G:X2}{color.B:X2}";
+
+    /// <summary>Parses a hex string, or gives back the fallback when it is empty or not a color.</summary>
+    public static Color ToColorOr(this string? hex, Color fallback)
+    {
+        if (string.IsNullOrWhiteSpace(hex)) return fallback;
+
+        try
+        {
+            return hex.ToColor();
+        }
+        catch (Exception exception) when (exception is FormatException or ArgumentException or OverflowException)
+        {
+            return fallback;
+        }
+    }
+
     /// <summary>Resolves an enum value's hex <see cref="DisplayAttribute"/> name to a solid brush.</summary>
     public static Brush ToBrush(this Enum value)
     {

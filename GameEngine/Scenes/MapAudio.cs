@@ -46,6 +46,20 @@ public class MapAudio(IAudioService audioService)
         await Task.WhenAll(PlayBgm(Track(map.Bgm), seconds), PlayBgs(Track(map.Bgs), seconds));
     }
 
+    // a page playing music or background sound: it takes over from the map's until the next map that has its own
+    public Task PlayBgm(AudioFile track) => PlayBgm(Track(track), 0.0);
+
+    public Task PlayBgs(AudioFile track) => PlayBgs(Track(track), 0.0);
+
+    // a page fading out the music and background sound
+    public void FadeOut(double seconds)
+    {
+        audioService.FadeOutBgm(seconds);
+        audioService.FadeOutBgs(seconds);
+        _bgm = null;
+        _bgs = null;
+    }
+
     #endregion
 
     #region Private Methods

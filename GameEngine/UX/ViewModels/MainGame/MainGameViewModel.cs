@@ -60,7 +60,7 @@ public partial class MainGameViewModel(
 
         // a new game, the party is the game start's party
         gameStateService.ActiveParty.Clear();
-        gameStateService.ActiveParty.UnionWith(gameDataService.GameStart.Party);
+        gameStateService.ActiveParty.AddRange(gameDataService.GameStart.Party.Distinct());
         gameStateService.OwnedParty.UnionWith(gameDataService.GameStart.Party);
 
         await mapScene.Load(start.Map, start.Spawn);

@@ -17,6 +17,7 @@ using GameMaker.Services.Navigation;
 using GameMaker.UX.Components.EngineListView;
 using GameMaker.UX.Models.Choices;
 using GameMaker.UX.Models.Hitboxes;
+using GameMaker.UX.Utilities;
 using GameMaker.UX.ViewModels.Popups.ActionEditor;
 using GameMaker.UX.ViewModels.Popups.BranchActionEditor;
 using GameMaker.UX.ViewModels.Popups.ConditionEditor;
@@ -75,6 +76,12 @@ public class EntityEditorViewModel : BaseViewModel<Page>
     private readonly NamedChoice[] _balloonChoices;
     private readonly IReadOnlyList<Entity> _mapEntities;
 
+    // the BGS folder's sounds, for weather
+    private readonly string[] _bgsFiles;
+
+    // the SFX folder's sounds, for thunder
+    private readonly string[] _sfxFiles;
+
     public EntityEditorViewModel(
         Entity entity,
         IGameDataService gameDataService,
@@ -86,6 +93,8 @@ public class EntityEditorViewModel : BaseViewModel<Page>
     {
         Entity = entity;
         FaceFolderPath = Path.Combine(locationService.GraphicsDirectory!, "Faces");
+        _bgsFiles = AudioFiles.InFolder(Path.Combine(locationService.GameDirectory!, "Media", "BGS"));
+        _sfxFiles = AudioFiles.InFolder(Path.Combine(locationService.GameDirectory!, "Media", "SFX"));
         Hitboxes = new HitboxEditorModel(graphicsService);
         _graphicsService = graphicsService;
         Title = $"{kind} Editor";
@@ -373,7 +382,8 @@ public class EntityEditorViewModel : BaseViewModel<Page>
                 new() { Text = "Entity Erase", Command = AddActionCommand, CommandParameter = "EntityErase" },
                 new() { Text = "Entity Animation", Command = AddActionCommand, CommandParameter = "EntityAnimation" },
                 new() { Text = "Entity Balloon Icon", Command = AddActionCommand, CommandParameter = "EntityBalloonIcon" },
-                new() { Text = "Entity Opacity", Command = AddActionCommand, CommandParameter = "EntityOpacity" }
+                new() { Text = "Entity Opacity", Command = AddActionCommand, CommandParameter = "EntityOpacity" },
+                new() { Text = "Entity Tint", Command = AddActionCommand, CommandParameter = "EntityTint" }
             ]
         },
         new()
@@ -730,6 +740,7 @@ public class EntityEditorViewModel : BaseViewModel<Page>
         "EntityAnimation" => new EntityAnimationAction(),
         "EntityBalloonIcon" => new EntityBalloonIconAction(),
         "EntityOpacity" => new EntityOpacityAction(),
+        "EntityTint" => new EntityTintAction(),
         "PlayMedia" => new PlayMediaAction(),
         "FadeMedia" => new FadeMediaAction(),
         "ScrollMap" => new ScrollMapAction(),
@@ -763,7 +774,7 @@ public class EntityEditorViewModel : BaseViewModel<Page>
 
     private async Task<ContentDialogResult> ShowActionEditor(PageAction action)
     {
-        var viewModel = new ActionEditorViewModel(action, _gameDataService, _mapEntities);
+        var viewModel = new ActionEditorViewModel(action, _gameDataService, _mapEntities, _bgsFiles, _sfxFiles);
         return await _navigationService.ShowActionEditorPopup(viewModel);
     }
 

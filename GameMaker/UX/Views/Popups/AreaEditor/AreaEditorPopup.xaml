@@ -114,6 +114,35 @@
                 ItemsSource="{x:Bind ViewModel.FootstepFiles, Mode=OneWay}"
                 SelectedItem="{x:Bind ViewModel.SelectedFootstep, Mode=TwoWay}"
                 Visibility="{x:Bind ViewModel.SelectedArea.IsFootstep, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Collapsed}" />
+      <!-- heat haze: the ground under the area shimmers in the game, props and characters on it stay sharp -->
+      <Grid ColumnSpacing="10"
+            Visibility="{x:Bind ViewModel.SelectedArea.IsHeatHaze, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Collapsed}">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <NumberBox Header="Strength"
+                   Minimum="0"
+                   SmallChange="0.5"
+                   SpinButtonPlacementMode="Inline"
+                   Value="{x:Bind ViewModel.SelectedArea.Area.HazeStrength, Mode=TwoWay, FallbackValue=0}"
+                   ToolTipService.ToolTip="How far the heat pulls the ground, in pixels. 2 to 4 is a gentle shimmer." />
+        <NumberBox Grid.Column="1"
+                   Header="Ripple Size"
+                   Minimum="2"
+                   SmallChange="1"
+                   SpinButtonPlacementMode="Inline"
+                   Value="{x:Bind ViewModel.SelectedArea.Area.HazeRippleSize, Mode=TwoWay, FallbackValue=0}"
+                   ToolTipService.ToolTip="The size of one ripple, in pixels." />
+        <NumberBox Grid.Column="2"
+                   Header="Rise Speed"
+                   Minimum="0"
+                   SmallChange="5"
+                   SpinButtonPlacementMode="Inline"
+                   Value="{x:Bind ViewModel.SelectedArea.Area.HazeSpeed, Mode=TwoWay, FallbackValue=0}"
+                   ToolTipService.ToolTip="How fast the shimmer rises, in pixels a second." />
+      </Grid>
     </StackPanel>
   </popup:PopupShell>
 </UserControl>

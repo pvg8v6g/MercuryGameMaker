@@ -39,6 +39,12 @@ public class AudioService(IMediaService mediaService) : IAudioService
     private int _bgmRequest;
     private int _bgsRequest;
 
+    private AudioFileInputNode? _weather;
+    private CancellationTokenSource? _weatherFade;
+    private int _weatherRequest;
+    private EqualizerEffectDefinition? _muffle;
+    private bool _muffled;
+
     #endregion
 
     #region BGM
@@ -111,6 +117,64 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     #endregion
 
+    #region Weather
+
+    // the weather's own loop (rain on the roof), next to the BGS so a map's ambience and the weather play together.
+    // Heard from indoors it's muffled: an equalizer cuts its highs, the way walls do
+    public async Task PlayWeather(string file, double volume = 1.0, double pitch = 1.0)
+    {
+        StopWeather();
+        var request = _weatherRequest;
+        var node = await CreateLoopingNode(mediaService.GetBgs(file), volume, pitch);
+        if (node is not null && _graph is not null)
+        {
+            _muffle = MuffleDefinition(_graph);
+            node.EffectDefinitions.Add(_muffle);
+            if (!_muffled) node.DisableEffectsByDefinition(_muffle);
+        }
+
+        if (request == _weatherRequest) _weather = node;
+        else StopChannel(ref node);
+    }
+
+    public void StopWeather()
+    {
+        _weatherRequest++;
+        _weatherFade?.Cancel();
+        StopChannel(ref _weather);
+    }
+
+    public void FadeWeather(double seconds, double volume)
+    {
+        Fade(_weather, volume, seconds, ref _weatherFade);
+    }
+
+    public void MuffleWeather(bool muffled)
+    {
+        _muffled = muffled;
+        if (_weather is null || _muffle is null) return;
+
+        if (muffled) _weather.EnableEffectsByDefinition(_muffle);
+        else _weather.DisableEffectsByDefinition(_muffle);
+    }
+
+    // the lows come through, the mids are softer and the highs (the hiss of rain) are mostly gone
+    private static EqualizerEffectDefinition MuffleDefinition(AudioGraph graph)
+    {
+        var equalizer = new EqualizerEffectDefinition(graph);
+        (double Frequency, double Gain)[] bands = [(100, 1.0), (700, 0.5), (2500, 0.126), (8000, 0.126)];
+        for (var i = 0; i < equalizer.Bands.Count && i < bands.Length; i++)
+        {
+            equalizer.Bands[i].FrequencyCenter = bands[i].Frequency;
+            equalizer.Bands[i].Gain = bands[i].Gain;
+            equalizer.Bands[i].Bandwidth = 2.0;
+        }
+
+        return equalizer;
+    }
+
+    #endregion
+
     #region ME
 
     public async Task PlayMe(string file, double volume = 1.0, double pitch = 1.0)
@@ -147,6 +211,12 @@ public class AudioService(IMediaService mediaService) : IAudioService
     public void PlaySfx(string file, double volume = 1.0, double pitch = 1.0)
     {
         PlayOneShot(mediaService.GetSfx(file), volume, pitch).Forget();
+    }
+
+    // a sound heard through walls (thunder from indoors): the same muffle as the weather's sound
+    public void PlayMuffledSfx(string file, double volume = 1.0, double pitch = 1.0)
+    {
+        PlayOneShot(mediaService.GetSfx(file), volume, pitch, true).Forget();
     }
 
     public void PlayFootstep(string file, double volume = 1.0, double pitch = 1.0)
@@ -224,10 +294,12 @@ public class AudioService(IMediaService mediaService) : IAudioService
         return node;
     }
 
-    private async Task PlayOneShot(Uri source, double volume, double pitch)
+    private async Task PlayOneShot(Uri source, double volume, double pitch, bool muffled = false)
     {
         var node = await CreateNode(source, volume, pitch);
         if (node is null) return;
+
+        if (muffled && _graph is not null) node.EffectDefinitions.Add(MuffleDefinition(_graph));
 
         node.FileCompleted += OnOneShotFinished;
 

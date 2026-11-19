@@ -9,6 +9,8 @@ using GameLibrary.Services.Media;
 using GameLibrary.Utilities;
 using GameMaker.Services.Maps;
 using GameMaker.UX.Models.MainPage;
+using GameMaker.UX.Models.Weathers;
+using GameLibrary.Models.Weathers;
 using GameMaker.UX.Utilities;
 using MercuryLibrary.Extensions;
 using MercuryLibrary.WinUI3Components;
@@ -134,6 +136,13 @@ public partial class SelectedMapViewModel(
         private set => SetField(ref field, value);
     } = [AudioFiles.None];
 
+    // the map's own weather (ash over a volcano), it shows here whatever the world's weather is. None uses the world's
+    public WeatherEditorModel? MapWeather
+    {
+        get;
+        private set => SetField(ref field, value);
+    }
+
     public string? SelectedBgm
     {
         get => AudioFiles.NameOf(Map?.Bgm);
@@ -177,6 +186,20 @@ public partial class SelectedMapViewModel(
     {
         BgmFiles = [AudioFiles.None, .. mediaService.GetMediaFiles(Cache.Media)];
         BgsFiles = [AudioFiles.None, .. AudioFiles.InFolder(mediaService.GetBgsPath())];
+        RefreshWeather();
+    }
+
+    // the map keeps a weather only while it has one, setting it back to None drops it
+    private void RefreshWeather()
+    {
+        if (Map is not { } map)
+        {
+            MapWeather = null;
+            return;
+        }
+
+        var settings = map.Weather ?? new WeatherSettings();
+        MapWeather = new WeatherEditorModel(settings, AudioFiles.InFolder(mediaService.GetBgsPath()), AudioFiles.InFolder(mediaService.GetSfxPath()), type => map.Weather = type == WeatherType.None ? null : settings);
     }
 
     // everything shown for a newly selected map, or after its id changed
@@ -189,6 +212,7 @@ public partial class SelectedMapViewModel(
         RefreshLayers();
         OnPropertyChanged(nameof(SelectedBgm));
         OnPropertyChanged(nameof(SelectedBgs));
+        RefreshWeather();
         PlayBgmCommand.RaiseCanExecuteChanged();
         PlayBgsCommand.RaiseCanExecuteChanged();
     }

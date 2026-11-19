@@ -73,6 +73,10 @@ public class BalloonSystem(IGameDataService gameDataService, IGraphicsService gr
             Width = BalloonIcon.CellSize,
             Height = BalloonIcon.CellSize
         };
+
+        // placed and cropped to its first frame now: a page shows a balloon after this system ran, and the scene
+        // draws before the next update, which would show the whole sheet at the top left for a frame
+        Place(entity, state.Sprite, state.Balloon, 0);
     }
 
     public bool IsShowing(MapEntity entity) => entity.State<BalloonState>().Balloon is not null;

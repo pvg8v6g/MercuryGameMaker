@@ -32,6 +32,21 @@ public interface IAudioService
 
     #endregion
 
+    #region Weather
+
+    // the weather's own looping sound from the BGS folder, plays next to the BGS. Finishes once it has started
+    Task PlayWeather(string file, double volume = 1.0, double pitch = 1.0);
+
+    void StopWeather();
+
+    // fades the weather's sound to the volume (0 is silent)
+    void FadeWeather(double seconds, double volume);
+
+    // heard from indoors: the highs are cut, like through walls. Kept for the next weather sound too
+    void MuffleWeather(bool muffled);
+
+    #endregion
+
     #region ME
 
     Task PlayMe(string file, double volume = 1.0, double pitch = 1.0);
@@ -49,6 +64,9 @@ public interface IAudioService
     #region SFX
 
     void PlaySfx(string file, double volume = 1.0, double pitch = 1.0);
+
+    // a sound heard through walls (thunder from indoors), its highs cut like the weather's muffled sound
+    void PlayMuffledSfx(string file, double volume = 1.0, double pitch = 1.0);
 
     void PlayFootstep(string file, double volume = 1.0, double pitch = 1.0);
 

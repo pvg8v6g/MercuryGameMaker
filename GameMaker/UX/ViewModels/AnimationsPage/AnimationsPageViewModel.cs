@@ -4,14 +4,17 @@ using GameLibrary.Services.GameData;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Services.Json;
 using GameLibrary.Services.Media;
+using GameLibrary.Utilities;
 using GameLibrary.Utilities.ComponentModels;
 using GameLibrary.Behaviors;
 using GameLibrary.Commands;
+using GameLibrary.Enumerations;
 using GameMaker.Services.Navigation;
 using GameMaker.UX.Models.AnimationsPage;
 using GameMaker.UX.ViewModels.Popups.AnimationEffects;
 using GameMaker.UX.ViewModels.Popups.FrameSpanning;
 using MercuryLibrary.ImageComponents;
+using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Windows.Foundation;
@@ -38,6 +41,19 @@ public class AnimationsPageViewModel(
     private DispatcherTimer? _playTimer;
     private int _tempFrame;
     private int _lastFrame;
+
+    // the first actor with a picture, standing facing down where the animation plays (the red square when there's none)
+    private PictureBox? _actorSprite;
+
+    // the frame's tint being edited, watched so the actor shows each change
+    private AnimationTint? _watchedTint;
+
+    // the frame's shockwave and heat being edited, watched so the preview shows each change
+    private AnimationShockwave? _watchedShockwave;
+    private AnimationHeatHaze? _watchedHeatHaze;
+
+    // shockwaves and heat are drawn over the actor and under the cells, like the game
+    private const int DistortionZ = -1;
 
     #endregion
 
@@ -66,9 +82,61 @@ public class AnimationsPageViewModel(
         {
             if (!SetField(ref field, value)) return;
             SelectedCell = null;
+            RefreshFrameTint();
+            RefreshFrameDistortions();
             _ = RebuildSprites();
         }
     } = 1;
+
+    // the animation tints its target on this frame (a poison animation turning the character green)
+    public bool TintsTarget
+    {
+        get => FrameTint is not null;
+        set
+        {
+            if (SelectedEntity is null || value == TintsTarget) return;
+
+            if (value) SelectedEntity.TargetTints.Add(new AnimationTint { Frame = SelectedFrame });
+            else SelectedEntity.TargetTints.Remove(FrameTint!);
+            RefreshFrameTint();
+        }
+    }
+
+    public AnimationTint? FrameTint => SelectedEntity?.TargetTints.FirstOrDefault(x => x.Frame == SelectedFrame);
+
+    // a shockwave starts on this frame, sent out from the target
+    public bool StartsShockwave
+    {
+        get => FrameShockwave is not null;
+        set
+        {
+            if (SelectedEntity is null || value == StartsShockwave) return;
+
+            if (value) SelectedEntity.Shockwaves.Add(new AnimationShockwave { Frame = SelectedFrame });
+            else SelectedEntity.Shockwaves.Remove(FrameShockwave!);
+            RefreshFrameDistortions();
+            _ = RebuildSprites();
+        }
+    }
+
+    public AnimationShockwave? FrameShockwave => SelectedEntity?.Shockwaves.FirstOrDefault(x => x.Frame == SelectedFrame);
+
+    // heat starts shimmering around the target on this frame
+    public bool StartsHeatHaze
+    {
+        get => FrameHeatHaze is not null;
+        set
+        {
+            if (SelectedEntity is null || value == StartsHeatHaze) return;
+
+            if (value) SelectedEntity.HeatHazes.Add(new AnimationHeatHaze { Frame = SelectedFrame });
+            else SelectedEntity.HeatHazes.Remove(FrameHeatHaze!);
+            RefreshFrameDistortions();
+            _ = RebuildSprites();
+        }
+    }
+
+    public AnimationHeatHaze? FrameHeatHaze => SelectedEntity?.HeatHazes.FirstOrDefault(x => x.Frame == SelectedFrame);
 
     public ObservableCollection<PictureBox> Sprites { get; } = [];
 
@@ -117,7 +185,13 @@ public class AnimationsPageViewModel(
         set => SetField(ref field, value);
     }
 
-    private int AnchorSize
+    private double AnchorWidth
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    private double AnchorHeight
     {
         get;
         set => SetField(ref field, value);
@@ -193,7 +267,8 @@ public class AnimationsPageViewModel(
     protected override async Task LoadedAction()
     {
         RefreshAnimationImageFiles();
-        AnchorSize = gameDataService.GridSize;
+        await LoadActorSprite();
+        UpdateAnchor();
         await RebuildSprites();
     }
 
@@ -202,10 +277,94 @@ public class AnimationsPageViewModel(
         StopPlayback();
         SelectedCell = null;
         SelectedFrame = 1;
+        RefreshFrameTint();
+        RefreshFrameDistortions();
         await RebuildSprites();
     }
 
     #endregion
+
+    private void RefreshFrameTint()
+    {
+        if (_watchedTint is not null) _watchedTint.PropertyChanged -= OnFrameTintChanged;
+        _watchedTint = FrameTint;
+        if (_watchedTint is not null) _watchedTint.PropertyChanged += OnFrameTintChanged;
+
+        OnPropertyChanged(nameof(TintsTarget));
+        OnPropertyChanged(nameof(FrameTint));
+        TintActor();
+    }
+
+    private void OnFrameTintChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => TintActor();
+
+    private void RefreshFrameDistortions()
+    {
+        if (_watchedShockwave is not null) _watchedShockwave.PropertyChanged -= OnFrameDistortionChanged;
+        _watchedShockwave = FrameShockwave;
+        if (_watchedShockwave is not null) _watchedShockwave.PropertyChanged += OnFrameDistortionChanged;
+
+        if (_watchedHeatHaze is not null) _watchedHeatHaze.PropertyChanged -= OnFrameDistortionChanged;
+        _watchedHeatHaze = FrameHeatHaze;
+        if (_watchedHeatHaze is not null) _watchedHeatHaze.PropertyChanged += OnFrameDistortionChanged;
+
+        OnPropertyChanged(nameof(StartsShockwave));
+        OnPropertyChanged(nameof(FrameShockwave));
+        OnPropertyChanged(nameof(StartsHeatHaze));
+        OnPropertyChanged(nameof(FrameHeatHaze));
+    }
+
+    private void OnFrameDistortionChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => _ = RebuildSprites();
+
+    // the shockwaves and heat going on the selected frame, around the middle of the actor the way the game places
+    // them around the target. The editor draws at a scale of 1
+    private IEnumerable<PictureBox> FrameDistortions()
+    {
+        if (SelectedEntity is not { } animation) yield break;
+
+        var centerX = AnchorX + (AnchorWidth / 2.0);
+        var centerY = AnchorY + (AnchorHeight / 2.0);
+        var frame = SelectedFrame;
+        foreach (var shockwave in animation.Shockwaves.Where(x => frame >= x.Frame && frame <= x.LastFrame))
+        {
+            var wave = new Shockwave { Z = DistortionZ, X = (int) (centerX + shockwave.X), Y = (int) (centerY + shockwave.Y) };
+            shockwave.ApplyTo(wave, frame - shockwave.Frame, 1.0);
+            yield return wave;
+        }
+
+        foreach (var heat in animation.HeatHazes.Where(x => frame >= x.Frame && frame <= x.LastFrame))
+        {
+            var haze = new HeatHaze
+            {
+                Z = DistortionZ,
+                X = (int) (centerX + heat.X - (heat.Width / 2.0)),
+                Y = (int) (centerY + heat.Y - (heat.Height / 2.0))
+            };
+            heat.ApplyTo(haze, frame - heat.Frame, 1.0);
+            yield return haze;
+        }
+    }
+
+    // the actor tinted the way the animation has it on the selected frame: every tint up to the frame played through,
+    // each fading a frame at a time the way the game fades it
+    private void TintActor()
+    {
+        if (_actorSprite is null) return;
+
+        var fade = new TintFade();
+        if (SelectedEntity is { } animation)
+        {
+            for (var frame = 1; frame <= SelectedFrame; frame++)
+            {
+                fade.Step();
+                foreach (var tint in animation.TargetTints.Where(x => x.Frame == frame))
+                {
+                    fade.To(tint.Color.ToColorOr(Colors.White), tint.Strength, tint.BlendMode, tint.FadeFrames);
+                }
+            }
+        }
+
+        fade.ApplyTo(_actorSprite);
+    }
 
     #region Playback
 
@@ -222,9 +381,10 @@ public class AnimationsPageViewModel(
 
     private void StartPlayback()
     {
-        if (SelectedEntity is null || SelectedEntity.Effects.Count == 0) return;
+        if (SelectedEntity is null) return;
 
-        _lastFrame = SelectedEntity.Effects.Max(x => x.Frame);
+        // the last frame with a cell, a tint, or a shockwave or heat still going, the way the game plays it
+        _lastFrame = SelectedEntity.LastFrame();
         if (_lastFrame < 1) return;
 
         _tempFrame = SelectedFrame;
@@ -291,19 +451,49 @@ public class AnimationsPageViewModel(
         AnimationImageFiles = graphicsService.GetAnimationImages();
     }
 
+    // the first actor that has a picture stands in for the target, the way the game centers an animation on the
+    // character it plays on. No actor with a picture leaves the red square
+    private async Task LoadActorSprite()
+    {
+        _actorSprite = null;
+        AnchorWidth = gameDataService.GridSize;
+        AnchorHeight = gameDataService.GridSize;
+
+        var actor = gameDataService.Actors.FirstOrDefault(x => !string.IsNullOrEmpty(x.CharacterName));
+        if (actor is null) return;
+
+        var image = await graphicsService.GetCharacter(actor.CharacterName!, actor.CharacterIndex, Direction.Down);
+        if (image.Rect is not { Width: > 0, Height: > 0 } viewport) return;
+
+        _actorSprite = new PictureBox { ImagePath = image.ImagePath, Viewport = viewport, Z = 0 };
+        AnchorWidth = viewport.Width;
+        AnchorHeight = viewport.Height;
+        TintActor();
+    }
+
     private void UpdateAnchor()
     {
-        AnchorX = (int) ((CanvasWidth - AnchorSize) / 2.0);
-        AnchorY = (int) ((CanvasHeight - AnchorSize) / 2.0);
-        AnchorRect = new Rect(AnchorX, AnchorY, AnchorSize, AnchorSize);
+        AnchorX = (int) ((CanvasWidth - AnchorWidth) / 2.0);
+        AnchorY = (int) ((CanvasHeight - AnchorHeight) / 2.0);
+
+        // the actor's picture is the anchor, the square only shows without one
+        if (_actorSprite is not null)
+        {
+            _actorSprite.X = AnchorX;
+            _actorSprite.Y = AnchorY;
+            AnchorRect = default;
+            return;
+        }
+
+        AnchorRect = new Rect(AnchorX, AnchorY, AnchorWidth, AnchorHeight);
     }
 
     private (int X, int Y) EffectToSpritePosition(AnimationEffect effect, Rect? viewport)
     {
         // 0,0 on the animation form maps to the center of the anchor, aligned with
         // the center of the sprite's viewport (not its top-left corner).
-        var centerX = AnchorX + AnchorSize / 2.0 + effect.X;
-        var centerY = AnchorY + AnchorSize / 2.0 + effect.Y;
+        var centerX = AnchorX + AnchorWidth / 2.0 + effect.X;
+        var centerY = AnchorY + AnchorHeight / 2.0 + effect.Y;
         var halfWidth = (viewport?.Width ?? 0) / 2.0;
         var halfHeight = (viewport?.Height ?? 0) / 2.0;
         return ((int) (centerX - halfWidth), (int) (centerY - halfHeight));
@@ -520,7 +710,7 @@ public class AnimationsPageViewModel(
         for (var i = Sprites.Count - 1; i >= 0; i--)
         {
             var sprite = Sprites[i];
-            if (sprite.Viewport is not { } viewport) continue;
+            if (ReferenceEquals(sprite, _actorSprite) || sprite.Viewport is not { } viewport) continue;
 
             var width = viewport.Width * sprite.ScaleX;
             var height = viewport.Height * sprite.ScaleY;
@@ -544,6 +734,7 @@ public class AnimationsPageViewModel(
         if (SelectedEntity is null)
         {
             Sprites.Clear();
+            if (_actorSprite is not null) Sprites.Add(_actorSprite);
             return;
         }
 
@@ -554,7 +745,10 @@ public class AnimationsPageViewModel(
 
         // Build the full sprite list first (all async work done) so the canvas
         // never renders a half-cleared collection mid-rebuild (prevents flicker)
+        // the actor stands under every cell, shockwaves and heat bend it but not the cells
         var rebuilt = new List<PictureBox>();
+        if (_actorSprite is not null) rebuilt.Add(_actorSprite);
+        rebuilt.AddRange(FrameDistortions());
 
         foreach (var effect in effects)
         {
@@ -598,7 +792,7 @@ public class AnimationsPageViewModel(
 
         foreach (var sprite in Sprites)
         {
-            if (sprite.Viewport is not { } viewport) continue;
+            if (ReferenceEquals(sprite, _actorSprite) || sprite.Viewport is not { } viewport) continue;
 
             var width = viewport.Width * sprite.ScaleX;
             var height = viewport.Height * sprite.ScaleY;

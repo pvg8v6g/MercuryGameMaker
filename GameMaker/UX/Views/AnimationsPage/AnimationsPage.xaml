@@ -6,6 +6,7 @@
       xmlns:animationsPage="using:GameMaker.UX.ViewModels.AnimationsPage"
       xmlns:engineListView="using:GameMaker.UX.Components.EngineListView"
       xmlns:enginePanel="using:GameMaker.UX.Components.EnginePanel"
+      xmlns:tintEditor="using:GameMaker.UX.Components.TintEditor"
       xmlns:behaviors="using:GameLibrary.Behaviors"
       xmlns:mercury="using:MercuryLibrary.CanvasComponents"
       mc:Ignorable="d"
@@ -90,6 +91,204 @@
           </Button>
           <Button Command="{x:Bind ViewModel.FrameSpanningCommand}">
             Frame Spanning
+          </Button>
+          <!-- the target's tint on this frame, the color fades in over the fade frames -->
+          <Button Content="Target Tint"
+                  ToolTipService.ToolTip="Tint the character the animation plays on, starting on this frame. A tint still on when the animation ends fades out.">
+            <Button.Flyout>
+              <Flyout Placement="Bottom">
+                <StackPanel Width="320"
+                            Spacing="10">
+                  <CheckBox Content="Tint The Target On This Frame"
+                            IsChecked="{x:Bind ViewModel.TintsTarget, Mode=TwoWay}" />
+                  <StackPanel Spacing="10"
+                              Visibility="{x:Bind ViewModel.TintsTarget, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <tintEditor:TintEditor Color="{x:Bind ViewModel.FrameTint.Color, Mode=TwoWay, FallbackValue={x:Null}}"
+                                           Strength="{x:Bind ViewModel.FrameTint.Strength, Mode=TwoWay, FallbackValue=0}"
+                                           BlendMode="{x:Bind ViewModel.FrameTint.BlendMode, Mode=TwoWay, FallbackValue={x:Null}}" />
+                    <NumberBox Header="Fade Frames"
+                               Minimum="0"
+                               SmallChange="1"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameTint.FadeFrames, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="Frames the tint takes to fade to the strength (60 is a second), 0 is straight away. Strength 0 fades a tint out." />
+                  </StackPanel>
+                </StackPanel>
+              </Flyout>
+            </Button.Flyout>
+          </Button>
+          <!-- a ring sent out from the target that bends the map and everyone on it as it spreads and fades -->
+          <Button Content="Shockwave"
+                  ToolTipService.ToolTip="Send a shockwave out from the target, starting on this frame. It bends everything under the animation as it spreads out and fades.">
+            <Button.Flyout>
+              <Flyout Placement="Bottom">
+                <StackPanel Width="320"
+                            Spacing="10">
+                  <CheckBox Content="Start A Shockwave On This Frame"
+                            IsChecked="{x:Bind ViewModel.StartsShockwave, Mode=TwoWay}" />
+                  <Grid ColumnSpacing="10"
+                        RowSpacing="10"
+                        Visibility="{x:Bind ViewModel.StartsShockwave, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <NumberBox Header="X"
+                               SmallChange="1"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameShockwave.X, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="Moves the middle of the ring from the middle of the target, in pixels." />
+                    <NumberBox Grid.Column="1"
+                               Header="Y"
+                               SmallChange="1"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameShockwave.Y, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="Moves the middle of the ring from the middle of the target, in pixels." />
+                    <NumberBox Grid.Row="1"
+                               Header="Start Radius"
+                               Minimum="0"
+                               SmallChange="4"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameShockwave.StartRadius, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="How big the ring is when it starts, in pixels." />
+                    <NumberBox Grid.Row="1"
+                               Grid.Column="1"
+                               Header="End Radius"
+                               Minimum="0"
+                               SmallChange="4"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameShockwave.EndRadius, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="How far the ring spreads out to, in pixels." />
+                    <NumberBox Grid.Row="2"
+                               Header="Thickness"
+                               Minimum="2"
+                               SmallChange="2"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameShockwave.Thickness, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="How wide the ring is, in pixels." />
+                    <NumberBox Grid.Row="2"
+                               Grid.Column="1"
+                               Header="Strength"
+                               Minimum="0"
+                               SmallChange="1"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameShockwave.Strength, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="How far the ring pulls the picture when it starts, in pixels. It weakens to nothing as it spreads." />
+                    <NumberBox Grid.Row="3"
+                               Header="Glow"
+                               Minimum="0"
+                               Maximum="1"
+                               SmallChange="0.05"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameShockwave.Glow, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="A light edge on the ring, 0 to 1. 0 is none." />
+                    <NumberBox Grid.Row="3"
+                               Grid.Column="1"
+                               Header="Frames"
+                               Minimum="1"
+                               SmallChange="1"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameShockwave.Frames, Mode=TwoWay, FallbackValue=1}"
+                               ToolTipService.ToolTip="How many frames the ring takes to spread out (60 is a second)." />
+                  </Grid>
+                </StackPanel>
+              </Flyout>
+            </Button.Flyout>
+          </Button>
+          <!-- shimmering air around the target, a fire spell's heat -->
+          <Button Content="Heat Haze"
+                  ToolTipService.ToolTip="Make the air shimmer around the target, starting on this frame. It bends everything under the animation and fades in and out.">
+            <Button.Flyout>
+              <Flyout Placement="Bottom">
+                <StackPanel Width="320"
+                            Spacing="10">
+                  <CheckBox Content="Start Heat Haze On This Frame"
+                            IsChecked="{x:Bind ViewModel.StartsHeatHaze, Mode=TwoWay}" />
+                  <Grid ColumnSpacing="10"
+                        RowSpacing="10"
+                        Visibility="{x:Bind ViewModel.StartsHeatHaze, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="*" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <NumberBox Header="X"
+                               SmallChange="1"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameHeatHaze.X, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="Moves the middle of the heat from the middle of the target, in pixels." />
+                    <NumberBox Grid.Column="1"
+                               Header="Y"
+                               SmallChange="1"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameHeatHaze.Y, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="Moves the middle of the heat from the middle of the target, in pixels." />
+                    <NumberBox Grid.Row="1"
+                               Header="Width"
+                               Minimum="4"
+                               SmallChange="4"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameHeatHaze.Width, Mode=TwoWay, FallbackValue=0}" />
+                    <NumberBox Grid.Row="1"
+                               Grid.Column="1"
+                               Header="Height"
+                               Minimum="4"
+                               SmallChange="4"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameHeatHaze.Height, Mode=TwoWay, FallbackValue=0}" />
+                    <NumberBox Grid.Row="2"
+                               Header="Strength"
+                               Minimum="0"
+                               SmallChange="0.5"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameHeatHaze.Strength, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="How far the heat pulls the picture, in pixels." />
+                    <NumberBox Grid.Row="2"
+                               Grid.Column="1"
+                               Header="Ripple Size"
+                               Minimum="2"
+                               SmallChange="1"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameHeatHaze.RippleSize, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="The size of one ripple, in pixels." />
+                    <NumberBox Grid.Row="3"
+                               Header="Rise Speed"
+                               Minimum="0"
+                               SmallChange="5"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameHeatHaze.Speed, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="How fast the shimmer rises, in pixels a second." />
+                    <NumberBox Grid.Row="3"
+                               Grid.Column="1"
+                               Header="Frames"
+                               Minimum="1"
+                               SmallChange="1"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameHeatHaze.Frames, Mode=TwoWay, FallbackValue=1}"
+                               ToolTipService.ToolTip="How many frames the heat lasts (60 is a second)." />
+                    <NumberBox Grid.Row="4"
+                               Header="Fade Frames"
+                               Minimum="0"
+                               SmallChange="1"
+                               SpinButtonPlacementMode="Inline"
+                               Value="{x:Bind ViewModel.FrameHeatHaze.FadeFrames, Mode=TwoWay, FallbackValue=0}"
+                               ToolTipService.ToolTip="Frames it takes to fade in at the start and out at the end." />
+                  </Grid>
+                </StackPanel>
+              </Flyout>
+            </Button.Flyout>
           </Button>
           <Button Command="{x:Bind ViewModel.PlayCommand}"
                   Content="{x:Bind ViewModel.PlayButtonText, Mode=OneWay}" />

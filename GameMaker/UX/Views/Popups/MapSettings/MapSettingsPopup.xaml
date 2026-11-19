@@ -7,6 +7,7 @@
              xmlns:behaviors="using:GameLibrary.Behaviors"
              xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
              xmlns:popup="using:GameMaker.UX.Components.Popup"
+             xmlns:weatherEditor="using:GameMaker.UX.Components.WeatherEditor"
              mc:Ignorable="d">
   <popup:PopupShell Title="{x:Bind ViewModel.Title}"
                     PrimaryButtonText="{x:Bind ViewModel.PrimaryText}"
@@ -146,9 +147,15 @@
             </CheckBox>
             <CheckBox IsChecked="{x:Bind ViewModel.Editor.SelectedMap.Interior, Mode=TwoWay, FallbackValue='False'}"
                       behaviors:PointerCursorBehavior.CursorType="Hand"
-                      ToolTipService.ToolTip="Weather effects do not show up on this map.">
+                      ToolTipService.ToolTip="Indoors: the world's rain and snow don't show here, their sound carries on muffled. Ash and the map's own weather still show.">
               Interior
             </CheckBox>
+
+            <TextBlock Text="Weather" FontWeight="Bold" />
+            <TextBlock Foreground="{StaticResource LightGreyBrush}"
+                       TextWrapping="Wrap"
+                       Text="The map's own weather shows here whatever the world's weather is (ash over a volcano). None uses the world's weather, set by Set Weather." />
+            <weatherEditor:WeatherEditor Model="{x:Bind ViewModel.Editor.Map.MapWeather, Mode=OneWay}" />
 
             <TextBlock Text="Connections" FontWeight="Bold" />
             <Grid ColumnSpacing="10" RowSpacing="10">

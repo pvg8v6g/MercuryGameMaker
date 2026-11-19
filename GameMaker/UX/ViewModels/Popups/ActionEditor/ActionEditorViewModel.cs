@@ -12,12 +12,13 @@ using GameLibrary.Models.States;
 using GameLibrary.Models.Troops;
 using GameLibrary.Services.GameData;
 using GameMaker.UX.Models.Choices;
+using GameMaker.UX.Models.Weathers;
 using MercuryLibrary.WinUI3Components;
 using Attribute = GameLibrary.Models.Attributes.Attribute;
 
 namespace GameMaker.UX.ViewModels.Popups.ActionEditor;
 
-public class ActionEditorViewModel(PageAction action, IGameDataService gameDataService, IEnumerable<Entity>? mapEntities = null) : PropertyChangedUpdater
+public class ActionEditorViewModel(PageAction action, IGameDataService gameDataService, IEnumerable<Entity>? mapEntities = null, string[]? bgsFiles = null, string[]? sfxFiles = null) : PropertyChangedUpdater
 {
     #region Properties
 
@@ -86,6 +87,8 @@ public class ActionEditorViewModel(PageAction action, IGameDataService gameDataS
 
     public EntityOpacityAction? AsEntityOpacity => Action as EntityOpacityAction;
 
+    public EntityTintAction? AsEntityTint => Action as EntityTintAction;
+
     public EntityStateAction? AsEntityState => Action as EntityStateAction;
 
     public EntityTransferAction? AsEntityTransfer => Action as EntityTransferAction;
@@ -111,6 +114,11 @@ public class ActionEditorViewModel(PageAction action, IGameDataService gameDataS
     public SaveAction? AsSave => Action as SaveAction;
 
     public ScreenFadeAction? AsScreenFade => Action as ScreenFadeAction;
+
+    public WeatherAction? AsWeather => Action as WeatherAction;
+
+    // the weather Set Weather changes to, its sound picked from the BGS folder
+    public WeatherEditorModel? WeatherModel => field ??= Action is WeatherAction weather ? new WeatherEditorModel(weather.Weather, bgsFiles ?? [], sfxFiles ?? []) : null;
 
     public ScrollMapAction? AsScrollMap => Action as ScrollMapAction;
 
@@ -161,6 +169,8 @@ public class ActionEditorViewModel(PageAction action, IGameDataService gameDataS
     public bool IsEntityErase => Action is EntityEraseAction;
 
     public bool IsEntityOpacity => Action is EntityOpacityAction;
+
+    public bool IsEntityTint => Action is EntityTintAction;
 
     public bool IsEntityState => Action is EntityStateAction;
 
@@ -382,20 +392,40 @@ public class ActionEditorViewModel(PageAction action, IGameDataService gameDataS
         }
     }
 
-    // the balloon command: over this entity, the player or another entity on the map
-    public TargetChoice[] BalloonTargets { get; } = TargetChoice.List(mapEntities ?? []);
+    // the entity commands (balloon, erase, opacity, transfer, animation, state): this entity, the player or another
+    // entity on the map
+    public TargetChoice[] EntityTargets { get; } = TargetChoice.List(mapEntities ?? []);
 
-    public TargetChoice? BalloonTarget
+    public TargetChoice? EntityTarget
     {
-        get => AsEntityBalloonIcon is { } balloon ? TargetChoice.Find(BalloonTargets, balloon.TargetsPlayer, balloon.EntityId) : null;
+        get => Action is IEntityTargetAction target ? TargetChoice.Find(EntityTargets, target.TargetsPlayer, target.EntityId) : null;
         set
         {
-            if (value is null || value == BalloonTarget || AsEntityBalloonIcon is not { } balloon) return;
-            balloon.TargetsPlayer = value.Player;
-            balloon.EntityId = value.Id;
+            if (value is null || value == EntityTarget || Action is not IEntityTargetAction target) return;
+            target.TargetsPlayer = value.Player;
+            target.EntityId = value.Id;
+            target.TargetName = value.Id is null ? null : value.Name;
             OnPropertyChanged();
         }
     }
+
+    // scroll map: a tile (the X and Y), the player or an entity on the map
+    public TargetChoice[] ScrollTargets => field ??= [new TargetChoice(null, false, "Tile"), .. EntityTargets[1..]];
+
+    public TargetChoice? ScrollTarget
+    {
+        get => AsScrollMap is { } scroll ? TargetChoice.Find(ScrollTargets, scroll.TargetPlayer, scroll.TargetEntityId) : null;
+        set
+        {
+            if (value is null || value == ScrollTarget || AsScrollMap is not { } scroll) return;
+            scroll.TargetPlayer = value.Player;
+            scroll.TargetEntityId = value.Id;
+            OnPropertyChanged();
+        }
+    }
+
+    // play media: the media folder decides how it plays
+    public string[] MediaFolders { get; } = ["BGM", "BGS", "ME", "SFX"];
 
     // the balloons from the Balloon Icons settings, None first
     public NamedChoice[] BalloonChoices { get; } = NamedChoice.List("None", gameDataService.BalloonIcons.AsEnumerable().OrderBy(x => x.Id));

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<UserControl x:Class="GameMaker.UX.Components.TintEditor.TintEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d">
+  <!-- a color laid over an entity's picture: the color, how much of it shows and how it mixes with the picture -->
+  <StackPanel Spacing="10">
+    <ColorPicker x:Name="Picker"
+                 IsAlphaEnabled="False"
+                 IsMoreButtonVisible="True"
+                 IsColorSliderVisible="True"
+                 IsColorChannelTextInputVisible="True"
+                 IsHexInputVisible="True" />
+    <Slider x:Name="StrengthSlider"
+            Header="Strength (0 = off, 1 = full color)"
+            Minimum="0"
+            Maximum="1"
+            StepFrequency="0.05"
+            ToolTipService.ToolTip="How much of the color shows. 0 fades the tint back out." />
+    <ComboBox x:Name="BlendBox"
+              Header="Blend"
+              HorizontalAlignment="Stretch"
+              ToolTipService.ToolTip="None lays the color flat over the picture (a silhouette at full strength). Multiply, Overlay, Soft Light and the rest keep the picture's shading." />
+  </StackPanel>
+</UserControl>

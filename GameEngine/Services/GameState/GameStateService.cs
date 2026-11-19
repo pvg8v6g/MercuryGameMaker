@@ -1,6 +1,8 @@
 ﻿using GameEngine.Models;
+using GameLibrary.Models.Weathers;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.Areas;
+using GameLibrary.Models.Fighter;
 using GameLibrary.Models.GameMaps;
 
 namespace GameEngine.Services.GameState;
@@ -24,9 +26,13 @@ public class GameStateService : IGameStateService
 
     public List<MapArea> MapAreas { get; } = [];
 
-    public HashSet<Guid> OwnedItems { get; } = [];
+    public Dictionary<Guid, int> Items { get; } = [];
 
-    public HashSet<Guid> ActiveParty { get; } = [];
+    public int Money { get; set; }
+
+    public List<Guid> ActiveParty { get; } = [];
+
+    public Dictionary<Guid, Fighter> Actors { get; } = [];
 
     public HashSet<Guid> OwnedParty { get; } = [];
 
@@ -35,6 +41,14 @@ public class GameStateService : IGameStateService
     public Dictionary<string, string> Variables { get; } = [];
 
     public Dictionary<(Guid Map, Guid Entity, SelfSwitch Key), bool> SelfSwitches { get; } = [];
+
+    public Dictionary<(Guid Map, Guid Entity), EntityPlace> EntityPlaces { get; } = [];
+
+    public WeatherSettings? Weather { get; set; }
+
+    public HashSet<(Guid Map, Guid Entity)> DepartedEntities { get; } = [];
+
+    public Dictionary<Guid, List<VisitingEntity>> VisitingEntities { get; } = [];
 
     public bool IsPlayerBusy { get; set; }
 

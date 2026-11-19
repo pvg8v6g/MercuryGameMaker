@@ -33,12 +33,13 @@ public class PageRunner(
 
     #region Methods
 
-    // a new map starts with nothing running
+    // a new map starts with nothing running, but a page that transferred the player finishes on the new map
     public void Clear()
     {
-        _runs.Clear();
+        foreach (var left in _runs.Where(x => !x.Value.CarriesOver).Select(x => x.Key).ToArray()) _runs.Remove(left);
+        foreach (var run in _runs.Values) run.CarriesOver = false;
         pageTouches.Take();
-        gameStateService.IsPlayerBusy = false;
+        gameStateService.IsPlayerBusy = _runs.Values.Any(x => x.BlocksPlayer);
     }
 
     // called once an update after the systems, when the map isn't paused
@@ -121,19 +122,42 @@ public class PageRunner(
                ?? others.FirstOrDefault(entity => hitboxSystem.PlacedOf(entity).Any(feet.Collide));
     }
 
-    // turns toward the player along whichever way the player is farther, an entity with a fixed direction stays as it is
+    // turns to face the player, an entity with a fixed direction stays as it is. A player facing the entity (talking to
+    // it, walking into it) is faced back head on, the way the player looks. Otherwise (it walked into the player) it
+    // turns along whichever way the player is farther, measured between where their feet are, not their pictures:
+    // a tall character's picture starts a tile higher than a short one's
     private void FacePlayer(MapEntity entity)
     {
         if (entity.GetModule<MovementModule>() is { FixDirection: true }) return;
-        if (entity.GetModule<PositionModule>() is not { } position || gameStateService.Player?.GetModule<PositionModule>() is not { } player) return;
+        if (entity.GetModule<PositionModule>() is not { } position || gameStateService.Player is not { } player) return;
+        if (player.GetModule<PositionModule>() is not { } playerPosition) return;
 
-        var dx = player.X - position.X;
-        var dy = player.Y - position.Y;
+        var (dx, dy) = hitboxSystem.Between(entity, player);
         if (dx == 0 && dy == 0) return;
 
-        position.Direction = Math.Abs(dx) > Math.Abs(dy)
-            ? dx > 0 ? Direction.Right : Direction.Left
-            : dy > 0 ? Direction.Down : Direction.Up;
+        var looks = (Direction) ((int) playerPosition.Direction % 4);
+        var (lookX, lookY) = looks switch
+        {
+            Direction.Up => (0.0, -1.0),
+            Direction.Down => (0.0, 1.0),
+            Direction.Left => (-1.0, 0.0),
+            _ => (1.0, 0.0)
+        };
+
+        // the player looks toward the entity: the entity looks straight back
+        if ((-dx * lookX) + (-dy * lookY) > 0)
+        {
+            position.Direction = looks switch
+            {
+                Direction.Up => Direction.Down,
+                Direction.Down => Direction.Up,
+                Direction.Left => Direction.Right,
+                _ => Direction.Left
+            };
+            return;
+        }
+
+        position.Direction = hitboxSystem.Toward(entity, player);
     }
 
     #endregion

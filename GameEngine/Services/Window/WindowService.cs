@@ -49,13 +49,26 @@ public partial class WindowService(
 
     #region Private Methods
 
-    // what the map scene needs: the maps, the props placed on them, the actors the party leader comes from and the game start
+    // everything the game maker saves that a page can use, the same folders the game maker loads (fill sets are only
+    // for painting maps), and the game start
     private void LoadGame()
     {
-        Load(Path.Combine(locationService.GameDirectory!, "Maps"), gameDataService.GameMaps);
-        Load(Path.Combine(locationService.GameDirectory!, "Fighters", "Actors"), gameDataService.Actors);
-        Load(Path.Combine(locationService.GameDirectory!, "Props"), gameDataService.Props);
-        Load(Path.Combine(locationService.GameDirectory!, "Settings", "BalloonIcons"), gameDataService.BalloonIcons);
+        var game = locationService.GameDirectory!;
+        Load(Path.Combine(game, "Settings", "Attributes"), gameDataService.Attributes);
+        Load(Path.Combine(game, "Settings", "Elements"), gameDataService.Elements);
+        Load(Path.Combine(game, "Settings", "Growths"), gameDataService.Growths);
+        Load(Path.Combine(game, "Settings", "BalloonIcons"), gameDataService.BalloonIcons);
+        Load(Path.Combine(game, "Fighters", "Actors"), gameDataService.Actors);
+        Load(Path.Combine(game, "Disciplines"), gameDataService.Disciplines);
+        Load(Path.Combine(game, "Artes"), gameDataService.Artes);
+        Load(Path.Combine(game, "Items", "Consumables"), gameDataService.Consumables);
+        Load(Path.Combine(game, "Items", "Equipment"), gameDataService.Equipment);
+        Load(Path.Combine(game, "Fighters", "Enemies"), gameDataService.Enemies);
+        Load(Path.Combine(game, "Troops"), gameDataService.Troops);
+        Load(Path.Combine(game, "States"), gameDataService.States);
+        Load(Path.Combine(game, "Animations"), gameDataService.Animations);
+        Load(Path.Combine(game, "Maps"), gameDataService.GameMaps);
+        Load(Path.Combine(game, "Props"), gameDataService.Props);
 
         var gameStart = Path.Combine(locationService.GameDirectory!, "Settings", "GameStart.data");
         if (File.Exists(gameStart) && jsonService.DecryptFile<GameStart>(gameStart) is { } start) gameDataService.GameStart = start;

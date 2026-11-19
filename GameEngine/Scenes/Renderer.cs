@@ -44,6 +44,13 @@ public partial class Renderer(IGameDataService gameDataService) : PropertyChange
         private set => SetField(ref field, value);
     }
 
+    // how white the screen is, a lightning flash
+    public double Flash
+    {
+        get;
+        private set => SetField(ref field, value);
+    }
+
     #endregion
 
     #region Methods
@@ -73,6 +80,12 @@ public partial class Renderer(IGameDataService gameDataService) : PropertyChange
     public void SetFade(double fade)
     {
         _dispatcherQueue.TryEnqueue(() => Fade = Math.Clamp(fade, 0.0, 1.0));
+    }
+
+    // called from the game loop, the screen changes on the ui thread
+    public void SetFlash(double flash)
+    {
+        _dispatcherQueue.TryEnqueue(() => Flash = Math.Clamp(flash, 0.0, 1.0));
     }
 
     // the canvas loads an image the first time it is handed a picture of it, handing it every image of the map at
