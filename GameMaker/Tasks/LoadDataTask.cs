@@ -49,6 +49,8 @@ public class LoadDataTask(ILocationService locationService, IJsonService jsonSer
         DecryptData(Path.Combine("Disciplines"), gameDataService.Disciplines);
         DecryptData(Path.Combine("Artes"), gameDataService.Artes);
         DecryptData(Path.Combine("Items", "Consumables"), gameDataService.Consumables);
+        DecryptData(Path.Combine("Items", "Ingredients"), gameDataService.Ingredients);
+        DecryptData(Path.Combine("Items", "Materials"), gameDataService.Materials);
         DecryptData(Path.Combine("Items", "Equipment"), gameDataService.Equipment);
         DecryptData(Path.Combine("Fighters", "Enemies"), gameDataService.Enemies);
         DecryptData(Path.Combine("Troops"), gameDataService.Troops);
@@ -60,11 +62,16 @@ public class LoadDataTask(ILocationService locationService, IJsonService jsonSer
 
         var gameStart = Path.Combine(locationService.GameDirectory!, "Settings", "GameStart.data");
         if (File.Exists(gameStart) && jsonService.DecryptFile<GameStart>(gameStart) is { } start) gameDataService.GameStart = start;
+
+        var gameSettings = Path.Combine(locationService.GameDirectory!, "Settings", "GameSettings.data");
+        gameDataService.GameSettings = File.Exists(gameSettings) && jsonService.DecryptFile<GameSettings>(gameSettings) is { } settings ? settings : new GameSettings();
     }
 
     private void DecryptData<T>(string path, ObservableCollection<T> collection) where T : BaseModel
     {
         var directoryPath = Path.Combine(locationService.GameDirectory!, path);
+        // a folder a game doesn't have yet (an older game without ingredients, say) just has nothing in it
+        if (!Directory.Exists(directoryPath)) return;
         foreach (var entityFile in Directory.GetFiles(directoryPath))
         {
             if (!entityFile.EndsWith(".data")) continue;

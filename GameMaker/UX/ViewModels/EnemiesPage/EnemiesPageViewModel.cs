@@ -46,6 +46,8 @@ public partial class EnemiesPageViewModel(
     [
         .. GameDataService.Consumables
             .Cast<Item>()
+            .Concat(GameDataService.Ingredients)
+            .Concat(GameDataService.Materials)
             .Concat(GameDataService.Equipment)
             .OrderBy(x => x.Name)
     ];

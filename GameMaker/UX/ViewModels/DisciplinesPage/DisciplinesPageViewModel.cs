@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using GameLibrary.Models;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Collections.Generic;
 using System.Linq;
@@ -64,7 +65,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
         var lifeSetting = new AttributeGrowthSetting
         {
             AvailableGrowths = GameDataService.Growths,
-            IconIndex = 478,
+            Icon = GameDataService.GameSettings.LifeIcon,
             AttributeGuid = GameDataService.LifeAttributeGuid,
             Name = "Life",
             GrowthGuid = null
@@ -75,7 +76,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
         var manaSetting = new AttributeGrowthSetting
         {
             AvailableGrowths = GameDataService.Growths,
-            IconIndex = 523,
+            Icon = GameDataService.GameSettings.ManaIcon,
             AttributeGuid = GameDataService.ManaAttributeGuid,
             Name = "Mana",
             GrowthGuid = null
@@ -88,7 +89,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
             var setting = new AttributeGrowthSetting
             {
                 AvailableGrowths = GameDataService.Growths,
-                IconIndex = attr.Icon,
+                Icon = attr.Icon,
                 AttributeGuid = attr.Guid,
                 Name = attr.Name,
                 GrowthGuid = null

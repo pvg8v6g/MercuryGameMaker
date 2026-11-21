@@ -10,5 +10,6 @@ public enum ItemSort
     Keys,
     Materials,
     Quest,
-    Other
+    Other,
+    Valuables
 }

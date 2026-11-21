@@ -123,7 +123,7 @@ public class BalloonSystem(IGameDataService gameDataService, IGraphicsService gr
     {
         var size = BalloonIcon.CellSize;
         var scale = gameDataService.ScaleFactor;
-        sprite.Picture.Viewport = new Rect(frame * size, balloon.Icon * size, size, size);
+        sprite.Picture.Viewport = new Rect(frame * size, balloon.Row * size, size, size);
 
         if (entity.State<CharacterImageState>().Sprite is { } character)
         {

@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using GameLibrary.Models;
+using System.Collections.ObjectModel;
 using GameLibrary.Models.Growths;
 using LiveChartsCore;
 using LiveChartsCore.SkiaSharpView;
@@ -10,7 +11,7 @@ public partial class AttributeGrowthSetting : PropertyChangedUpdater
 {
     public ObservableCollection<Growth> AvailableGrowths { get; set; } = [];
 
-    public int IconIndex { get; set; }
+    public GameIcon Icon { get; set; } = GameIcon.None;
 
     public string Name { get; set; } = string.Empty;
 

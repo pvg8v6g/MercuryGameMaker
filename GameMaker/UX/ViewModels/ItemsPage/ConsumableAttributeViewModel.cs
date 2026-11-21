@@ -1,14 +1,15 @@
-﻿using GameLibrary.Models.Items;
+﻿using GameLibrary.Models;
+using GameLibrary.Models.Items;
 using MercuryLibrary.Extensions;
 using MercuryLibrary.WinUI3Components;
 
 namespace GameMaker.UX.ViewModels.ItemsPage;
 
-public class ConsumableAttributeViewModel(string name, int icon, Guid guid, Consumable consumable) : PropertyChangedUpdater
+public class ConsumableAttributeViewModel(string name, GameIcon icon, Guid guid, Consumable consumable) : PropertyChangedUpdater
 {
     public string Name => name;
 
-    public int Icon => icon;
+    public GameIcon Icon => icon;
 
     public string AttributeValue
     {

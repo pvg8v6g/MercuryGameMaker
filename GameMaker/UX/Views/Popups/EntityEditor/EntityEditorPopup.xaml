@@ -21,6 +21,7 @@
           RowSpacing="10">
       <Grid.RowDefinitions>
         <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
       </Grid.RowDefinitions>
 
@@ -30,6 +31,7 @@
           <ColumnDefinition Width="Auto" />
           <ColumnDefinition Width="*" />
           <ColumnDefinition Width="140" />
+          <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
         <TextBlock VerticalAlignment="Bottom"
                    Margin="0,0,0,6"
@@ -45,9 +47,22 @@
                    SpinButtonPlacementMode="Inline"
                    Value="{x:Bind ViewModel.EntityZ, Mode=TwoWay}"
                    ToolTipService.ToolTip="Draw order against the map layers and other entities. The layers button shows each layer's z." />
+        <ComboBox Grid.Column="3"
+                  Header="Detonate on Contact"
+                  Width="180"
+                  ItemsSource="{x:Bind ViewModel.ContactTargets}"
+                  SelectedItem="{x:Bind ViewModel.Entity.DetonateOnContact, Mode=TwoWay}"
+                  Visibility="{x:Bind ViewModel.IsProjectile}"
+                  ToolTipService.ToolTip="Who this projectile detonates on when it touches them, counted from the side of whoever fired it. It flies through everyone else. A contact projectile that reaches its Detonate step without hitting anything is just removed." />
       </Grid>
 
-      <Grid Grid.Row="1"
+      <TextBlock Grid.Row="1"
+                 Foreground="{StaticResource LightYellowBrush}"
+                 TextWrapping="Wrap"
+                 Visibility="{x:Bind ViewModel.ShowsDetonateWarning, Mode=OneWay}"
+                 Text="This projectile never detonates. Add a Detonate step to one of its movement routes so it activates its arte and leaves the battle." />
+
+      <Grid Grid.Row="2"
             ColumnSpacing="10">
         <Grid.ColumnDefinitions>
           <ColumnDefinition Width="240" />

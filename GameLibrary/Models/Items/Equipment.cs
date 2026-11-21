@@ -30,5 +30,8 @@ public partial class Equipment : Item
 
     public List<Guid> ResistStates { get; init; } = [];
 
+    // the disciplines that can equip it, empty for every discipline
+    public List<Guid> Disciplines { get; init; } = [];
+
     #endregion
 }

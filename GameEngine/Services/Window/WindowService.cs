@@ -62,6 +62,8 @@ public partial class WindowService(
         Load(Path.Combine(game, "Disciplines"), gameDataService.Disciplines);
         Load(Path.Combine(game, "Artes"), gameDataService.Artes);
         Load(Path.Combine(game, "Items", "Consumables"), gameDataService.Consumables);
+        Load(Path.Combine(game, "Items", "Ingredients"), gameDataService.Ingredients);
+        Load(Path.Combine(game, "Items", "Materials"), gameDataService.Materials);
         Load(Path.Combine(game, "Items", "Equipment"), gameDataService.Equipment);
         Load(Path.Combine(game, "Fighters", "Enemies"), gameDataService.Enemies);
         Load(Path.Combine(game, "Troops"), gameDataService.Troops);
@@ -72,6 +74,9 @@ public partial class WindowService(
 
         var gameStart = Path.Combine(locationService.GameDirectory!, "Settings", "GameStart.data");
         if (File.Exists(gameStart) && jsonService.DecryptFile<GameStart>(gameStart) is { } start) gameDataService.GameStart = start;
+
+        var gameSettings = Path.Combine(locationService.GameDirectory!, "Settings", "GameSettings.data");
+        gameDataService.GameSettings = File.Exists(gameSettings) && jsonService.DecryptFile<GameSettings>(gameSettings) is { } settings ? settings : new GameSettings();
     }
 
     private void Load<T>(string directory, ObservableCollection<T> collection) where T : BaseModel

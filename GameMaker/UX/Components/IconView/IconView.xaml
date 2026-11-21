@@ -20,6 +20,12 @@
             <Setter Property="MaxWidth" Value="1000" />
           </Style>
         </Flyout.FlyoutPresenterStyle>
+        <StackPanel Spacing="5">
+        <ComboBox x:Name="SheetBox"
+                  Header="Icon Sheet"
+                  MinWidth="200"
+                  SelectionChanged="SheetBox_OnSelectionChanged"
+                  ToolTipService.ToolTip="The icon sheets in Graphics\Icons. Pick one to see its icons." />
         <ScrollViewer x:Name="IconScrollViewer"
                       MaxHeight="500"
                       HorizontalScrollBarVisibility="Auto"
@@ -47,6 +53,7 @@
             </Canvas>
           </Grid>
         </ScrollViewer>
+        </StackPanel>
       </Flyout>
     </FlyoutBase.AttachedFlyout>
 

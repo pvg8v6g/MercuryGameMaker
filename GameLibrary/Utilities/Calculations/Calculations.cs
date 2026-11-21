@@ -46,10 +46,12 @@ public static class Calculations
 
     #region Growth
 
-    public static double GetLevelValue(double level, double rate, double min, double max)
+    // a growth's value at a level: min at level 1, max at the level cap, rate bends the line into a curve
+    public static double GetLevelValue(double level, double rate, double min, double max, int levelCap)
     {
-        var ceil1 = Math.Ceiling((max - min) * (level - 1.0d) / 98.0d);
-        var ceil2 = Math.Ceiling((max - min) * Math.Pow((level - 1.0d) / 98.0d, 2.0d));
+        var span = Math.Max(1.0d, levelCap - 1.0d);
+        var ceil1 = Math.Ceiling((max - min) * (level - 1.0d) / span);
+        var ceil2 = Math.Ceiling((max - min) * Math.Pow((level - 1.0d) / span, 2.0d));
         return min + Math.Floor((1.0d - rate) * ceil1 + rate * ceil2);
     }
 

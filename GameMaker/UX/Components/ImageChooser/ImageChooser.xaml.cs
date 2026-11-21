@@ -1,4 +1,4 @@
-﻿using GameLibrary.Utilities;
+using GameLibrary.Utilities;
 using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
@@ -303,6 +303,22 @@ public partial class ImageChooser
 
     private void OnCancelClicked(object sender, RoutedEventArgs e)
     {
+        ImageFlyout.Hide();
+    }
+
+    // no image at all: the bound file name is emptied, and pages that save the pick through the command get an empty pick
+    private void OnClearClicked(object sender, RoutedEventArgs e)
+    {
+        FileListView.SelectedItem = null;
+        FileName = string.Empty;
+        Index = 0;
+
+        if (OnImageChangedCommand != null)
+        {
+            var args = new SpriteSelectedArgs(string.Empty, 0, Direction.Down);
+            if (OnImageChangedCommand.CanExecute(args)) OnImageChangedCommand.Execute(args);
+        }
+
         ImageFlyout.Hide();
     }
 

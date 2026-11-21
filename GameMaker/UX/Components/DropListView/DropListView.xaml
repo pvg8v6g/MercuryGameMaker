@@ -25,7 +25,7 @@
           <ComboBox.ItemTemplate>
             <DataTemplate x:DataType="items:Item">
               <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
-                <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
+                <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
                 <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
               </StackPanel>
             </DataTemplate>
@@ -62,7 +62,7 @@
           </Grid.ColumnDefinitions>
 
           <engineIcon:EngineIcon Grid.Column="0"
-                                 IconIndex="{x:Bind Icon, Mode=OneWay}"
+                                 Icon="{x:Bind Icon, Mode=OneWay}"
                                  HorizontalAlignment="Center"
                                  VerticalAlignment="Center" />
 

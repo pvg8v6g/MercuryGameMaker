@@ -41,7 +41,7 @@
 
           <StackPanel VerticalAlignment="Bottom">
             <TextBlock HorizontalAlignment="Center">Icon</TextBlock>
-            <iconView:IconView IconIndex="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay, FallbackValue=0}" HorizontalAlignment="Center" />
+            <iconView:IconView Icon="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay}" HorizontalAlignment="Center" />
           </StackPanel>
         </StackPanel>
 

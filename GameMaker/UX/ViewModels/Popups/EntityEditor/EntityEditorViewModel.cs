@@ -4,6 +4,7 @@ using GameLibrary.Commands;
 using GameLibrary.Enumerations;
 using GameLibrary.Models;
 using GameLibrary.Models.Actions;
+using GameLibrary.Models.Movements;
 using GameLibrary.Models.Conditions;
 using GameLibrary.Models.Modules;
 using GameLibrary.Services.GameData;
@@ -82,6 +83,9 @@ public class EntityEditorViewModel : BaseViewModel<Page>
     // the SFX folder's sounds, for thunder
     private readonly string[] _sfxFiles;
 
+    // arte projectiles must detonate, the editor warns when one can't
+    private readonly bool _isProjectile;
+
     public EntityEditorViewModel(
         Entity entity,
         IGameDataService gameDataService,
@@ -92,6 +96,7 @@ public class EntityEditorViewModel : BaseViewModel<Page>
         string kind = "Entity") : base(jsonService)
     {
         Entity = entity;
+        _isProjectile = kind == "Projectile";
         FaceFolderPath = Path.Combine(locationService.GraphicsDirectory!, "Faces");
         _bgsFiles = AudioFiles.InFolder(Path.Combine(locationService.GameDirectory!, "Media", "BGS"));
         _sfxFiles = AudioFiles.InFolder(Path.Combine(locationService.GameDirectory!, "Media", "SFX"));
@@ -155,9 +160,21 @@ public class EntityEditorViewModel : BaseViewModel<Page>
         }
     }
 
+    // a projectile with no Detonate step in any of its routes never activates its arte or leaves the battle
+    public bool ShowsDetonateWarning => _isProjectile && !Entity.Pages
+        .SelectMany(x => AllActions(x.Actions))
+        .OfType<EntityMovementAction>()
+        .SelectMany(x => x.Route)
+        .Any(x => x is DetonateMovement);
+
     private IEnumerable<PositionModule> Positions => Entity.Pages.SelectMany(x => x.Modules).OfType<PositionModule>();
 
     public PageTrigger[] Triggers { get; } = Enum.GetValues<PageTrigger>();
+
+    // projectile settings only show when the editor is editing an arte projectile
+    public bool IsProjectile => _isProjectile;
+
+    public ContactTarget[] ContactTargets { get; } = Enum.GetValues<ContactTarget>();
 
     #endregion
 
@@ -489,7 +506,9 @@ public class EntityEditorViewModel : BaseViewModel<Page>
         {
             Id = Calculations.GetNextId([.. EntityCollection.Select(x => x.Id)]),
             Name = newEntityName,
-            EntityId = Entity.Guid
+            EntityId = Entity.Guid,
+            // a projectile starts moving as soon as it's fired
+            PageTrigger = _isProjectile ? PageTrigger.ParallelProcess : PageTrigger.Action
         };
 
         var index = EntityCollection.AddSorted(newObject, x => x.Id);
@@ -512,6 +531,14 @@ public class EntityEditorViewModel : BaseViewModel<Page>
     private void SelectCharacter(SpriteSelectedArgs args)
     {
         if (SelectedPage is null) return;
+
+        // No Image: the page loses its image, and keeps facing the way it did
+        if (string.IsNullOrEmpty(args.FileName))
+        {
+            foreach (var module in SelectedPage.Modules.OfType<CharacterImageModule>().ToArray()) SelectedPage.Modules.Remove(module);
+            RefreshPageImages();
+            return;
+        }
 
         var image = PageModule<CharacterImageModule>();
         image.ImageName = args.FileName;
@@ -788,10 +815,11 @@ public class EntityEditorViewModel : BaseViewModel<Page>
     {
         if (SelectedPage is null) return;
 
+        // the route is edited first and inserted after, so its row is built with the steps it ended up with
         var action = new EntityMovementAction();
-        InsertAction(action);
-
         await ShowMovementRoute(action);
+
+        InsertAction(action);
     }
 
     private async Task EditAction()
@@ -886,6 +914,20 @@ public class EntityEditorViewModel : BaseViewModel<Page>
 
         BuildInto(SelectedPage.Actions, null, false, 0);
         ActionRows.Add(new ActionRow { Kind = ActionRowKind.Blank, Indent = 0 });
+        OnPropertyChanged(nameof(ShowsDetonateWarning));
+    }
+
+    // every action in the list, including the ones inside branches
+    private static IEnumerable<PageAction> AllActions(IEnumerable<PageAction> actions)
+    {
+        foreach (var action in actions)
+        {
+            yield return action;
+            if (action is not BranchAction branch) continue;
+
+            foreach (var child in AllActions(branch.BranchActions)) yield return child;
+            foreach (var child in AllActions(branch.ElseActions)) yield return child;
+        }
     }
 
     private void BuildInto(ObservableCollection<PageAction> list, BranchAction? parent, bool inElse, int indent)

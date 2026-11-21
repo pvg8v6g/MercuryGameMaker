@@ -22,6 +22,21 @@ public class EquipmentPageViewModel(IGameDataService gameDataService, IJsonServi
 
     public RelayCommand ClearArteCommand => new(ClearArte);
 
+    // All first, then a tick box per discipline
+    public ObservableCollection<DisciplineToggleViewModel> DisciplineToggles { get; } = [];
+
+    // the ticked disciplines in a line, for the dropdown button
+    public string EquippableByText
+    {
+        get
+        {
+            if (SelectedEntity is null || SelectedEntity.Disciplines.Count == 0) return "All";
+
+            var names = gameDataService.Disciplines.Where(x => SelectedEntity.Disciplines.Contains(x.Guid)).OrderBy(x => x.Id).Select(x => x.Name);
+            return string.Join(", ", names);
+        }
+    }
+
     #endregion
 
     #region Actions
@@ -38,6 +53,13 @@ public class EquipmentPageViewModel(IGameDataService gameDataService, IJsonServi
         return Task.CompletedTask;
     }
 
+    // a tick changed: every box and the button text follow, since All and the disciplines affect each other
+    private void DisciplinesChanged()
+    {
+        foreach (var toggle in DisciplineToggles) toggle.Refresh();
+        OnPropertyChanged(nameof(EquippableByText));
+    }
+
     #endregion
 
     #region Private methods
@@ -47,8 +69,16 @@ public class EquipmentPageViewModel(IGameDataService gameDataService, IJsonServi
         AttributeStats.Clear();
         ElementResistanceStats.Clear();
         StateResistanceStats.Clear();
+        DisciplineToggles.Clear();
+        OnPropertyChanged(nameof(EquippableByText));
 
         if (SelectedEntity is null) return;
+
+        DisciplineToggles.Add(new DisciplineToggleViewModel(null, SelectedEntity, DisciplinesChanged));
+        foreach (var discipline in gameDataService.Disciplines.OrderBy(x => x.Id))
+        {
+            DisciplineToggles.Add(new DisciplineToggleViewModel(discipline, SelectedEntity, DisciplinesChanged));
+        }
 
         foreach (var attribute in GameDataService.Attributes)
         {

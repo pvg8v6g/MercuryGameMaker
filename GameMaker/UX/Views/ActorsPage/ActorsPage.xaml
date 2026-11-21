@@ -26,7 +26,7 @@
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="300" />
-      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="{StaticResource DescriptionColumnWidth}" />
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="Auto" />
       <ColumnDefinition Width="Auto" />
@@ -112,7 +112,7 @@
             <ComboBox.ItemTemplate>
               <DataTemplate x:DataType="disciplines:Discipline">
                 <StackPanel behaviors:PointerCursorBehavior.CursorType="Hand" Orientation="Horizontal" Spacing="10" MinHeight="36">
-                  <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}"
+                  <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}"
                                          VerticalAlignment="Center" />
                   <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
                 </StackPanel>
@@ -136,7 +136,8 @@
                                        Text="{x:Bind ViewModel.SelectedEntity.Description, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
                                        AcceptsReturn="True"
                                        TextWrapping="Wrap"
-                                       MinHeight="100"
+                                       Height="120"
+                                       MaxWidth="{StaticResource DescriptionMaxWidth}"
                                        ToolTipService.ToolTip="Tell me a little bit about this actor."
                                        VerticalAlignment="Top" />
 
@@ -198,7 +199,7 @@
                 <ComboBox.ItemTemplate>
                   <DataTemplate x:DataType="actorsPage1:EquipmentOption">
                     <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
-                      <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
+                      <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
                       <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
                     </StackPanel>
                   </DataTemplate>
@@ -229,7 +230,7 @@
               </Grid.ColumnDefinitions>
 
               <engineIcon:EngineIcon Grid.Column="0"
-                                     IconIndex="{x:Bind Icon}"
+                                     Icon="{x:Bind Icon}"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center" />
 

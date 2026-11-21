@@ -40,7 +40,7 @@
           <!-- the picker lists the first frame of every row, the preview plays the picked row -->
           <StackPanel VerticalAlignment="Bottom" Spacing="5">
             <TextBlock HorizontalAlignment="Center">Icon</TextBlock>
-            <balloonIconView:BalloonIconView Row="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay, FallbackValue=0}"
+            <balloonIconView:BalloonIconView Row="{x:Bind ViewModel.SelectedEntity.Row, Mode=TwoWay, FallbackValue=0}"
                                              FrameTime="{x:Bind ViewModel.SelectedEntity.FrameTime, Mode=OneWay, FallbackValue=100}"
                                              HoldTime="{x:Bind ViewModel.SelectedEntity.HoldTime, Mode=OneWay, FallbackValue=400}"
                                              HorizontalAlignment="Center"

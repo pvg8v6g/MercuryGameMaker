@@ -1,3 +1,4 @@
+using GameLibrary.Models;
 using Windows.Foundation;
 using GameLibrary.Enumerations;
 using GameLibrary.Utilities.ComponentModels;
@@ -7,14 +8,20 @@ namespace GameLibrary.Services.Graphics;
 
 public interface IGraphicsService
 {
-    string GetIconsPath();
+    string GetIconsFolder();
+
+    int IconSize { get; }
+
+    IReadOnlyList<string> GetIconSheets();
+
+    string GetIconSheetPath(string? sheet);
 
     string GetBalloonsPath();
 
     Task<CroppedImage> GetBalloonFrame(int row, int column);
 
     Task<(int columns, int rows)> GetBalloonDivisions();
-    Task<CroppedImage> GetIcon(int index);
+    Task<CroppedImage> GetIcon(GameIcon icon);
     Task<CroppedImage> GetEngineIcon(int index);
     string GetCharacterPath();
     Direction GetCharacterDirectionFromIndex(string fileName, int index);

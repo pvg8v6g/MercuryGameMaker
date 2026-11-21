@@ -76,6 +76,20 @@ public class ArtesPageViewModel(
 
     #endregion
 
+    #region Animation relays
+
+    public RelayCommand ClearCasterAnimationCommand => new(() =>
+    {
+        if (SelectedEntity is not null) SelectedEntity.CasterAnimation = null;
+    });
+
+    public RelayCommand ClearTargetAnimationCommand => new(() =>
+    {
+        if (SelectedEntity is not null) SelectedEntity.TargetAnimation = null;
+    });
+
+    #endregion
+
     #region Projectile relays
 
     public AsyncRelayCommand<string?> NewProjectileCommand => new(NewProjectile);

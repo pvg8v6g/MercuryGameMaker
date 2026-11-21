@@ -2,7 +2,7 @@ using GameLibrary.Enumerations;
 
 namespace GameLibrary.Models.Movements;
 
-public partial class MoveMovement : Movement
+public partial class MoveMovement : StepCountMovement
 {
     public Direction Direction
     {
@@ -17,5 +17,5 @@ public partial class MoveMovement : Movement
         set => SetField(ref field, value);
     }
 
-    public override string ToString() => Random ? "Move Once: Random" : $"Move Once: {Direction}";
+    public override string ToString() => $"Move: {(Random ? "Random" : Direction.ToString())}, {Steps} {(Steps == 1 ? "step" : "steps")}";
 }

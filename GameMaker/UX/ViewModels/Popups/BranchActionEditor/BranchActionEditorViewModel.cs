@@ -20,7 +20,13 @@ public class BranchActionEditorViewModel(BranchAction branch, IGameDataService g
 
     public ObservableCollection<Fighter> Enemies => gameDataService.Enemies;
 
-    public ObservableCollection<Consumable> Consumables => gameDataService.Consumables;
+    // everything the party can carry besides equipment: consumables, cooking ingredients and crafting materials
+    public Item[] CarriedItems =>
+    [
+        .. gameDataService.Consumables.Cast<Item>()
+            .Concat(gameDataService.Ingredients)
+            .Concat(gameDataService.Materials)
+    ];
 
     public ObservableCollection<Equipment> Equipment => gameDataService.Equipment;
 

@@ -42,6 +42,9 @@ public class MovementRouteSystem(
 
     private double Tile => gameDataService.GridSize * gameDataService.ScaleFactor;
 
+    // one walking step (the grid divided by Division), the unit a move step's Steps count is in
+    private double StepPixels => gameDataService.StepSize * gameDataService.ScaleFactor;
+
     #endregion
 
     #region Methods
@@ -102,25 +105,25 @@ public class MovementRouteSystem(
         switch (movement)
         {
             case MoveMovement { Random: false } move:
-                return Result(pathWalker.Walk(entity, position, state.Walk, move.Direction, Tile));
+                return Result(pathWalker.Walk(entity, position, state.Walk, move.Direction, move.Steps * StepPixels));
 
             // a random way is picked once for the step, and one that's blocked is just skipped
-            case MoveMovement:
+            case MoveMovement randomMove:
                 if (!state.StepStarted)
                 {
                     state.StepStarted = true;
                     state.Way = Directions[_random.Next(Directions.Length)];
                 }
 
-                var random = Result(pathWalker.Walk(entity, position, state.Walk, state.Way, Tile));
+                var random = Result(pathWalker.Walk(entity, position, state.Walk, state.Way, randomMove.Steps * StepPixels));
                 return random == StepResult.Blocked ? StepResult.Done : random;
 
-            case StepForwardMovement:
-                return Result(pathWalker.Walk(entity, position, state.Walk, position.Direction, Tile));
+            case StepForwardMovement forward:
+                return Result(pathWalker.Walk(entity, position, state.Walk, position.Direction, forward.Steps * StepPixels));
 
             // backward keeps facing the same way
-            case StepAwayMovement:
-                return Result(pathWalker.Walk(entity, position, state.Walk, Opposite(position.Direction), Tile, true));
+            case StepAwayMovement backward:
+                return Result(pathWalker.Walk(entity, position, state.Walk, Opposite(position.Direction), backward.Steps * StepPixels, true));
 
             // someone that can't be got to keeps being tried, running away is done once it can't get any farther
             case MoveTowardMovement toward:

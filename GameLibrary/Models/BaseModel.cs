@@ -32,11 +32,12 @@ public partial class BaseModel : PropertyChangedUpdater
         set => SetField(ref field, value);
     } = string.Empty;
 
-    public int Icon
+    // the icon and the sheet it's on, GameIcon.None for no icon
+    public GameIcon Icon
     {
         get;
-        set => SetField(ref field, value);
-    } = 0;
+        set => SetField(ref field, value ?? GameIcon.None);
+    } = GameIcon.None;
 
     #endregion
 

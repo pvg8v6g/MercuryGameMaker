@@ -2,6 +2,7 @@ using Windows.Foundation;
 using Windows.Graphics.Imaging;
 using Windows.Storage;
 using GameLibrary.Enumerations;
+using GameLibrary.Models;
 using GameLibrary.Services.Location;
 using GameLibrary.Utilities.ComponentModels;
 using MercuryLibrary.Extensions;
@@ -13,20 +14,45 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
 {
     #region Icon
 
-    public string GetIconsPath()
+    public string GetIconsFolder()
     {
-        return Path.Combine(locationService.GameDirectory!, "Graphics", "Icons", "~Icons.png");
+        return Path.Combine(locationService.GameDirectory!, "Graphics", "Icons");
     }
 
-    public async Task<CroppedImage> GetIcon(int index)
+    // every icon on every sheet is this size, in pixels
+    public int IconSize => 32;
+
+    // the icon sheets: every picture in Graphics\Icons, named for its theme (Weapons.png, Status Effects.png ...), in name order
+    public IReadOnlyList<string> GetIconSheets()
     {
-        var path = GetIconsPath();
+        var folder = GetIconsFolder();
+        if (!Directory.Exists(folder)) return [];
+
+        return Directory.GetFiles(folder, "*.png")
+            .Select(Path.GetFileName)
+            .OfType<string>()
+            .Order(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    // a sheet's full path; no sheet means the first one
+    public string GetIconSheetPath(string? sheet)
+    {
+        var name = sheet ?? GetIconSheets().FirstOrDefault() ?? "Icons.png";
+        return Path.Combine(GetIconsFolder(), name);
+    }
+
+    public async Task<CroppedImage> GetIcon(GameIcon icon)
+    {
+        var path = GetIconSheetPath(icon.Sheet);
+        if (!File.Exists(path)) return new CroppedImage { ImagePath = path };
+
         var source = await GetImage(path);
         var dimensions = await GetImageDimensions(path);
-        var (w, h) = await GetSegmentation(path);
-        var columns = dimensions.width / w;
-        var x = (index % columns) * w;
-        var y = ((int) (index / columns)) * w;
+        var (w, h) = (IconSize, IconSize);
+        var columns = Math.Max(1, (int) (dimensions.width / w));
+        var x = (icon.Index % columns) * w;
+        var y = (icon.Index / columns) * h;
         var viewport = new Rect(x, y, w, h);
         return new CroppedImage { ImagePath = path, ImageSource = source, Rect = viewport };
     }

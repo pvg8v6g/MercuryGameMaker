@@ -38,6 +38,20 @@ public partial class GrowthsPageViewModel(IGameDataService gameDataService, IJso
         set => SetField(ref field, value);
     } = 0;
 
+    // the whole game's level cap (Settings\GameSettings.data), shown here because growths are made up to it
+    public double LevelCap
+    {
+        get => gameDataService.LevelCap;
+        set
+        {
+            if (double.IsNaN(value) || (int) value == gameDataService.LevelCap) return;
+
+            gameDataService.LevelCap = (int) value;
+            OnPropertyChanged();
+            UpdateAxes();
+        }
+    }
+
     public ISeries[] Series { get; set; } = [];
 
     public Axis[] XAxes { get; set; } =
@@ -72,56 +86,15 @@ public partial class GrowthsPageViewModel(IGameDataService gameDataService, IJso
 
     protected override Task LoadedAction()
     {
-        var levelCap = gameDataService.LevelCap;
-        var customSeparators = new double[] { 0, 20, 40, 60, 80, levelCap }.Distinct().OrderBy(x => x).ToArray();
-
-        XAxes =
-        [
-            new Axis
-            {
-                Name = "Level", MinLimit = 0, MaxLimit = levelCap, LabelsPaint = new SolidColorPaint(SKColors.White),
-                NamePaint = new SolidColorPaint(SKColors.White), CustomSeparators = customSeparators,
-                SeparatorsPaint = new SolidColorPaint(SKColors.Gray.WithAlpha(50), 0.5f)
-            }
-        ];
-        YAxes =
-        [
-            new Axis
-            {
-                Name = "Value", MinStep = 10, LabelsPaint = new SolidColorPaint(SKColors.White), NamePaint = new SolidColorPaint(SKColors.White),
-                SeparatorsPaint = new SolidColorPaint(SKColors.Gray.WithAlpha(50), 0.5f)
-            }
-        ];
-        OnPropertyChanged(nameof(XAxes));
-        OnPropertyChanged(nameof(YAxes));
+        OnPropertyChanged(nameof(LevelCap));
+        UpdateAxes();
         return Task.CompletedTask;
     }
 
     protected override async Task OnSelectedIndexChanged(int index)
     {
         await base.OnSelectedIndexChanged(index);
-        var levelCap = gameDataService.LevelCap;
-        var customSeparators = new double[] { 0, 20, 40, 60, 80, levelCap }.Distinct().OrderBy(x => x).ToArray();
-
-        XAxes =
-        [
-            new Axis
-            {
-                Name = "Level", MinLimit = 0, MaxLimit = levelCap, LabelsPaint = new SolidColorPaint(SKColors.White),
-                NamePaint = new SolidColorPaint(SKColors.White), CustomSeparators = customSeparators,
-                SeparatorsPaint = new SolidColorPaint(SKColors.Gray.WithAlpha(50), 0.5f)
-            }
-        ];
-        YAxes =
-        [
-            new Axis
-            {
-                Name = "Value", MinStep = 10, LabelsPaint = new SolidColorPaint(SKColors.White), NamePaint = new SolidColorPaint(SKColors.White),
-                SeparatorsPaint = new SolidColorPaint(SKColors.Gray.WithAlpha(50), 0.5f)
-            }
-        ];
-        OnPropertyChanged(nameof(XAxes));
-        OnPropertyChanged(nameof(YAxes));
+        UpdateAxes();
         UpdateChart();
     }
 
@@ -139,7 +112,7 @@ public partial class GrowthsPageViewModel(IGameDataService gameDataService, IJso
         var levelCap = gameDataService.LevelCap;
         for (var x = 0; x <= levelCap; x++)
         {
-            var y = (int) Calculations.GetLevelValue(x, rate, lower, upper);
+            var y = (int) Calculations.GetLevelValue(x, rate, lower, upper, levelCap);
             y = Math.Max(y, 0);
             if (SelectedEntity.GrowthValues.TryGetValue(x - 1, out var previous) && previous > y)
             {
@@ -155,6 +128,34 @@ public partial class GrowthsPageViewModel(IGameDataService gameDataService, IJso
     #endregion
 
     #region Private Methods
+
+    // the level axis runs to the game's level cap, with a line every 10 levels (every 20 past 100)
+    private void UpdateAxes()
+    {
+        var levelCap = gameDataService.LevelCap;
+        var step = levelCap > 100 ? 20 : 10;
+        var customSeparators = Enumerable.Range(0, levelCap / step + 1).Select(x => (double) (x * step)).Append(levelCap).Distinct().ToArray();
+
+        XAxes =
+        [
+            new Axis
+            {
+                Name = "Level", MinLimit = 0, MaxLimit = levelCap, LabelsPaint = new SolidColorPaint(SKColors.White),
+                NamePaint = new SolidColorPaint(SKColors.White), CustomSeparators = customSeparators,
+                SeparatorsPaint = new SolidColorPaint(SKColors.Gray.WithAlpha(50), 0.5f)
+            }
+        ];
+        YAxes =
+        [
+            new Axis
+            {
+                Name = "Value", MinStep = 10, LabelsPaint = new SolidColorPaint(SKColors.White), NamePaint = new SolidColorPaint(SKColors.White),
+                SeparatorsPaint = new SolidColorPaint(SKColors.Gray.WithAlpha(50), 0.5f)
+            }
+        ];
+        OnPropertyChanged(nameof(XAxes));
+        OnPropertyChanged(nameof(YAxes));
+    }
 
     private void UpdateChart()
     {

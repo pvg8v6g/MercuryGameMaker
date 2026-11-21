@@ -15,15 +15,18 @@ public class MovementEditorViewModel : PropertyChangedUpdater
 
     private readonly TargetChoice[] _targets;
     private readonly NamedChoice[] _balloons;
+    private readonly int _stepsPerTile;
 
     #endregion
 
     #region Construction
 
-    // the map's entities are who a step can move, the balloons come from the Balloon Icons settings
-    public MovementEditorViewModel(Movement movement, ObservableCollection<Arte> artes, IEnumerable<Entity> mapEntities, IEnumerable<BalloonIcon> balloons)
+    // the map's entities are who a step can move, the balloons come from the Balloon Icons settings,
+    // stepsPerTile (the game's Division) turns a move step's walking steps into tiles
+    public MovementEditorViewModel(Movement movement, ObservableCollection<Arte> artes, IEnumerable<Entity> mapEntities, IEnumerable<BalloonIcon> balloons, int stepsPerTile)
     {
         Movement = movement;
+        _stepsPerTile = Math.Max(1, stepsPerTile);
         Artes = artes;
         _targets = TargetChoice.List(mapEntities);
         _balloons = NamedChoice.List("None", balloons.AsEnumerable().OrderBy(x => x.Id));
@@ -47,6 +50,31 @@ public class MovementEditorViewModel : PropertyChangedUpdater
     public bool ShowsTarget => Movement.HasEntityTarget;
 
     public bool ShowsDirection => Movement is MoveMovement or TurnMovement;
+
+    // move once, step forward and step backward walk a number of walking steps
+    public bool ShowsSteps => Movement is StepCountMovement;
+
+    public int Steps
+    {
+        get => Movement is StepCountMovement step ? step.Steps : 0;
+        set
+        {
+            if (Movement is not StepCountMovement step || step.Steps == value) return;
+            step.Steps = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(TilesText));
+        }
+    }
+
+    // how far the steps go on the grid, so 60 walking steps reads as 5 tiles
+    public string TilesText
+    {
+        get
+        {
+            var tiles = Steps / (double)_stepsPerTile;
+            return $"= {tiles:0.##} {(tiles == 1 ? "tile" : "tiles")} ({_stepsPerTile} steps make one tile)";
+        }
+    }
 
     public bool ShowsTurnTarget => Movement is TurnTowardEntityMovement or TurnAwayEntityMovement;
 

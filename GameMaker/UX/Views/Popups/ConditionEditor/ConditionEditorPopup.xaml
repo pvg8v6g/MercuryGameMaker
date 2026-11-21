@@ -53,11 +53,11 @@
           <ComboBox Header="Owns Item"
                     PlaceholderText="None"
                     HorizontalAlignment="Stretch"
-                    ItemsSource="{x:Bind ViewModel.Consumables, Mode=OneWay}"
+                    ItemsSource="{x:Bind ViewModel.CarriedItems, Mode=OneWay}"
                     SelectedValue="{x:Bind ViewModel.AsItem.OwnItem, Mode=TwoWay, FallbackValue={x:Null}}"
                     SelectedValuePath="Guid">
             <ComboBox.ItemTemplate>
-              <DataTemplate x:DataType="items:Consumable">
+              <DataTemplate x:DataType="items:Item">
                 <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
               </DataTemplate>
             </ComboBox.ItemTemplate>
@@ -75,11 +75,11 @@
           <ComboBox Header="Does Not Own Item"
                     PlaceholderText="None"
                     HorizontalAlignment="Stretch"
-                    ItemsSource="{x:Bind ViewModel.Consumables, Mode=OneWay}"
+                    ItemsSource="{x:Bind ViewModel.CarriedItems, Mode=OneWay}"
                     SelectedValue="{x:Bind ViewModel.AsItem.DoNotOwnItem, Mode=TwoWay, FallbackValue={x:Null}}"
                     SelectedValuePath="Guid">
             <ComboBox.ItemTemplate>
-              <DataTemplate x:DataType="items:Consumable">
+              <DataTemplate x:DataType="items:Item">
                 <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
               </DataTemplate>
             </ComboBox.ItemTemplate>

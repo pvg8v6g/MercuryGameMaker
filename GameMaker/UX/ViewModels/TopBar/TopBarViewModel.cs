@@ -79,7 +79,13 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
             {
                 IsChecked = false,
                 CommandIndex = "4",
-                Tooltip = "Items"
+                Tooltip = "Items",
+                MenuItems =
+                [
+                    new MenuItemModel { Header = "Consumables", CommandIndex = "4.1" },
+                    new MenuItemModel { Header = "Ingredients", CommandIndex = "4.2" },
+                    new MenuItemModel { Header = "Materials", CommandIndex = "4.3" },
+                ]
             },
             new()
             {
@@ -164,7 +170,17 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
                 navigationService.NavigateTo<Views.ArtesPage.ArtesPage>();
                 break;
             case "4": // items
+            case "4.1": // consumables
+                EngineImages.FirstOrDefault(x => x.CommandIndex == "4")?.IsChecked = true;
                 navigationService.NavigateTo<Views.ItemsPage.ItemsPage>();
+                break;
+            case "4.2": // cooking ingredients
+                EngineImages.FirstOrDefault(x => x.CommandIndex == "4")?.IsChecked = true;
+                navigationService.NavigateTo<Views.IngredientsPage.IngredientsPage>();
+                break;
+            case "4.3": // crafting materials and valuables
+                EngineImages.FirstOrDefault(x => x.CommandIndex == "4")?.IsChecked = true;
+                navigationService.NavigateTo<Views.MaterialsPage.MaterialsPage>();
                 break;
             case "5": // equipment
                 navigationService.NavigateTo<Views.EquipmentPage.EquipmentPage>();

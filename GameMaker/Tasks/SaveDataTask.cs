@@ -39,14 +39,21 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
         "Maps",
         "Props",
         "FillSets",
-        Path.Combine("Settings", "BalloonIcons")
+        Path.Combine("Settings", "BalloonIcons"),
+        Path.Combine("Items", "Ingredients"),
+        Path.Combine("Items", "Materials")
     ];
 
+    // settings saved as single files rather than a folder of data
     private static readonly string GameStartFile = Path.Combine("Settings", "GameStart.data");
+    private static readonly string GameSettingsFile = Path.Combine("Settings", "GameSettings.data");
 
     #endregion
 
     #region Call
+
+    // saving only reads the game data and writes files, so it runs in the background and the editor stays responsive
+    public override bool RunsInBackground => true;
 
     public override Task Call()
     {
@@ -96,7 +103,10 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
             Add(files, gameDirectory, DataFolders[13], gameDataService.Props);
             Add(files, gameDirectory, DataFolders[14], gameDataService.FillSets);
             Add(files, gameDirectory, DataFolders[15], gameDataService.BalloonIcons);
+            Add(files, gameDirectory, DataFolders[16], gameDataService.Ingredients);
+            Add(files, gameDirectory, DataFolders[17], gameDataService.Materials);
             files[Path.Combine(gameDirectory, GameStartFile)] = jsonService.Serialize(gameDataService.GameStart);
+            files[Path.Combine(gameDirectory, GameSettingsFile)] = jsonService.Serialize(gameDataService.GameSettings);
         }
         catch (Exception exception)
         {
@@ -142,11 +152,13 @@ public class SaveDataTask(ILocationService locationService, IGameDataService gam
             foreach (var file in Directory.GetFiles(source, $"*{DataExtension}")) File.Copy(file, Path.Combine(target, Path.GetFileName(file)), true);
         }
 
-        var gameStart = Path.Combine(gameDirectory, GameStartFile);
-        if (File.Exists(gameStart))
+        foreach (var settingsFile in new[] { GameStartFile, GameSettingsFile })
         {
+            var source = Path.Combine(gameDirectory, settingsFile);
+            if (!File.Exists(source)) continue;
+
             Directory.CreateDirectory(Path.Combine(backup, "Settings"));
-            File.Copy(gameStart, Path.Combine(backup, GameStartFile), true);
+            File.Copy(source, Path.Combine(backup, settingsFile), true);
         }
 
         // the names sort by date, so the oldest go first

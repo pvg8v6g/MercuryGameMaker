@@ -158,6 +158,14 @@
                   SelectedItem="{x:Bind ViewModel.SelectedDirection, Mode=TwoWay}"
                   Visibility="{x:Bind ViewModel.ShowsDirection, Converter={StaticResource BooleanToVisibilityConverter}}"
                   ToolTipService.ToolTip="Random picks one of the four ways each time the step runs" />
+        <!-- move, step forward and step backward: how many walking steps, and how far that is on the grid -->
+        <StackPanel Spacing="4"
+                    Visibility="{x:Bind ViewModel.ShowsSteps, Converter={StaticResource BooleanToVisibilityConverter}}">
+          <engineTextBox:EngineTextBox Header="Steps" InputType="Integer"
+                                       Text="{x:Bind ViewModel.Steps, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                       ToolTipService.ToolTip="Walking steps, the same small steps a character takes when walked with the keys" />
+          <TextBlock Text="{x:Bind ViewModel.TilesText, Mode=OneWay}" Opacity="0.8" />
+        </StackPanel>
         <ComboBox Header="Target"
                   HorizontalAlignment="Stretch"
                   PlaceholderText="Pick the player or an entity"
@@ -182,7 +190,7 @@
           <ComboBox.ItemTemplate>
             <DataTemplate x:DataType="artes:Arte">
               <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
-                <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
+                <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
                 <TextBlock Text="{x:Bind Name, Mode=OneWay}" VerticalAlignment="Center" />
               </StackPanel>
             </DataTemplate>

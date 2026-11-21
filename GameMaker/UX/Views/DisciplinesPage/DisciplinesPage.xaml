@@ -20,7 +20,7 @@
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="300" />
-      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="{StaticResource DescriptionColumnWidth}" />
       <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
     <engineListView:EngineListView ItemsSource="{x:Bind ViewModel.GameDataService.Disciplines}"
@@ -53,7 +53,7 @@
         <StackPanel Grid.Column="1"
                     Grid.Row="0">
           <TextBlock HorizontalAlignment="Center">Icon</TextBlock>
-          <iconView:IconView IconIndex="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay, FallbackValue=0}"
+          <iconView:IconView Icon="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay}"
                              HorizontalAlignment="Center" />
         </StackPanel>
 
@@ -64,7 +64,9 @@
                  Text="{x:Bind ViewModel.SelectedEntity.Description, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
                  AcceptsReturn="True"
                  TextWrapping="Wrap"
-                 MinHeight="100"
+                 Height="120"
+                 MaxWidth="{StaticResource DescriptionMaxWidth}"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                  VerticalAlignment="Top" />
       </Grid>
     </enginePanel:EnginePanel>
@@ -86,7 +88,7 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="200" />
               </Grid.ColumnDefinitions>
-              <engineIcon:EngineIcon IconIndex="{x:Bind IconIndex, Mode=OneWay}"
+              <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}"
                                      HorizontalAlignment="Center" />
               <TextBlock Grid.Column="1" Text="{x:Bind Name}" VerticalAlignment="Center" />
               <lvc:CartesianChart Grid.Column="2"

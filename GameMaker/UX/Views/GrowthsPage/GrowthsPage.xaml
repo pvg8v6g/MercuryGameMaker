@@ -60,6 +60,11 @@
           <Button Content="Render"
                   Command="{x:Bind ViewModel.RenderCommand}"
                   VerticalAlignment="Bottom" />
+          <NumberBox Header="Level Cap (whole game)"
+                     Value="{x:Bind ViewModel.LevelCap, Mode=TwoWay}"
+                     Minimum="1" Maximum="999"
+                     SpinButtonPlacementMode="Inline"
+                     Margin="40,0,0,0" />
         </StackPanel>
 
         <lvc:CartesianChart Grid.Row="2"

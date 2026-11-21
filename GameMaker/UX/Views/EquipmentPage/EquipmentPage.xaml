@@ -25,7 +25,7 @@
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="300" />
-      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="{StaticResource DescriptionColumnWidth}" />
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="Auto" />
@@ -67,7 +67,7 @@
                     Grid.Row="0"
                     HorizontalAlignment="Left">
           <TextBlock HorizontalAlignment="Center">Icon</TextBlock>
-          <iconView:IconView IconIndex="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay, FallbackValue=0}"
+          <iconView:IconView Icon="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay}"
                              HorizontalAlignment="Center" />
         </StackPanel>
 
@@ -85,7 +85,9 @@
                  Text="{x:Bind ViewModel.SelectedEntity.Description, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
                  AcceptsReturn="True"
                  TextWrapping="Wrap"
-                 MinHeight="100"
+                 Height="120"
+                 MaxWidth="{StaticResource DescriptionMaxWidth}"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"
                  VerticalAlignment="Top" />
       </Grid>
     </enginePanel:EnginePanel>
@@ -103,13 +105,47 @@
           <ColumnDefinition Width="Auto" />
         </Grid.ColumnDefinitions>
 
-        <ComboBox Grid.Column="0"
-                  Grid.Row="0"
-                  PlaceholderText="Location"
-                  ItemsSource="{extensions:EnumValues EnumType=enums:EquipmentLocation}"
-                  SelectedItem="{x:Bind ViewModel.SelectedEntity.EquipmentLocation, Mode=TwoWay}"
-                  VerticalAlignment="Bottom"
-                  HorizontalAlignment="Stretch" />
+        <StackPanel Grid.Column="0"
+                    Grid.Row="0"
+                    Orientation="Horizontal"
+                    Spacing="10"
+                    VerticalAlignment="Bottom">
+          <ComboBox Header="Location"
+                    PlaceholderText="Location"
+                    ItemsSource="{extensions:EnumValues EnumType=enums:EquipmentLocation}"
+                    SelectedItem="{x:Bind ViewModel.SelectedEntity.EquipmentLocation, Mode=TwoWay}"
+                    MinWidth="140"
+                    VerticalAlignment="Bottom" />
+          <StackPanel Spacing="8"
+                      VerticalAlignment="Bottom">
+            <TextBlock Text="Equippable By" />
+            <DropDownButton Content="{x:Bind ViewModel.EquippableByText, Mode=OneWay}"
+                            MinWidth="160"
+                            MaxWidth="320"
+                            behaviors:PointerCursorBehavior.CursorType="Hand"
+                            ToolTipService.ToolTip="The disciplines that can equip this. All means anyone can.">
+              <DropDownButton.Flyout>
+                <Flyout Placement="Bottom">
+                  <ItemsControl ItemsSource="{x:Bind ViewModel.DisciplineToggles, Mode=OneWay}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="equipmentPage:DisciplineToggleViewModel">
+                        <CheckBox IsChecked="{x:Bind IsChecked, Mode=TwoWay}"
+                                  behaviors:PointerCursorBehavior.CursorType="Hand">
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <engineIcon:EngineIcon Icon="{x:Bind Icon}"
+                                                   Visibility="{x:Bind HasIcon}"
+                                                   VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
+                          </StackPanel>
+                        </CheckBox>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </Flyout>
+              </DropDownButton.Flyout>
+            </DropDownButton>
+          </StackPanel>
+        </StackPanel>
 
         <StackPanel Grid.Column="0"
                     Grid.Row="1"
@@ -128,7 +164,7 @@
             <ComboBox.ItemTemplate>
               <DataTemplate x:DataType="artes:Arte">
                 <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
-                  <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
+                  <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
                   <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
                 </StackPanel>
               </DataTemplate>
@@ -172,7 +208,7 @@
               </Grid.ColumnDefinitions>
 
               <engineIcon:EngineIcon Grid.Column="0"
-                                     IconIndex="{x:Bind Icon}"
+                                     Icon="{x:Bind Icon}"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center" />
 
@@ -212,7 +248,7 @@
               </Grid.ColumnDefinitions>
 
               <engineIcon:EngineIcon Grid.Column="0"
-                                     IconIndex="{x:Bind Icon}"
+                                     Icon="{x:Bind Icon}"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center" />
 
@@ -256,7 +292,7 @@
               </Grid.ColumnDefinitions>
 
               <engineIcon:EngineIcon Grid.Column="0"
-                                     IconIndex="{x:Bind Icon}"
+                                     Icon="{x:Bind Icon}"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center" />
 

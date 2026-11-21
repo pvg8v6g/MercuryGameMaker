@@ -137,7 +137,8 @@ public class ActorStateHandler(PartyService partyService) : ActorHandler<ActorSt
 
 /// <summary>
 /// Actor Equipment: equips the piece in its slot (an accessory takes the first free accessory slot) or takes it off.
-/// What comes off goes into the party's items, a piece the party carries is taken out of them. Locked equipment stays.
+/// What comes off goes into the party's items, a piece the party carries is taken out of them. Locked equipment stays,
+/// and a piece for another discipline can't be put on.
 /// </summary>
 public class ActorEquipmentHandler(PartyService partyService, IGameDataService gameDataService) : ActorHandler<ActorEquipmentAction>(partyService)
 {
@@ -159,6 +160,7 @@ public class ActorEquipmentHandler(PartyService partyService, IGameDataService g
         }
 
         if (gameDataService.Equipment.FirstOrDefault(x => x.Guid == id) is not { } equipment) return;
+        if (equipment.Disciplines.Count > 0 && (actor.DisciplineGuid is not { } discipline || !equipment.Disciplines.Contains(discipline))) return;
 
         var slots = actor.Equipment.Values.Where(x => x.Location == equipment.EquipmentLocation).ToArray();
         if ((slots.FirstOrDefault(x => x.Id is null) ?? slots.FirstOrDefault()) is not { } slot) return;

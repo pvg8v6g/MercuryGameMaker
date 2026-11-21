@@ -1,4 +1,5 @@
-﻿using GameLibrary.Models.Items;
+﻿using GameLibrary.Models;
+using GameLibrary.Models.Items;
 using GameLibrary.Models.States;
 using MercuryLibrary.WinUI3Components;
 
@@ -8,7 +9,7 @@ public class StateResistViewModel(State state, Equipment equipment) : PropertyCh
 {
     public string Name => state.Name;
 
-    public int Icon => state.Icon;
+    public GameIcon Icon => state.Icon;
 
     public bool IsResisted
     {

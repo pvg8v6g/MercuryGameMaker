@@ -76,8 +76,8 @@ public class ItemsPageViewModel(IGameDataService gameDataService, IJsonService j
 
         if (SelectedEntity is null) return;
 
-        AttributeChanges.Add(new ConsumableAttributeViewModel("Life", 478, gameDataService.LifeAttributeGuid, SelectedEntity));
-        AttributeChanges.Add(new ConsumableAttributeViewModel("Mana", 523, gameDataService.ManaAttributeGuid, SelectedEntity));
+        AttributeChanges.Add(new ConsumableAttributeViewModel("Life", gameDataService.GameSettings.LifeIcon, gameDataService.LifeAttributeGuid, SelectedEntity));
+        AttributeChanges.Add(new ConsumableAttributeViewModel("Mana", gameDataService.GameSettings.ManaIcon, gameDataService.ManaAttributeGuid, SelectedEntity));
 
         foreach (var attribute in gameDataService.Attributes)
         {

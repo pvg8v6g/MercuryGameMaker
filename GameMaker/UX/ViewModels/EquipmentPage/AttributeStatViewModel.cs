@@ -1,4 +1,5 @@
-﻿using GameLibrary.Models.Items;
+﻿using GameLibrary.Models;
+using GameLibrary.Models.Items;
 using MercuryLibrary.Extensions;
 using MercuryLibrary.WinUI3Components;
 using Attribute = GameLibrary.Models.Attributes.Attribute;
@@ -9,7 +10,7 @@ public class AttributeStatViewModel(Attribute attribute, Equipment equipment) : 
 {
     public string Name => attribute.Name;
 
-    public int Icon => attribute.Icon;
+    public GameIcon Icon => attribute.Icon;
 
     public string AttributeValue
     {

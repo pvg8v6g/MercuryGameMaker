@@ -82,11 +82,11 @@ public class MovementRouteEditorViewModel(
             Text = "Move",
             Children =
             [
-                new() { Text = "Move Once", Command = AddMovementCommand, CommandParameter = "Move" },
+                new() { Text = "Move", Command = AddMovementCommand, CommandParameter = "Move" },
                 new() { Text = "Move Toward", Command = AddMovementCommand, CommandParameter = "MoveToward" },
                 new() { Text = "Move Away", Command = AddMovementCommand, CommandParameter = "MoveAway" },
-                new() { Text = "1 Step Forward", Command = AddMovementCommand, CommandParameter = "StepForward" },
-                new() { Text = "1 Step Backward", Command = AddMovementCommand, CommandParameter = "StepAway" }
+                new() { Text = "Step Forward", Command = AddMovementCommand, CommandParameter = "StepForward" },
+                new() { Text = "Step Backward", Command = AddMovementCommand, CommandParameter = "StepAway" }
             ]
         },
         new()
@@ -142,6 +142,9 @@ public class MovementRouteEditorViewModel(
     {
         var movement = CreateMovement(key);
         if (movement is null) return;
+
+        // a new move step starts at one tile's worth of walking steps
+        if (movement is StepCountMovement step) step.Steps = gameDataService.Division;
 
         // anything with settings or an entity to pick opens its editor, the rest is added as it is
         if (IsEditable(movement))
@@ -214,7 +217,7 @@ public class MovementRouteEditorViewModel(
 
     private async Task<ContentDialogResult> ShowEditor(Movement movement)
     {
-        var viewModel = new MovementEditorViewModel(movement, gameDataService.Artes, mapEntities, gameDataService.BalloonIcons);
+        var viewModel = new MovementEditorViewModel(movement, gameDataService.Artes, mapEntities, gameDataService.BalloonIcons, gameDataService.Division);
         return await navigationService.ShowMovementEditorPopup(viewModel);
     }
 
@@ -224,7 +227,7 @@ public class MovementRouteEditorViewModel(
         BalloonMovement or
         TurnTowardEntityMovement or
         TurnAwayEntityMovement or
-        MoveMovement or
+        StepCountMovement or
         MoveTowardMovement or
         MoveAwayMovement or
         SpeedMovement or

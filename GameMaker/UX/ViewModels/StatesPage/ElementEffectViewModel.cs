@@ -1,4 +1,5 @@
-﻿using GameLibrary.Models.States;
+﻿using GameLibrary.Models;
+using GameLibrary.Models.States;
 using MercuryLibrary.WinUI3Components;
 using Attribute = GameLibrary.Models.Attributes.Attribute;
 
@@ -8,7 +9,7 @@ public class ElementEffectViewModel(Attribute element, State state) : PropertyCh
 {
     public string Name => element.Name;
 
-    public int Icon => element.Icon;
+    public GameIcon Icon => element.Icon;
 
     public bool IsAffected
     {

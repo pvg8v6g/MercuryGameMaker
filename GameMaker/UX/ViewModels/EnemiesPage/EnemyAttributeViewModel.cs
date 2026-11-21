@@ -1,4 +1,5 @@
-﻿using GameLibrary.Models.Fighter;
+﻿using GameLibrary.Models;
+using GameLibrary.Models.Fighter;
 using MercuryLibrary.Extensions;
 using MercuryLibrary.WinUI3Components;
 using Attribute = GameLibrary.Models.Attributes.Attribute;
@@ -11,7 +12,7 @@ public class EnemyAttributeViewModel(Attribute attribute, Fighter fighter) : Pro
 
     public string Name => attribute.Name;
 
-    public int Icon => attribute.Icon;
+    public GameIcon Icon => attribute.Icon;
 
     public string AttributeValue
     {

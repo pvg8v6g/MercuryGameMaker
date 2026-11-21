@@ -14,7 +14,6 @@ public class PartyService(IGameDataService gameDataService, IGameStateService ga
     #region Constants
 
     private const int MinLevel = 1;
-    private const int MaxLevel = 99;
 
     #endregion
 
@@ -89,7 +88,7 @@ public class PartyService(IGameDataService gameDataService, IGameStateService ga
     // a new level, and the life, mana and attributes its discipline's growths give at that level (static stats stay put)
     public void SetLevel(Fighter actor, int level)
     {
-        actor.Level = Math.Clamp(level, MinLevel, MaxLevel);
+        actor.Level = Math.Clamp(level, MinLevel, Math.Max(MinLevel, gameDataService.LevelCap));
         if (actor.StaticStats || gameDataService.Disciplines.FirstOrDefault(x => x.Guid == actor.DisciplineGuid) is not { } discipline) return;
 
         if (Grown(discipline.LifeGrowthGuid, actor.Level) is { } life) actor.MaxLife = life;

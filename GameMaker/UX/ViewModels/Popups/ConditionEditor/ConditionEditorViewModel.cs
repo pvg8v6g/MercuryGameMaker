@@ -17,7 +17,13 @@ public class ConditionEditorViewModel(Condition condition, IGameDataService game
 
     public ObservableCollection<Fighter> Actors => gameDataService.Actors;
 
-    public ObservableCollection<Consumable> Consumables => gameDataService.Consumables;
+    // everything the party can carry besides equipment: consumables, cooking ingredients and crafting materials
+    public Item[] CarriedItems =>
+    [
+        .. gameDataService.Consumables.Cast<Item>()
+            .Concat(gameDataService.Ingredients)
+            .Concat(gameDataService.Materials)
+    ];
 
     public SelfSwitch[] SelfSwitches { get; } = Enum.GetValues<SelfSwitch>();
 

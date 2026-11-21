@@ -26,7 +26,7 @@
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="300" />
-      <ColumnDefinition Width="1.6*" />
+      <ColumnDefinition Width="{StaticResource DescriptionColumnWidth}" />
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="*" />
@@ -75,7 +75,7 @@
                       Grid.Row="0"
                       HorizontalAlignment="Left">
             <TextBlock HorizontalAlignment="Center">Icon</TextBlock>
-            <iconView:IconView IconIndex="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay, FallbackValue=0}"
+            <iconView:IconView Icon="{x:Bind ViewModel.SelectedEntity.Icon, Mode=TwoWay}"
                                HorizontalAlignment="Center" />
           </StackPanel>
 
@@ -86,7 +86,9 @@
                    Text="{x:Bind ViewModel.SelectedEntity.Description, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
                    AcceptsReturn="True"
                    TextWrapping="Wrap"
-                   MinHeight="80"
+                   Height="100"
+                   MaxWidth="{StaticResource DescriptionMaxWidth}"
+                   ScrollViewer.VerticalScrollBarVisibility="Auto"
                    VerticalAlignment="Top" />
 
           <engineTextBox:EngineTextBox Grid.Column="0"
@@ -117,43 +119,67 @@
                     SelectedItem="{x:Bind ViewModel.SelectedEntity.EffectScope, Mode=TwoWay}"
                     HorizontalAlignment="Stretch" />
 
-          <ComboBox Grid.Column="0"
-                    Grid.Row="4"
-                    Header="Caster Animation"
-                    PlaceholderText="None"
-                    ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
-                    SelectedValue="{x:Bind ViewModel.SelectedEntity.CasterAnimation, Mode=TwoWay, FallbackValue={x:Null}}"
-                    SelectedValuePath="Guid"
-                    MinHeight="48"
-                    HorizontalAlignment="Stretch">
-            <ComboBox.ItemTemplate>
-              <DataTemplate x:DataType="animations:Animation">
-                <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
-                  <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
-                  <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
-                </StackPanel>
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
+          <Grid Grid.Column="0"
+                Grid.Row="4"
+                ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ComboBox Header="Caster Animation"
+                      PlaceholderText="None"
+                      ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
+                      SelectedValue="{x:Bind ViewModel.SelectedEntity.CasterAnimation, Mode=TwoWay, FallbackValue={x:Null}}"
+                      SelectedValuePath="Guid"
+                      MinHeight="48"
+                      HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="animations:Animation">
+                  <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
+                    <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
+                  </StackPanel>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Grid.Column="1"
+                    Content="Clear"
+                    Command="{x:Bind ViewModel.ClearCasterAnimationCommand}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="Remove the caster animation from this arte."
+                    VerticalAlignment="Bottom" />
+          </Grid>
 
-          <ComboBox Grid.Column="1"
-                    Grid.Row="4"
-                    Header="Target Animation"
-                    PlaceholderText="None"
-                    ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
-                    SelectedValue="{x:Bind ViewModel.SelectedEntity.TargetAnimation, Mode=TwoWay, FallbackValue={x:Null}}"
-                    SelectedValuePath="Guid"
-                    MinHeight="48"
-                    HorizontalAlignment="Stretch">
-            <ComboBox.ItemTemplate>
-              <DataTemplate x:DataType="animations:Animation">
-                <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
-                  <engineIcon:EngineIcon IconIndex="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
-                  <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
-                </StackPanel>
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
+          <Grid Grid.Column="1"
+                Grid.Row="4"
+                ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ComboBox Header="Target Animation"
+                      PlaceholderText="None"
+                      ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
+                      SelectedValue="{x:Bind ViewModel.SelectedEntity.TargetAnimation, Mode=TwoWay, FallbackValue={x:Null}}"
+                      SelectedValuePath="Guid"
+                      MinHeight="48"
+                      HorizontalAlignment="Stretch">
+              <ComboBox.ItemTemplate>
+                <DataTemplate x:DataType="animations:Animation">
+                  <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
+                    <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
+                    <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
+                  </StackPanel>
+                </DataTemplate>
+              </ComboBox.ItemTemplate>
+            </ComboBox>
+            <Button Grid.Column="1"
+                    Content="Clear"
+                    Command="{x:Bind ViewModel.ClearTargetAnimationCommand}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="Remove the target animation from this arte."
+                    VerticalAlignment="Bottom" />
+          </Grid>
 
           <StackPanel Grid.Column="0"
                       Grid.Row="5"
@@ -237,8 +263,18 @@
                                      CopiedModel="{x:Bind ViewModel.CopiedProjectile, Mode=OneWay}" />
     </enginePanel:EnginePanel>
 
-    <enginePanel:EnginePanel Grid.Column="4"
-                             Grid.Row="0"
+    <!-- the state lists get their own half-and-half column so their length never sizes the top row (which would
+         squash the Projectiles panel to nothing); each panel scrolls -->
+    <Grid Grid.Column="4"
+          Grid.Row="0"
+          Grid.RowSpan="2"
+          RowSpacing="10">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="*" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+
+    <enginePanel:EnginePanel Grid.Row="0"
                              Title="Add States"
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
       <ItemsControl ItemsSource="{x:Bind ViewModel.AddStates, Mode=OneWay}">
@@ -257,7 +293,7 @@
               </Grid.ColumnDefinitions>
 
               <engineIcon:EngineIcon Grid.Column="0"
-                                     IconIndex="{x:Bind Icon}"
+                                     Icon="{x:Bind Icon}"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center" />
 
@@ -277,8 +313,7 @@
       </ItemsControl>
     </enginePanel:EnginePanel>
 
-    <enginePanel:EnginePanel Grid.Column="4"
-                             Grid.Row="1"
+    <enginePanel:EnginePanel Grid.Row="1"
                              Title="Remove States"
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
       <ItemsControl ItemsSource="{x:Bind ViewModel.RemoveStates, Mode=OneWay}">
@@ -297,7 +332,7 @@
               </Grid.ColumnDefinitions>
 
               <engineIcon:EngineIcon Grid.Column="0"
-                                     IconIndex="{x:Bind Icon}"
+                                     Icon="{x:Bind Icon}"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center" />
 
@@ -316,6 +351,7 @@
         </ItemsControl.ItemTemplate>
       </ItemsControl>
     </enginePanel:EnginePanel>
+    </Grid>
 
     <enginePanel:EnginePanel Grid.Column="3"
                              Grid.Row="0"
@@ -338,7 +374,7 @@
               </Grid.ColumnDefinitions>
 
               <engineIcon:EngineIcon Grid.Column="0"
-                                     IconIndex="{x:Bind Icon}"
+                                     Icon="{x:Bind Icon}"
                                      HorizontalAlignment="Center"
                                      VerticalAlignment="Center" />
 

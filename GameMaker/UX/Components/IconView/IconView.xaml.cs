@@ -1,4 +1,5 @@
-﻿using GameLibrary.Utilities;
+﻿using GameLibrary.Models;
+using GameLibrary.Utilities;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Utilities.ComponentModels;
 using GameMaker.AppMain;
@@ -11,25 +12,34 @@ using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace GameMaker.UX.Components.IconView;
 
+/// <summary>
+/// Shows an icon and picks a new one: the flyout has a dropdown of the icon sheets in Graphics\Icons and the chosen
+/// sheet below it. Clicking a cell picks that icon on that sheet.
+/// </summary>
 public partial class IconView
 {
-    public static readonly DependencyProperty IconIndexProperty = DependencyProperty.Register(
-        nameof(IconIndex), typeof(int), typeof(IconView), new PropertyMetadata(0, OnIconIndexChanged));
+    public static readonly DependencyProperty IconProperty = DependencyProperty.Register(
+        nameof(Icon), typeof(GameIcon), typeof(IconView), new PropertyMetadata(GameIcon.None, OnIconChanged));
 
-    private static void OnIconIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnIconChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is not IconView iconView) return;
         iconView.UpdateSelectedBorder();
         iconView.UpdateCroppedImage().Forget();
     }
 
-    public int IconIndex
+    public GameIcon Icon
     {
-        get => (int) GetValue(IconIndexProperty);
-        set => SetValue(IconIndexProperty, value);
+        get => (GameIcon) GetValue(IconProperty);
+        set => SetValue(IconProperty, value);
     }
 
     public CroppedImage CroppedImage { get; } = new();
+
+    // the sheet the flyout is showing, which isn't always the sheet of the current icon
+    private string? _shownSheet;
+
+    private static IGraphicsService GraphicsService => App.Services!.GetRequiredService<IGraphicsService>();
 
     public IconView()
     {
@@ -40,8 +50,7 @@ public partial class IconView
 
     private async Task UpdateCroppedImage()
     {
-        var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
-        var icon = await graphicsService.GetIcon(IconIndex);
+        var icon = await GraphicsService.GetIcon(Icon ?? GameIcon.None);
         CroppedImage.ImageSource = icon.ImageSource;
         CroppedImage.Rect = icon.Rect;
         UpdateSelectedBorder();
@@ -49,87 +58,102 @@ public partial class IconView
 
     private void OnTapped(object sender, TappedRoutedEventArgs e)
     {
-        UpdateSelectedBorder();
         FlyoutBase.ShowAttachedFlyout(sender as FrameworkElement);
     }
 
+    // opens on the current icon's sheet, the sheet list is read fresh so new sheets show up
     private void IconFlyout_Opened(object? sender, object e)
     {
-        LoadFullIcons().Forget();
+        var sheets = GraphicsService.GetIconSheets();
+        SheetBox.ItemsSource = sheets.Select(x => new SheetChoice(x)).ToArray();
+        var current = Icon?.Sheet ?? sheets.FirstOrDefault();
+        var shown = current is not null && sheets.Contains(current) ? current : sheets.FirstOrDefault();
+        SheetBox.SelectedItem = shown is null ? null : new SheetChoice(shown);
+        LoadSheet(shown).Forget();
     }
 
-    private async Task LoadFullIcons()
+    private void SheetBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (FullIconsImage.Source == null)
+        if (SheetBox.SelectedItem is SheetChoice choice && choice.File != _shownSheet) LoadSheet(choice.File).Forget();
+    }
+
+    private async Task LoadSheet(string? sheet)
+    {
+        _shownSheet = sheet;
+        var bitmapImage = await GraphicsService.GetImage(GraphicsService.GetIconSheetPath(sheet));
+
+        if (bitmapImage.PixelWidth == 0)
         {
-            var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
-            var path = graphicsService.GetIconsPath();
-            var bitmapImage = await graphicsService.GetImage(path);
-
-            if (bitmapImage.PixelWidth == 0)
+            bitmapImage.ImageOpened += (_, _) =>
             {
-                bitmapImage.ImageOpened += (_, _) =>
-                {
-                    UpdateSelectedBorder();
-                    ScrollToSelected();
-                };
-            }
-
-            FullIconsImage.Source = bitmapImage;
+                SizeToSheet();
+                UpdateSelectedBorder();
+                ScrollToSelected();
+            };
         }
 
+        FullIconsImage.Source = bitmapImage;
+        SizeToSheet();
         UpdateSelectedBorder();
         ScrollToSelected();
     }
 
+    // the current icon is on the shown sheet (an icon without a sheet is on the first one)
+    private bool CurrentIconIsShown()
+    {
+        var sheets = GraphicsService.GetIconSheets();
+        var iconSheet = Icon?.Sheet ?? sheets.FirstOrDefault();
+        return iconSheet is not null && string.Equals(iconSheet, _shownSheet, StringComparison.OrdinalIgnoreCase);
+    }
+
     private void ScrollToSelected()
     {
-        if (CroppedImage.Rect == null) return;
+        if (CroppedImage.Rect == null || !CurrentIconIsShown())
+        {
+            IconScrollViewer.ChangeView(0, 0, null);
+            return;
+        }
 
-        var y = CroppedImage.Rect.Value.Y;
-
-        // Ensure the layout is updated so ViewportWidth and ViewportHeight are correct
+        // the layout has to be up to date for the viewport size to be right
         IconScrollViewer.UpdateLayout();
-
-        // Center the 32x32 icon in the view if possible
-        var offsetY = y - IconScrollViewer.ViewportHeight / 2 + CroppedImage.Rect.Value.Y / 2;
-
+        var y = CroppedImage.Rect.Value.Y;
+        var offsetY = y - IconScrollViewer.ViewportHeight / 2 + CroppedImage.Rect.Value.Height / 2;
         IconScrollViewer.ChangeView(0, offsetY, null);
+    }
+
+    private void SizeToSheet()
+    {
+        if (FullIconsImage.Source is not BitmapImage { PixelWidth: > 0 } bitmapImage) return;
+
+        OverlayCanvas.Width = bitmapImage.PixelWidth;
+        OverlayCanvas.Height = bitmapImage.PixelHeight;
+        IconsContainer.Width = bitmapImage.PixelWidth;
+        IconsContainer.Height = bitmapImage.PixelHeight;
+        FullIconsImage.Width = bitmapImage.PixelWidth;
+        FullIconsImage.Height = bitmapImage.PixelHeight;
     }
 
     private void UpdateSelectedBorder()
     {
-        if (FullIconsImage.Source is BitmapImage bitmapImage)
+        if (CroppedImage.Rect == null || !CurrentIconIsShown())
         {
-            if (bitmapImage.PixelWidth == 0 || CroppedImage.Rect == null) return;
-
-            var x = (int) CroppedImage.Rect.Value.X;
-            var y = (int) CroppedImage.Rect.Value.Y;
-
-            Canvas.SetLeft(SelectedBorder, x);
-            Canvas.SetTop(SelectedBorder, y);
-            SelectedBorder.Visibility = Visibility.Visible;
-
-            OverlayCanvas.Width = bitmapImage.PixelWidth;
-            OverlayCanvas.Height = bitmapImage.PixelHeight;
-            IconsContainer.Width = bitmapImage.PixelWidth;
-            IconsContainer.Height = bitmapImage.PixelHeight;
-            FullIconsImage.Width = bitmapImage.PixelWidth;
-            FullIconsImage.Height = bitmapImage.PixelHeight;
+            SelectedBorder.Visibility = Visibility.Collapsed;
+            return;
         }
+
+        Canvas.SetLeft(SelectedBorder, (int) CroppedImage.Rect.Value.X);
+        Canvas.SetTop(SelectedBorder, (int) CroppedImage.Rect.Value.Y);
+        SelectedBorder.Visibility = Visibility.Visible;
     }
 
     private void IconsContainer_OnPointerMoved(object sender, PointerRoutedEventArgs e)
     {
-        var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
-        var (w, h) = graphicsService.GetSegmentation(graphicsService.GetIconsPath()).Result;
+        var w = GraphicsService.IconSize;
+        var h = GraphicsService.IconSize;
         var position = e.GetCurrentPoint(IconsContainer).Position;
 
-        var x = (int) (position.X / w) * w;
-        var y = (int) (position.Y / h) * h;
-
-        Canvas.SetLeft(HoverBorder, x);
-        Canvas.SetTop(HoverBorder, y);
+        Canvas.SetLeft(HoverBorder, (int) (position.X / w) * w);
+        Canvas.SetTop(HoverBorder, (int) (position.Y / h) * h);
         HoverBorder.Visibility = Visibility.Visible;
     }
 
@@ -140,16 +164,20 @@ public partial class IconView
 
     private void FullIconsImage_OnTapped(object sender, TappedRoutedEventArgs e)
     {
-        var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
-        var (w, h) = graphicsService.GetSegmentation(graphicsService.GetIconsPath()).Result;
-        var position = e.GetPosition(IconsContainer);
-        var xIndex = (int) (position.X / w);
-        var yIndex = (int) (position.Y / h);
+        if (FullIconsImage.Source is not BitmapImage bitmapImage || _shownSheet is null) return;
 
-        if (FullIconsImage.Source is not BitmapImage bitmapImage) return;
+        var w = GraphicsService.IconSize;
+        var h = GraphicsService.IconSize;
+        var position = e.GetPosition(IconsContainer);
         var columns = (int) (bitmapImage.PixelWidth / w);
-        var index = yIndex * columns + xIndex;
-        IconIndex = index;
+        var index = (int) (position.Y / h) * columns + (int) (position.X / w);
+        Icon = new GameIcon(_shownSheet, index);
         IconFlyout.Hide();
     }
+}
+
+// a sheet in the dropdown: shown by its theme name (the file name without .png), equal by file
+internal sealed record SheetChoice(string File)
+{
+    public override string ToString() => Path.GetFileNameWithoutExtension(File);
 }

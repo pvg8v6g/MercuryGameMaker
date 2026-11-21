@@ -32,6 +32,10 @@ public abstract class EngineTask : PropertyChangedUpdater
         private set => SetField(ref field, value);
     }
 
+    // true when the work doesn't touch anything on screen (no bound collections), so it can run off the UI thread
+    // and the progress bar keeps moving while it works
+    public virtual bool RunsInBackground => false;
+
     #endregion
 
     #region Abstract Methods

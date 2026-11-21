@@ -1,4 +1,5 @@
-﻿using GameLibrary.Utilities;
+﻿using GameLibrary.Models;
+using GameLibrary.Utilities;
 using Microsoft.UI.Xaml;
 using GameLibrary.Services.Graphics;
 using GameLibrary.Utilities.ComponentModels;
@@ -9,18 +10,19 @@ namespace GameMaker.UX.Components.EngineIcon;
 
 public sealed partial class EngineIcon
 {
-    public static readonly DependencyProperty IconIndexProperty = DependencyProperty.Register(
-        nameof(IconIndex), typeof(int), typeof(EngineIcon), new PropertyMetadata(0, OnIconIndexChanged));
+    public static readonly DependencyProperty IconProperty = DependencyProperty.Register(
+        nameof(Icon), typeof(GameIcon), typeof(EngineIcon), new PropertyMetadata(GameIcon.None, OnIconChanged));
 
-    private static void OnIconIndexChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    private static void OnIconChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
     {
         if (d is EngineIcon engineIcon) engineIcon.UpdateCroppedImage().Forget();
     }
 
-    public int IconIndex
+    // the icon and the sheet it's on
+    public GameIcon Icon
     {
-        get => (int) GetValue(IconIndexProperty);
-        set => SetValue(IconIndexProperty, value);
+        get => (GameIcon) GetValue(IconProperty);
+        set => SetValue(IconProperty, value);
     }
 
     public CroppedImage CroppedImage { get; } = new();
@@ -34,7 +36,7 @@ public sealed partial class EngineIcon
     private async Task UpdateCroppedImage()
     {
         var graphicsService = App.Services!.GetRequiredService<IGraphicsService>();
-        var icon = await graphicsService.GetIcon(IconIndex);
+        var icon = await graphicsService.GetIcon(Icon ?? GameIcon.None);
         CroppedImage.ImageSource = icon.ImageSource;
         CroppedImage.Rect = icon.Rect;
     }

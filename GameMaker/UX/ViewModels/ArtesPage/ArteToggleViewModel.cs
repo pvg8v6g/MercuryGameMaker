@@ -1,12 +1,13 @@
-﻿using MercuryLibrary.WinUI3Components;
+﻿using GameLibrary.Models;
+using MercuryLibrary.WinUI3Components;
 
 namespace GameMaker.UX.ViewModels.ArtesPage;
 
-public class ArteToggleViewModel(string name, int icon, List<Guid> changeList, Guid guid) : PropertyChangedUpdater
+public class ArteToggleViewModel(string name, GameIcon icon, List<Guid> changeList, Guid guid) : PropertyChangedUpdater
 {
     public string Name => name;
 
-    public int Icon => icon;
+    public GameIcon Icon => icon;
 
     public bool IsChecked
     {

@@ -56,6 +56,9 @@ public interface IGameDataService
     // where a new game begins and who is in the party
     GameStart GameStart { get; set; }
 
+    // rules for the whole game, such as the level cap
+    GameSettings GameSettings { get; set; }
+
     ObservableCollection<Fighter> Actors { get; }
 
     ObservableCollection<Discipline> Disciplines { get; }
@@ -63,6 +66,12 @@ public interface IGameDataService
     ObservableCollection<Arte> Artes { get; }
 
     ObservableCollection<Consumable> Consumables { get; }
+
+    // cooking ingredients
+    ObservableCollection<Ingredient> Ingredients { get; }
+
+    // crafting materials and valuables
+    ObservableCollection<Material> Materials { get; }
 
     ObservableCollection<Equipment> Equipment { get; }
 

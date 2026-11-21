@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Linq;
 using GameLibrary.Commands;
 using GameLibrary.Models;
 using GameLibrary.Models.Actions;
@@ -28,7 +27,13 @@ public class ActionEditorViewModel(PageAction action, IGameDataService gameDataS
 
     public ObservableCollection<Fighter> Enemies => gameDataService.Enemies;
 
-    public ObservableCollection<Consumable> Consumables => gameDataService.Consumables;
+    // everything the party can carry besides equipment: consumables, cooking ingredients and crafting materials
+    public Item[] CarriedItems =>
+    [
+        .. gameDataService.Consumables.Cast<Item>()
+            .Concat(gameDataService.Ingredients)
+            .Concat(gameDataService.Materials)
+    ];
 
     public ObservableCollection<Equipment> Equipment => gameDataService.Equipment;
 
@@ -267,7 +272,7 @@ public class ActionEditorViewModel(PageAction action, IGameDataService gameDataS
         {
             if (AsChangeItem is null) return;
             AsChangeItem.ItemId = value;
-            AsChangeItem.ItemName = Consumables.FirstOrDefault(x => x.Guid == value)?.Name;
+            AsChangeItem.ItemName = CarriedItems.FirstOrDefault(x => x.Guid == value)?.Name;
         }
     }
 

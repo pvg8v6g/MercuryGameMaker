@@ -66,7 +66,12 @@ public partial class GameDataService : PropertyChangedUpdater, IGameDataService
 
     public string[] GameGraphicsMapFolders { get; set; } = ["Parallax", "Light", "Ground", "Underlayment"];
 
-    public int LevelCap { get; set; } = 99;
+    // the game's level cap, kept in GameSettings so it's saved with the game
+    public int LevelCap
+    {
+        get => GameSettings.LevelCap;
+        set => GameSettings.LevelCap = value;
+    }
 
     public Guid LifeAttributeGuid => new("0581680B-6BCC-4668-AA4A-FA2BCE8160DA");
 
@@ -80,6 +85,8 @@ public partial class GameDataService : PropertyChangedUpdater, IGameDataService
 
     public GameStart GameStart { get; set; } = new();
 
+    public GameSettings GameSettings { get; set; } = new();
+
     public ObservableCollection<Fighter> Actors { get; } = [];
 
     public ObservableCollection<Discipline> Disciplines { get; } = [];
@@ -87,6 +94,10 @@ public partial class GameDataService : PropertyChangedUpdater, IGameDataService
     public ObservableCollection<Arte> Artes { get; } = [];
 
     public ObservableCollection<Consumable> Consumables { get; } = [];
+
+    public ObservableCollection<Ingredient> Ingredients { get; } = [];
+
+    public ObservableCollection<Material> Materials { get; } = [];
 
     public ObservableCollection<Equipment> Equipment { get; } = [];
 

@@ -63,11 +63,11 @@
           <ComboBox Header="Item"
                     PlaceholderText="None"
                     HorizontalAlignment="Stretch"
-                    ItemsSource="{x:Bind ViewModel.Consumables, Mode=OneWay}"
+                    ItemsSource="{x:Bind ViewModel.CarriedItems, Mode=OneWay}"
                     SelectedValue="{x:Bind ViewModel.ChangeItemItemId, Mode=TwoWay, FallbackValue={x:Null}}"
                     SelectedValuePath="Guid">
             <ComboBox.ItemTemplate>
-              <DataTemplate x:DataType="items:Consumable">
+              <DataTemplate x:DataType="items:Item">
                 <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
               </DataTemplate>
             </ComboBox.ItemTemplate>
