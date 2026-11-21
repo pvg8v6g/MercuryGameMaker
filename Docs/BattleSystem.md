@@ -134,6 +134,22 @@ big area often falls outside the walls and hits nobody. Big areas are fine on th
   whether that member may use items in battle. It's a real trade-off: a low party member who heals themselves may not
   reach you with the area, and if you're low too you can die.
 
+## Spawn points (user, 2026-11-21)
+
+- **Troops own every spawn point.** Battle maps are plain open fields with no spawn entities, so any troop can use
+  any battle map.
+- **Enemies:** each enemy in a troop is **Fixed** (starts on its own spot, for bosses and set pieces) or **Random**
+  (starts on one of the troop's **enemy spawn points**, a different one for each random enemy, so fights don't start
+  the same way every time).
+- **Party:** the troop's **Party Spawn** is **Fixed** (party member 1, the leader, on party point 1, member 2 on
+  point 2 and so on) or **Random** (each member on a different party point picked at random).
+- **Placement is by the feet:** a spot is the tile the fighter stands on, and the sprite rises up from it, centred,
+  like characters standing on tiles on the story maps (`TroopEnemy.X/Y` and `TroopSpawnPoint.X/Y` are that tile's
+  top left in battle map pixels).
+- The Troops page warns (yellow) when there are fewer than 4 party points, fewer enemy points than Random enemies, or
+  Fixed enemies that haven't been placed. If a battle is still short anyway, leftover fighters go to the nearest
+  open tile next to their side's other points.
+
 ## Starting a battle (user, 2026-11-20)
 
 - **Touching an enemy on the map starts a fight against a troop**, and the troop can be **random**: one enemy on the

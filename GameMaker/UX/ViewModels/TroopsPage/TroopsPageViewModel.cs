@@ -29,6 +29,14 @@ public partial class TroopsPageViewModel(
 
     private const string None = "(None)";
 
+    // the most fighters the party can bring into a battle, so a troop wants this many party spawn points
+    private const int PartyBattlers = 4;
+
+    // what a left-click in the arena does
+    private const string PlaceEnemy = "Selected Enemy";
+    private const string PlaceEnemyPoints = "Enemy Spawn Points";
+    private const string PlacePartyPoints = "Party Spawn Points";
+
     #endregion
 
     #region Fields
@@ -62,6 +70,8 @@ public partial class TroopsPageViewModel(
             SetField(ref field, value);
             for (var i = 0; i < TroopEnemies.Count; i++) TroopEnemies[i].IsSelected = i == value;
             OnPropertyChanged(nameof(SelectedTroopEnemy));
+            OnPropertyChanged(nameof(HasSelectedTroopEnemy));
+            OnPropertyChanged(nameof(SelectedEnemySpawn));
         }
     } = -1;
 
@@ -74,6 +84,72 @@ public partial class TroopsPageViewModel(
     public TroopEnemyModel? SelectedTroopEnemy => SelectedTroopEnemyIndex >= 0 && SelectedTroopEnemyIndex < TroopEnemies.Count
         ? TroopEnemies[SelectedTroopEnemyIndex]
         : null;
+
+    public bool HasSelectedTroopEnemy => SelectedTroopEnemy is not null;
+
+    // the selected enemy starts on its own spot (Fixed) or on one of the troop's enemy spawn points (Random)
+    public SpawnMode SelectedEnemySpawn
+    {
+        get => SelectedTroopEnemy?.Spawn ?? SpawnMode.Fixed;
+        set
+        {
+            if (SelectedTroopEnemy is not { } model || model.Spawn == value) return;
+            model.Spawn = value;
+            OnPropertyChanged();
+            RefreshWarning();
+        }
+    }
+
+    // the party starts on its points in party order (Fixed) or on points picked at random (Random)
+    public SpawnMode PartySpawn
+    {
+        get => SelectedEntity?.PartySpawn ?? SpawnMode.Fixed;
+        set
+        {
+            if (SelectedEntity is null || SelectedEntity.PartySpawn == value) return;
+            SelectedEntity.PartySpawn = value;
+            OnPropertyChanged();
+        }
+    }
+
+    // the party and enemy spawn points drawn in the arena
+    public ObservableCollection<SpawnPointModel> SpawnPoints { get; } = [];
+
+    public string[] PlaceModes { get; } = [PlaceEnemy, PlaceEnemyPoints, PlacePartyPoints];
+
+    public string SelectedPlaceMode
+    {
+        get;
+        set
+        {
+            if (value is null) return;
+            SetField(ref field, value);
+        }
+    } = PlaceEnemy;
+
+    // what's missing for this troop to start a battle the way it's set up, empty when nothing is
+    public string SpawnWarning
+    {
+        get
+        {
+            if (SelectedEntity is not { } troop) return string.Empty;
+
+            var warnings = new List<string>();
+            if (troop.PartySpawnPoints.Count < PartyBattlers)
+                warnings.Add($"The party can bring {PartyBattlers} fighters, but there are only {troop.PartySpawnPoints.Count} party spawn points.");
+
+            var random = troop.Enemies.Count(x => x.Spawn == SpawnMode.Random);
+            if (random > troop.EnemySpawnPoints.Count)
+                warnings.Add($"{random} enemies spawn at random, but there are only {troop.EnemySpawnPoints.Count} enemy spawn points.");
+
+            var unplaced = troop.Enemies.Count(x => x.Spawn == SpawnMode.Fixed && (x.X is null || x.Y is null));
+            if (unplaced > 0) warnings.Add($"{unplaced} fixed {(unplaced == 1 ? "enemy hasn't" : "enemies haven't")} been placed.");
+
+            return string.Join(Environment.NewLine, warnings);
+        }
+    }
+
+    public bool HasSpawnWarning => SpawnWarning.Length > 0;
 
     #endregion
 
@@ -211,6 +287,8 @@ public partial class TroopsPageViewModel(
 
     public RelayCommand<TroopEnemyModel> SelectArenaEnemyCommand => field ??= new RelayCommand<TroopEnemyModel>(SelectArenaEnemyAction);
 
+    public RelayCommand<SpawnPointModel> RemoveSpawnPointCommand => field ??= new RelayCommand<SpawnPointModel>(RemoveSpawnPointAction);
+
     public RelayCommand PlayBgmCommand => field ??= new RelayCommand(PlayBgmAction, () => IsBgmSelected);
 
     public RelayCommand StopBgmCommand => field ??= new RelayCommand(audioService.StopBgm);
@@ -242,7 +320,10 @@ public partial class TroopsPageViewModel(
     protected override async Task OnSelectedIndexChanged(int selectedIndex)
     {
         RefreshMusic();
+        OnPropertyChanged(nameof(PartySpawn));
+        RefreshSpawnPoints();
         await RefreshTroopEnemies();
+        RefreshWarning();
     }
 
     private void AddEnemyAction(Fighter enemy)
@@ -252,10 +333,11 @@ public partial class TroopsPageViewModel(
         var troopEnemy = new TroopEnemy { EnemyGuid = enemy.Guid };
         SelectedEntity.Enemies.Add(troopEnemy);
 
-        var model = new TroopEnemyModel(troopEnemy, enemy);
+        var model = new TroopEnemyModel(troopEnemy, enemy, gameDataService.GridSize);
         TroopEnemies.Add(model);
         SelectedTroopEnemyIndex = TroopEnemies.Count - 1;
         _ = LoadSprite(model, enemy);
+        RefreshWarning();
     }
 
     private void CopyEnemyAction()
@@ -279,13 +361,56 @@ public partial class TroopsPageViewModel(
         SelectedEntity.Enemies.Remove(model.TroopEnemy);
         TroopEnemies.Remove(model);
         SelectedTroopEnemyIndex = Math.Min(index, TroopEnemies.Count - 1);
+        RefreshWarning();
     }
 
+    // the clicked tile is where the feet go: the selected enemy stands there, or a spawn point is added there
     private void PlaceEnemyAction(Point point)
     {
-        if (SelectedTroopEnemy is not { } model) return;
-        model.X = (int) point.X;
-        model.Y = (int) point.Y;
+        if (SelectedEntity is not { } troop) return;
+
+        var (x, y) = ((int) point.X, (int) point.Y);
+        switch (SelectedPlaceMode)
+        {
+            case PlaceEnemyPoints:
+                AddSpawnPoint(troop.EnemySpawnPoints, x, y);
+                break;
+
+            case PlacePartyPoints:
+                AddSpawnPoint(troop.PartySpawnPoints, x, y);
+                break;
+
+            default:
+                if (SelectedTroopEnemy is not { } model) return;
+
+                // placing an enemy on a spot of its own makes it Fixed
+                model.Spawn = SpawnMode.Fixed;
+                model.X = x;
+                model.Y = y;
+                OnPropertyChanged(nameof(SelectedEnemySpawn));
+                break;
+        }
+
+        RefreshWarning();
+    }
+
+    // one point per tile for each side
+    private void AddSpawnPoint(ObservableCollection<TroopSpawnPoint> points, int x, int y)
+    {
+        if (points.Any(p => p.X == x && p.Y == y)) return;
+
+        points.Add(new TroopSpawnPoint { X = x, Y = y });
+        RefreshSpawnPoints();
+    }
+
+    private void RemoveSpawnPointAction(SpawnPointModel model)
+    {
+        if (SelectedEntity is not { } troop) return;
+
+        if (model.IsParty) troop.PartySpawnPoints.Remove(model.Point);
+        else troop.EnemySpawnPoints.Remove(model.Point);
+        RefreshSpawnPoints();
+        RefreshWarning();
     }
 
     private void SelectArenaEnemyAction(TroopEnemyModel model)
@@ -311,7 +436,7 @@ public partial class TroopsPageViewModel(
 
         var models = SelectedEntity.Enemies
             .Select(x => (troopEnemy: x, enemy: Enemies.FirstOrDefault(e => e.Guid == x.EnemyGuid)))
-            .Select(x => (model: new TroopEnemyModel(x.troopEnemy, x.enemy), x.enemy))
+            .Select(x => (model: new TroopEnemyModel(x.troopEnemy, x.enemy, gameDataService.GridSize), x.enemy))
             .ToArray();
 
         foreach (var (model, _) in models) TroopEnemies.Add(model);
@@ -322,6 +447,22 @@ public partial class TroopsPageViewModel(
     {
         if (enemy is null || enemy.CharacterName.IsNullOrEmpty()) return;
         model.Sprite = await graphicsService.GetCharacter(enemy.CharacterName!, enemy.CharacterIndex, enemy.CharacterDirection);
+    }
+
+    // party points are numbered in party order, enemy points are all alike
+    private void RefreshSpawnPoints()
+    {
+        SpawnPoints.Clear();
+        if (SelectedEntity is not { } troop) return;
+
+        for (var i = 0; i < troop.PartySpawnPoints.Count; i++) SpawnPoints.Add(new SpawnPointModel(troop.PartySpawnPoints[i], true, (i + 1).ToString()));
+        foreach (var point in troop.EnemySpawnPoints) SpawnPoints.Add(new SpawnPointModel(point, false, string.Empty));
+    }
+
+    private void RefreshWarning()
+    {
+        OnPropertyChanged(nameof(SpawnWarning));
+        OnPropertyChanged(nameof(HasSpawnWarning));
     }
 
     // syncs the combo box to the selected troop without writing back to the troop

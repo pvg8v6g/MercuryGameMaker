@@ -61,7 +61,26 @@ public partial class TroopArena
         set => SetValue(ShowGridProperty, value);
     }
 
-    // executed with the snapped Point the selected enemy's 0,0 should move to
+    public static readonly DependencyProperty SpawnPointsProperty = DependencyProperty.Register(
+        nameof(SpawnPoints), typeof(ObservableCollection<SpawnPointModel>), typeof(TroopArena), new PropertyMetadata(null, OnBindingsChanged));
+
+    public ObservableCollection<SpawnPointModel>? SpawnPoints
+    {
+        get => (ObservableCollection<SpawnPointModel>?) GetValue(SpawnPointsProperty);
+        set => SetValue(SpawnPointsProperty, value);
+    }
+
+    // executed with the SpawnPointModel that was right-clicked in the arena
+    public static readonly DependencyProperty RemoveSpawnPointCommandProperty = DependencyProperty.Register(
+        nameof(RemoveSpawnPointCommand), typeof(ICommand), typeof(TroopArena), new PropertyMetadata(null));
+
+    public ICommand? RemoveSpawnPointCommand
+    {
+        get => (ICommand?) GetValue(RemoveSpawnPointCommandProperty);
+        set => SetValue(RemoveSpawnPointCommandProperty, value);
+    }
+
+    // executed with the snapped Point of the clicked tile: where the feet go (an enemy or a spawn point)
     public static readonly DependencyProperty PlaceCommandProperty = DependencyProperty.Register(
         nameof(PlaceCommand), typeof(ICommand), typeof(TroopArena), new PropertyMetadata(null));
 
@@ -129,6 +148,15 @@ public partial class TroopArena
         if (sender is not FrameworkElement { DataContext: TroopEnemyModel enemy }) return;
 
         if (SelectCommand?.CanExecute(enemy) == true) SelectCommand.Execute(enemy);
+        e.Handled = true;
+    }
+
+    private void OnSpawnPointPointerPressed(object sender, PointerRoutedEventArgs e)
+    {
+        if (!e.GetCurrentPoint((UIElement) sender).Properties.IsRightButtonPressed) return;
+        if (sender is not FrameworkElement { DataContext: SpawnPointModel point }) return;
+
+        if (RemoveSpawnPointCommand?.CanExecute(point) == true) RemoveSpawnPointCommand.Execute(point);
         e.Handled = true;
     }
 

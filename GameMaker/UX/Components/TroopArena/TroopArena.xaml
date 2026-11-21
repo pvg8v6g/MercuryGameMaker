@@ -47,10 +47,45 @@
       </ItemsControl.ItemTemplate>
     </ItemsControl>
 
-    <!-- Enemies (placed by their 0,0) -->
-    <gridArea:CanvasItemsControl ItemsSource="{x:Bind Enemies, Mode=OneWay}"
+    <!-- Spawn points: tiles on the floor, blue and numbered for the party, red for random enemies -->
+    <gridArea:CanvasItemsControl ItemsSource="{x:Bind SpawnPoints, Mode=OneWay}"
                                  LeftPropertyName="X"
                                  TopPropertyName="Y">
+      <gridArea:CanvasItemsControl.ItemsPanel>
+        <ItemsPanelTemplate>
+          <Canvas />
+        </ItemsPanelTemplate>
+      </gridArea:CanvasItemsControl.ItemsPanel>
+      <gridArea:CanvasItemsControl.ItemTemplate>
+        <DataTemplate x:DataType="troopsPage:SpawnPointModel">
+          <Grid Width="48"
+                Height="48"
+                Background="Transparent"
+                ToolTipService.ToolTip="{x:Bind ToolTip}"
+                PointerPressed="OnSpawnPointPointerPressed">
+            <Rectangle Fill="{StaticResource LightBlueBrush}"
+                       Stroke="{StaticResource LightBlueBrush}"
+                       StrokeThickness="2"
+                       Opacity="0.45"
+                       Visibility="{x:Bind IsParty, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            <Rectangle Fill="{StaticResource MediumPinkBrush}"
+                       Stroke="{StaticResource MediumPinkBrush}"
+                       StrokeThickness="2"
+                       Opacity="0.45"
+                       Visibility="{x:Bind IsEnemy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            <TextBlock Text="{x:Bind Label}"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center" />
+          </Grid>
+        </DataTemplate>
+      </gridArea:CanvasItemsControl.ItemTemplate>
+    </gridArea:CanvasItemsControl>
+
+    <!-- Enemies: each stands on its feet tile, the sprite rising up from it -->
+    <gridArea:CanvasItemsControl ItemsSource="{x:Bind Enemies, Mode=OneWay}"
+                                 LeftPropertyName="DrawX"
+                                 TopPropertyName="DrawY">
       <gridArea:CanvasItemsControl.ItemsPanel>
         <ItemsPanelTemplate>
           <Canvas />

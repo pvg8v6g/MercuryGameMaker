@@ -10,6 +10,8 @@
       xmlns:engineListView="using:GameMaker.UX.Components.EngineListView"
       xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
       xmlns:troopArena="using:GameMaker.UX.Components.TroopArena"
+      xmlns:enums="using:GameLibrary.Enumerations"
+      xmlns:extensions="using:GameLibrary.MarkupExtensions"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance troopsPage:TroopsPageViewModel}"
       behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
@@ -55,6 +57,12 @@
                   ToolTipService.ToolTip="Can the party run from this battle? Turn off for bosses and scripted fights.">
           Can Run
         </CheckBox>
+
+        <ComboBox Header="Party Spawn"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{extensions:EnumValues EnumType=enums:SpawnMode}"
+                  SelectedItem="{x:Bind ViewModel.PartySpawn, Mode=TwoWay}"
+                  ToolTipService.ToolTip="Fixed: party member 1 (the leader) starts on party point 1, member 2 on point 2 and so on. Random: each party member starts on a different party point picked at random." />
 
         <ComboBox Header="Battle Music"
                   HorizontalAlignment="Stretch"
@@ -115,7 +123,7 @@
                                      CopiedModel="{x:Bind ViewModel.CopiedTroopEnemy, Mode=OneWay}"
                                      MinHeight="200"
                                      Height="{x:Bind EnemiesPanel.ScrollerViewportHeight, Mode=OneWay}"
-                                     ToolTipService.ToolTip="Right-click and choose Add to pick an enemy for this troop. Select an enemy, then left-click the battle arena to place it. Right-click an enemy in the arena to select it.">
+                                     ToolTipService.ToolTip="Right-click and choose Add to pick an enemy for this troop. Select an enemy, then left-click the tile in the battle arena it should stand on. Right-click an enemy in the arena to select it.">
         <engineListView:EngineListView.ItemTemplate>
           <DataTemplate x:DataType="troopsPageModels:TroopEnemyModel">
             <Grid ColumnSpacing="10" Padding="0,5">
@@ -164,7 +172,28 @@
                     IsChecked="{x:Bind ViewModel.ShowGrid, Mode=TwoWay}" />
         </StackPanel>
 
+        <StackPanel Orientation="Horizontal" Spacing="15">
+          <ComboBox Header="Click Places"
+                    MinWidth="200"
+                    ItemsSource="{x:Bind ViewModel.PlaceModes}"
+                    SelectedItem="{x:Bind ViewModel.SelectedPlaceMode, Mode=TwoWay}"
+                    ToolTipService.ToolTip="What a left-click in the arena places: the selected enemy (on a spot of its own), a random enemy spawn point, or a party spawn point. Click the tile the feet stand on. Right-click a spawn point to remove it." />
+          <ComboBox Header="Selected Enemy Spawn"
+                    MinWidth="160"
+                    ItemsSource="{extensions:EnumValues EnumType=enums:SpawnMode}"
+                    SelectedItem="{x:Bind ViewModel.SelectedEnemySpawn, Mode=TwoWay}"
+                    IsEnabled="{x:Bind ViewModel.HasSelectedTroopEnemy, Mode=OneWay}"
+                    ToolTipService.ToolTip="Fixed: the enemy starts on its own spot. Random: it starts on one of the enemy spawn points, a different one for each random enemy." />
+        </StackPanel>
+
+        <TextBlock Text="{x:Bind ViewModel.SpawnWarning, Mode=OneWay}"
+                   Foreground="{StaticResource LightYellowBrush}"
+                   TextWrapping="Wrap"
+                   Visibility="{x:Bind ViewModel.HasSpawnWarning, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
         <troopArena:TroopArena Enemies="{x:Bind ViewModel.TroopEnemies}"
+                               SpawnPoints="{x:Bind ViewModel.SpawnPoints}"
+                               RemoveSpawnPointCommand="{x:Bind ViewModel.RemoveSpawnPointCommand}"
                                BackgroundSource="{x:Bind ViewModel.BackgroundImage, Mode=OneWay}"
                                ArenaSize="{x:Bind ViewModel.ArenaSize, Mode=OneWay}"
                                BlockSize="{x:Bind ViewModel.BlockSize, Mode=OneWay}"
