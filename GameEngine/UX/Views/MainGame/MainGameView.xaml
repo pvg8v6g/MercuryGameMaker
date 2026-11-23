@@ -1,4 +1,4 @@
-﻿<Page x:Class="GameEngine.UX.Views.MainGame.MainGameView"
+<Page x:Class="GameEngine.UX.Views.MainGame.MainGameView"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -7,6 +7,7 @@
       xmlns:behaviors="using:GameLibrary.Behaviors"
       xmlns:mercury="using:MercuryLibrary.CanvasComponents"
       xmlns:models="using:GameEngine.Models"
+      xmlns:battleHud="using:GameEngine.UX.Views.BattleHud"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance mainGame:MainGameViewModel}"
       Background="Black"
@@ -68,8 +69,14 @@
         <ItemsControl ItemsPanel="{StaticResource DebugBoxPanel}"
                       ItemTemplate="{StaticResource DebugBoxTemplate}"
                       ItemsSource="{x:Bind ViewModel.DebugOverlay.EntityHitboxes, Mode=OneWay}" />
+        <ItemsControl ItemsPanel="{StaticResource DebugBoxPanel}"
+                      ItemTemplate="{StaticResource DebugBoxTemplate}"
+                      ItemsSource="{x:Bind ViewModel.DebugOverlay.ArteHitboxes, Mode=OneWay}" />
       </Canvas>
     </Grid>
+
+    <!-- the screen layers: the battle HUD, then (later) the menus over it -->
+    <battleHud:BattleHudView Hud="{x:Bind ViewModel.BattleHud}" />
 
     <!-- a lightning flash, under the fade so a black screen stays black -->
     <Rectangle Fill="White"

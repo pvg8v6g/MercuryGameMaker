@@ -1,4 +1,5 @@
-﻿using GameEngine.Models;
+using GameEngine.Models;
+using GameEngine.Models.Battle;
 using GameEngine.Services.GameState;
 using GameEngine.Services.Input;
 using GameLibrary.Models.Modules;
@@ -14,6 +15,9 @@ public class InputSystem(IInputService inputService, IGameStateService gameState
     {
         // a running page the player started (or an autorun) holds the player still
         if (gameStateService.IsPlayerBusy || !entity.HasModule<InputModule>() || inputService.Direction is not { } direction) return;
+
+        // casting, or down in battle: the fighter stays where it is
+        if (entity.State<BattleLockState>().Locked) return;
         movementSystem.Move(entity, direction);
     }
 }

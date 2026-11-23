@@ -1,4 +1,4 @@
-﻿using Windows.System;
+using Windows.System;
 using GameLibrary.Enumerations;
 
 namespace GameEngine.Services.Input;
@@ -30,6 +30,8 @@ public class InputService : IInputService
     public int Lag { get; set; }
 
     public bool Enter => KeyAny(VirtualKey.Enter);
+
+    public bool IsDown(VirtualKey key) => KeyAny(key);
 
     public bool Escape => KeyAny(VirtualKey.Escape);
 

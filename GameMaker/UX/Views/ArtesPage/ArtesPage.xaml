@@ -1,4 +1,4 @@
-﻿<Page x:Class="GameMaker.UX.Views.ArtesPage.ArtesPage"
+<Page x:Class="GameMaker.UX.Views.ArtesPage.ArtesPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -9,14 +9,37 @@
       xmlns:engineIcon="using:GameMaker.UX.Components.EngineIcon"
       xmlns:iconView="using:GameMaker.UX.Components.IconView"
       xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+      xmlns:engineComboBox="using:GameMaker.UX.Components.EngineComboBox"
       xmlns:hitboxPreview="using:GameMaker.UX.Components.HitboxPreview"
-      xmlns:animations="using:GameLibrary.Models.Animations"
       xmlns:enums="using:GameLibrary.Enumerations"
       xmlns:extensions="using:GameLibrary.MarkupExtensions"
       xmlns:behaviors="using:GameLibrary.Behaviors"
+      xmlns:mercury="using:MercuryLibrary.CanvasComponents"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance artesPage:ArtesPageViewModel}"
       behaviors:LoadedBehavior.LoadedCommand="{x:Bind ViewModel.LoadedCommand}">
+  <Page.Resources>
+    <!-- the cards that group the Animations panel -->
+    <Style x:Key="ArteSectionCardStyle" TargetType="Border">
+      <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+      <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="14,12" />
+    </Style>
+    <Style x:Key="ArteSectionHeaderStyle" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="18" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <!-- MaxWidth: the Animations panel's column sizes to its content, where wrapping text would never wrap and would
+         widen the column until the Hitboxes panel beside it had no room left. 380 is about the preview's width -->
+    <Style x:Key="ArteCaptionStyle" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="14" />
+      <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+      <Setter Property="MaxWidth" Value="380" />
+    </Style>
+  </Page.Resources>
   <Grid ColumnSpacing="10"
         RowSpacing="10"
         Padding="5">
@@ -26,8 +49,8 @@
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
       <ColumnDefinition Width="300" />
-      <ColumnDefinition Width="{StaticResource DescriptionColumnWidth}" />
-      <ColumnDefinition Width="*" />
+      <ColumnDefinition Width="3*" />
+      <ColumnDefinition Width="1.5*" />
       <ColumnDefinition Width="*" />
       <ColumnDefinition Width="*" />
     </Grid.ColumnDefinitions>
@@ -44,16 +67,29 @@
                                    DeleteCommand="{x:Bind ViewModel.DeleteEntityCommand}"
                                    CopiedModel="{x:Bind ViewModel.CopiedModel, Mode=OneWay}" />
 
-    <enginePanel:EnginePanel Grid.Column="1"
-                             Grid.Row="0"
-                             Grid.RowSpan="2"
-                             Title="Arte Metadata"
-                             Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-      <Grid ColumnSpacing="20"
-            RowSpacing="10">
+    <!-- metadata across the top, animations and hitboxes side by side underneath -->
+    <Grid Grid.Column="1"
+          Grid.Row="0"
+          Grid.RowSpan="2"
+          ColumnSpacing="10"
+          RowSpacing="10">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="*" />
+      </Grid.ColumnDefinitions>
+
+      <enginePanel:EnginePanel Grid.Column="0"
+                               Grid.ColumnSpan="2"
+                               Grid.Row="0"
+                               Title="Arte Metadata"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <Grid ColumnSpacing="20"
+              RowSpacing="10">
           <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -79,17 +115,19 @@
                                HorizontalAlignment="Center" />
           </StackPanel>
 
-          <TextBox Grid.Column="0"
-                   Grid.Row="1"
-                   Grid.ColumnSpan="2"
-                   Header="Description"
-                   Text="{x:Bind ViewModel.SelectedEntity.Description, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
-                   AcceptsReturn="True"
-                   TextWrapping="Wrap"
-                   Height="100"
-                   MaxWidth="{StaticResource DescriptionMaxWidth}"
-                   ScrollViewer.VerticalScrollBarVisibility="Auto"
-                   VerticalAlignment="Top" />
+          <!-- the description stretches up to DescriptionMaxWidth, anchored left: a stretched box with a MaxWidth centres itself -->
+          <Grid Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" MaxWidth="{StaticResource DescriptionMaxWidth}" />
+            </Grid.ColumnDefinitions>
+            <TextBox Header="Description"
+                     Text="{x:Bind ViewModel.SelectedEntity.Description, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     Height="100"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     VerticalAlignment="Top" />
+          </Grid>
 
           <engineTextBox:EngineTextBox Grid.Column="0"
                                        Grid.Row="2"
@@ -98,12 +136,24 @@
                                        Text="{x:Bind ViewModel.SelectedEntity.Cost, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
                                        Tooltip="How much mana does casting this arte cost?" />
 
-          <engineTextBox:EngineTextBox Grid.Column="1"
-                                       Grid.Row="2"
-                                       Header="Cast Time (60 = 1sec)"
-                                       InputType="Integer"
-                                       Text="{x:Bind ViewModel.SelectedEntity.CastTime, Mode=TwoWay, FallbackValue='60', UpdateSourceTrigger=PropertyChanged}"
-                                       Tooltip="How long does this arte take to cast? 60 equals one second." />
+          <Grid Grid.Column="1"
+                Grid.Row="2"
+                ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <engineTextBox:EngineTextBox Grid.Column="0"
+                                         Header="Cast Time (60 = 1sec)"
+                                         InputType="Integer"
+                                         Text="{x:Bind ViewModel.SelectedEntity.CastTime, Mode=TwoWay, FallbackValue='60', UpdateSourceTrigger=PropertyChanged}"
+                                         Tooltip="How long does this arte take to cast? 60 equals one second. The caster can't move or cancel it while it casts." />
+            <engineTextBox:EngineTextBox Grid.Column="1"
+                                         Header="Cooldown (60 = 1sec)"
+                                         InputType="Integer"
+                                         Text="{x:Bind ViewModel.SelectedEntity.Cooldown, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                         Tooltip="How long after it's used before it can be used again? 60 equals one second, 0 for no cooldown." />
+          </Grid>
 
           <ComboBox Grid.Column="0"
                     Grid.Row="3"
@@ -119,93 +169,296 @@
                     SelectedItem="{x:Bind ViewModel.SelectedEntity.EffectScope, Mode=TwoWay}"
                     HorizontalAlignment="Stretch" />
 
-          <Grid Grid.Column="0"
-                Grid.Row="4"
-                ColumnSpacing="10">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <ComboBox Header="Caster Animation"
-                      PlaceholderText="None"
-                      ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
-                      SelectedValue="{x:Bind ViewModel.SelectedEntity.CasterAnimation, Mode=TwoWay, FallbackValue={x:Null}}"
-                      SelectedValuePath="Guid"
-                      MinHeight="48"
-                      HorizontalAlignment="Stretch">
-              <ComboBox.ItemTemplate>
-                <DataTemplate x:DataType="animations:Animation">
-                  <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
-                    <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
-                    <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
-                  </StackPanel>
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
-            <Button Grid.Column="1"
-                    Content="Clear"
-                    Command="{x:Bind ViewModel.ClearCasterAnimationCommand}"
-                    behaviors:PointerCursorBehavior.CursorType="Hand"
-                    ToolTipService.ToolTip="Remove the caster animation from this arte."
-                    VerticalAlignment="Bottom" />
-          </Grid>
-
-          <Grid Grid.Column="1"
-                Grid.Row="4"
-                ColumnSpacing="10">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <ComboBox Header="Target Animation"
-                      PlaceholderText="None"
-                      ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
-                      SelectedValue="{x:Bind ViewModel.SelectedEntity.TargetAnimation, Mode=TwoWay, FallbackValue={x:Null}}"
-                      SelectedValuePath="Guid"
-                      MinHeight="48"
-                      HorizontalAlignment="Stretch">
-              <ComboBox.ItemTemplate>
-                <DataTemplate x:DataType="animations:Animation">
-                  <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
-                    <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
-                    <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
-                  </StackPanel>
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
-            <Button Grid.Column="1"
-                    Content="Clear"
-                    Command="{x:Bind ViewModel.ClearTargetAnimationCommand}"
-                    behaviors:PointerCursorBehavior.CursorType="Hand"
-                    ToolTipService.ToolTip="Remove the target animation from this arte."
-                    VerticalAlignment="Bottom" />
-          </Grid>
-
-          <StackPanel Grid.Column="0"
-                      Grid.Row="5"
-                      Spacing="5">
-            <TextBlock Text="Arte Hitboxes" />
-            <hitboxPreview:HitboxPreview Hitboxes="{x:Bind ViewModel.SelectedEntity.Hitboxes, Mode=OneWay}"
-                                         PreviewsHitboxes="{x:Bind ViewModel.PreviewsHitboxes, Mode=OneWay}"
-                                         PreviewGridLines="{x:Bind ViewModel.PreviewGridLines, Mode=OneWay}"
-                                         PreviewScale="{x:Bind ViewModel.HitboxPreviewScale, Mode=OneWay}"
-                                         PreviewOffsetX="{x:Bind ViewModel.HitboxPreviewOffsetX, Mode=OneWay}"
-                                         PreviewOffsetY="{x:Bind ViewModel.HitboxPreviewOffsetY, Mode=OneWay}"
-                                         ShowAnchor="True"
-                                         ShowGrid="True" />
-          </StackPanel>
-
           <CheckBox Grid.Column="0"
                     Grid.ColumnSpan="2"
-                    Grid.Row="6"
+                    Grid.Row="4"
                     IsChecked="{x:Bind ViewModel.SelectedEntity.DirectionRotate, Mode=TwoWay, FallbackValue='False', UpdateSourceTrigger=PropertyChanged}"
                     behaviors:PointerCursorBehavior.CursorType="Hand"
                     ToolTipService.ToolTip="Should the arte rotate to match the character's facing direction?"
                     VerticalAlignment="Bottom">
             Rotate Arte With Character Direction
-        </CheckBox>
-      </Grid>
-    </enginePanel:EnginePanel>
+          </CheckBox>
+        </Grid>
+      </enginePanel:EnginePanel>
+
+      <enginePanel:EnginePanel Grid.Column="0"
+                               Grid.Row="1"
+                               Title="Animations"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <!-- four cards top to bottom: which animations play, how they turn with the user, where they sit for the
+             picked direction, and a preview of the result. MaxWidth: the panel's column sizes to its content, and the
+             side-by-side animation boxes would otherwise grow to the longest animation name; the rest goes to Hitboxes -->
+        <StackPanel Spacing="12"
+                    MaxWidth="440">
+
+          <!-- which animations play -->
+          <Border Style="{StaticResource ArteSectionCardStyle}">
+            <StackPanel Spacing="10">
+              <TextBlock Text="Animations" Style="{StaticResource ArteSectionHeaderStyle}" />
+              <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <engineComboBox:EngineComboBox Grid.Column="0"
+                                               Header="Caster"
+                                               IsClearable="True"
+                                               PlaceholderText="None"
+                                               ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
+                                               SelectedValue="{x:Bind ViewModel.SelectedEntity.CasterAnimation, Mode=TwoWay, FallbackValue={x:Null}}"
+                                               SelectedValuePath="Guid"
+                                               DisplayMemberPath="Name"
+                                               HorizontalAlignment="Stretch"
+                                               ToolTipService.ToolTip="Plays on the user when they use this arte." />
+                <engineComboBox:EngineComboBox Grid.Column="1"
+                                               Header="Target"
+                                               IsClearable="True"
+                                               PlaceholderText="None"
+                                               ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
+                                               SelectedValue="{x:Bind ViewModel.SelectedEntity.TargetAnimation, Mode=TwoWay, FallbackValue={x:Null}}"
+                                               SelectedValuePath="Guid"
+                                               DisplayMemberPath="Name"
+                                               HorizontalAlignment="Stretch"
+                                               ToolTipService.ToolTip="Plays on each fighter the arte hits." />
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <!-- how the animations turn with the user: only for an arte that rotates with its user -->
+          <Border Style="{StaticResource ArteSectionCardStyle}"
+                  Visibility="{x:Bind ViewModel.ShowsHitboxDirections, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+            <StackPanel Spacing="10">
+              <TextBlock Text="Facing" Style="{StaticResource ArteSectionHeaderStyle}" />
+              <StackPanel Spacing="4">
+                <ComboBox Header="Turning"
+                          ItemsSource="{extensions:EnumValues EnumType=enums:DirectionAnimations}"
+                          ItemTemplate="{StaticResource EnumDisplayNameTemplate}"
+                          SelectedItem="{x:Bind ViewModel.SelectedEntity.DirectionAnimations, Mode=TwoWay}"
+                          HorizontalAlignment="Stretch" />
+                <TextBlock Text="{x:Bind ViewModel.DirectionAnimationsHint, Mode=OneWay}"
+                           Style="{StaticResource ArteCaptionStyle}" />
+              </StackPanel>
+              <!-- the same direction as the Hitboxes panel's -->
+              <StackPanel Spacing="4">
+                <RadioButtons Header="Direction"
+                              MaxColumns="4"
+                              ItemsSource="{x:Bind ViewModel.HitboxDirections}"
+                              SelectedIndex="{x:Bind ViewModel.HitboxDirectionIndex, Mode=TwoWay}">
+                  <!-- a radio button is 120 wide by default: four in a row only need their labels' width -->
+                  <RadioButtons.Resources>
+                    <Style TargetType="RadioButton">
+                      <Setter Property="MinWidth" Value="0" />
+                      <Setter Property="Margin" Value="0,0,16,0" />
+                    </Style>
+                  </RadioButtons.Resources>
+                </RadioButtons>
+                <TextBlock Text="The way the user faces for the placement and preview below. It's the same direction as in the Hitboxes panel."
+                           Style="{StaticResource ArteCaptionStyle}" />
+              </StackPanel>
+            </StackPanel>
+          </Border>
+
+          <!-- where the one animation sits for the picked direction: only for Move And Rotate -->
+          <Border Style="{StaticResource ArteSectionCardStyle}"
+                  Visibility="{x:Bind ViewModel.ShowsAnimationPlacement, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+            <StackPanel Spacing="10">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <TextBlock Text="Placement" Style="{StaticResource ArteSectionHeaderStyle}" />
+                <TextBlock Style="{StaticResource ArteCaptionStyle}"
+                           VerticalAlignment="Bottom">
+                  <Run Text="facing" />
+                  <Run Text="{x:Bind ViewModel.HitboxDirection, Mode=OneWay, Converter={StaticResource EnumDisplayNameConverter}}" />
+                </TextBlock>
+              </StackPanel>
+              <Grid ColumnSpacing="10"
+                    RowSpacing="10">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto" />
+                  <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <NumberBox Grid.Row="0"
+                           Grid.Column="0"
+                           Header="Move X (px)"
+                           SmallChange="1"
+                           LargeChange="12"
+                           SpinButtonPlacementMode="Inline"
+                           Value="{x:Bind ViewModel.SelectedAnimationPlacement.OffsetX, Mode=TwoWay, FallbackValue=0}"
+                           ToolTipService.ToolTip="Moves the caster animation sideways for the picked direction, in pixels (positive is right)." />
+                <NumberBox Grid.Row="0"
+                           Grid.Column="1"
+                           Header="Move Y (px)"
+                           SmallChange="1"
+                           LargeChange="12"
+                           SpinButtonPlacementMode="Inline"
+                           Value="{x:Bind ViewModel.SelectedAnimationPlacement.OffsetY, Mode=TwoWay, FallbackValue=0}"
+                           ToolTipService.ToolTip="Moves the caster animation up or down for the picked direction, in pixels (positive is down)." />
+                <NumberBox Grid.Row="1"
+                           Grid.Column="0"
+                           Header="Rotation (°)"
+                           SmallChange="1"
+                           LargeChange="45"
+                           SpinButtonPlacementMode="Inline"
+                           Value="{x:Bind ViewModel.SelectedAnimationPlacement.Rotation, Mode=TwoWay, FallbackValue=0}"
+                           ToolTipService.ToolTip="Turns the caster and target animations for the picked direction, clockwise in degrees about the middle of the character. They start at Down 0, Left 90, Right 270 and Up 180." />
+                <StackPanel Grid.Row="1"
+                            Grid.Column="1"
+                            Spacing="4">
+                  <TextBlock Text="Mirror" Margin="0,0,0,4" />
+                  <StackPanel Orientation="Horizontal" Spacing="16">
+                    <CheckBox Content="Left/Right"
+                              MinWidth="0"
+                              IsChecked="{x:Bind ViewModel.SelectedAnimationPlacement.Mirror, Mode=TwoWay, FallbackValue='False'}"
+                              behaviors:PointerCursorBehavior.CursorType="Hand"
+                              ToolTipService.ToolTip="Mirrors the caster and target animations left to right for the picked direction, before they're turned." />
+                    <CheckBox Content="Up/Down"
+                              MinWidth="0"
+                              IsChecked="{x:Bind ViewModel.SelectedAnimationPlacement.MirrorVertical, Mode=TwoWay, FallbackValue='False'}"
+                              behaviors:PointerCursorBehavior.CursorType="Hand"
+                              ToolTipService.ToolTip="Mirrors the caster and target animations up and down for the picked direction, before they're turned." />
+                  </StackPanel>
+                </StackPanel>
+              </Grid>
+            </StackPanel>
+          </Border>
+
+          <!-- the preview fighter, the hitboxes the game uses (red) and the caster animation for the picked direction -->
+          <Border Style="{StaticResource ArteSectionCardStyle}">
+            <StackPanel Spacing="10">
+              <Grid>
+                <TextBlock Text="Preview"
+                           Style="{StaticResource ArteSectionHeaderStyle}"
+                           VerticalAlignment="Center" />
+                <Button HorizontalAlignment="Right"
+                        Command="{x:Bind ViewModel.AnimationPreview.PlayCommand}"
+                        behaviors:PointerCursorBehavior.CursorType="Hand"
+                        ToolTipService.ToolTip="Plays the caster animation once over the preview fighter, the way the game places it for the picked direction. Sounds, shockwaves and heat aren't previewed.">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <SymbolIcon Symbol="Play" />
+                    <TextBlock Text="{x:Bind ViewModel.AnimationPreview.PlayButtonText, Mode=OneWay}" VerticalAlignment="Center" />
+                  </StackPanel>
+                </Button>
+              </Grid>
+
+              <Border HorizontalAlignment="Center"
+                      CornerRadius="4"
+                      BorderThickness="1"
+                      BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <Grid Width="{x:Bind ViewModel.AnimationPreview.PreviewSize}"
+                      Height="{x:Bind ViewModel.AnimationPreview.PreviewSize}">
+                  <mercury:GameCanvasView ImageDpi="96"
+                                          UpdateRate="16.66666667"
+                                          ClearColor="{StaticResource MediumGreyColor}"
+                                          Sprites="{x:Bind ViewModel.AnimationPreview.Sprites, Mode=OneWay}" />
+                  <ItemsControl IsHitTestVisible="False"
+                                ItemsSource="{x:Bind ViewModel.AnimationPreview.Hitboxes, Mode=OneWay}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <Canvas />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="artesPage:PreviewBox">
+                        <Rectangle Fill="{StaticResource RedBrush}" Opacity="0.35" Stroke="{StaticResource LightYellowBrush}" StrokeThickness="1"
+                                   Width="{x:Bind Width}"
+                                   Height="{x:Bind Height}">
+                          <Rectangle.RenderTransform>
+                            <TranslateTransform X="{x:Bind X}" Y="{x:Bind Y}" />
+                          </Rectangle.RenderTransform>
+                        </Rectangle>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                  <ItemsControl IsHitTestVisible="False"
+                                ItemsSource="{x:Bind ViewModel.AnimationPreview.FighterHitboxes, Mode=OneWay}">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <Canvas />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="artesPage:PreviewBox">
+                        <Rectangle Stroke="{StaticResource LightBlueBrush}" StrokeThickness="2" StrokeDashArray="3,2"
+                                   Width="{x:Bind Width}"
+                                   Height="{x:Bind Height}">
+                          <Rectangle.RenderTransform>
+                            <TranslateTransform X="{x:Bind X}" Y="{x:Bind Y}" />
+                          </Rectangle.RenderTransform>
+                        </Rectangle>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </Grid>
+              </Border>
+
+              <!-- what the two outlines mean -->
+              <StackPanel Orientation="Horizontal"
+                          Spacing="20"
+                          HorizontalAlignment="Center">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Rectangle Width="14" Height="14" Fill="{StaticResource RedBrush}" Opacity="0.6" Stroke="{StaticResource LightYellowBrush}"
+                             StrokeThickness="1" VerticalAlignment="Center" />
+                  <TextBlock Text="Arte hitboxes" Style="{StaticResource ArteCaptionStyle}" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Rectangle Width="14" Height="14" Stroke="{StaticResource LightBlueBrush}" StrokeThickness="2" StrokeDashArray="3,2"
+                             VerticalAlignment="Center" />
+                  <TextBlock Text="Preview fighter" Style="{StaticResource ArteCaptionStyle}" VerticalAlignment="Center" />
+                </StackPanel>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </enginePanel:EnginePanel>
+
+      <enginePanel:EnginePanel Grid.Column="1"
+                               Grid.Row="1"
+                               Title="Hitboxes"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <StackPanel Spacing="10">
+          <ComboBox Header="Preview Fighter"
+                    ItemsSource="{x:Bind ViewModel.PreviewFighters, Mode=OneWay}"
+                    SelectedItem="{x:Bind ViewModel.PreviewFighter, Mode=TwoWay}"
+                    DisplayMemberPath="Name"
+                    HorizontalAlignment="Stretch"
+                    ToolTipService.ToolTip="A fighter shown standing on the anchor in the hitbox picker and the animation preview, with their own hitbox outlined in blue, so the arte's hitboxes can be drawn over a real body. Only for the editor." />
+          <Grid ColumnSpacing="10"
+                Visibility="{x:Bind ViewModel.ShowsHitboxDirections, Converter={StaticResource BooleanToVisibilityConverter}, Mode=OneWay}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <ComboBox Header="Hitbox Direction"
+                      ItemsSource="{x:Bind ViewModel.HitboxDirections}"
+                      SelectedItem="{x:Bind ViewModel.HitboxDirection, Mode=TwoWay}"
+                      HorizontalAlignment="Stretch"
+                      ToolTipService.ToolTip="Which way the user faces for the hitboxes being drawn. A direction with no hitboxes of its own turns the Down hitboxes in battle." />
+            <Button Grid.Column="1"
+                    Command="{x:Bind ViewModel.FillFromDownCommand}"
+                    VerticalAlignment="Bottom"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="Fill from Down: gives Left, Right and Up the Down hitboxes turned to face them, as a starting point. Directions that already have hitboxes are left alone.">
+              <SymbolIcon Symbol="Rotate" />
+            </Button>
+          </Grid>
+          <hitboxPreview:HitboxPreview Hitboxes="{x:Bind ViewModel.SelectedDirectionHitboxes, Mode=OneWay}"
+                                       CharacterImage="{x:Bind ViewModel.PreviewImage, Mode=OneWay}"
+                                       CharacterHitboxes="{x:Bind ViewModel.PreviewFighterHitboxes, Mode=OneWay}"
+                                       StandOnAnchor="True"
+                                       PreviewsHitboxes="{x:Bind ViewModel.PreviewsHitboxes, Mode=OneWay}"
+                                       PreviewGridLines="{x:Bind ViewModel.PreviewGridLines, Mode=OneWay}"
+                                       PreviewScale="{x:Bind ViewModel.HitboxPreviewScale, Mode=OneWay}"
+                                       PreviewOffsetX="{x:Bind ViewModel.HitboxPreviewOffsetX, Mode=OneWay}"
+                                       PreviewOffsetY="{x:Bind ViewModel.HitboxPreviewOffsetY, Mode=OneWay}"
+                                       ShowAnchor="True"
+                                       ShowGrid="True" />
+        </StackPanel>
+      </enginePanel:EnginePanel>
+    </Grid>
 
     <enginePanel:EnginePanel Grid.Column="2"
                              Grid.Row="0"
@@ -274,83 +527,83 @@
         <RowDefinition Height="*" />
       </Grid.RowDefinitions>
 
-    <enginePanel:EnginePanel Grid.Row="0"
-                             Title="Add States"
-                             Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-      <ItemsControl ItemsSource="{x:Bind ViewModel.AddStates, Mode=OneWay}">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <StackPanel Spacing="15" />
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="artesPage:ArteToggleViewModel">
-            <Grid ColumnSpacing="10">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="32" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
+      <enginePanel:EnginePanel Grid.Row="0"
+                               Title="Add States"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <ItemsControl ItemsSource="{x:Bind ViewModel.AddStates, Mode=OneWay}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Spacing="15" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="artesPage:ArteToggleViewModel">
+              <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="32" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-              <engineIcon:EngineIcon Grid.Column="0"
-                                     Icon="{x:Bind Icon}"
-                                     HorizontalAlignment="Center"
-                                     VerticalAlignment="Center" />
+                <engineIcon:EngineIcon Grid.Column="0"
+                                       Icon="{x:Bind Icon}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
 
-              <TextBlock Grid.Column="1"
-                         Text="{x:Bind Name}"
-                         VerticalAlignment="Center"
-                         TextWrapping="NoWrap"
-                         TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="1"
+                           Text="{x:Bind Name}"
+                           VerticalAlignment="Center"
+                           TextWrapping="NoWrap"
+                           TextTrimming="CharacterEllipsis" />
 
-              <CheckBox Grid.Column="2"
-                        IsChecked="{x:Bind IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        behaviors:PointerCursorBehavior.CursorType="Hand"
-                        VerticalAlignment="Center" />
-            </Grid>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </enginePanel:EnginePanel>
+                <CheckBox Grid.Column="2"
+                          IsChecked="{x:Bind IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          behaviors:PointerCursorBehavior.CursorType="Hand"
+                          VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </enginePanel:EnginePanel>
 
-    <enginePanel:EnginePanel Grid.Row="1"
-                             Title="Remove States"
-                             Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-      <ItemsControl ItemsSource="{x:Bind ViewModel.RemoveStates, Mode=OneWay}">
-        <ItemsControl.ItemsPanel>
-          <ItemsPanelTemplate>
-            <StackPanel Spacing="15" />
-          </ItemsPanelTemplate>
-        </ItemsControl.ItemsPanel>
-        <ItemsControl.ItemTemplate>
-          <DataTemplate x:DataType="artesPage:ArteToggleViewModel">
-            <Grid ColumnSpacing="10">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="32" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-              </Grid.ColumnDefinitions>
+      <enginePanel:EnginePanel Grid.Row="1"
+                               Title="Remove States"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <ItemsControl ItemsSource="{x:Bind ViewModel.RemoveStates, Mode=OneWay}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Spacing="15" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="artesPage:ArteToggleViewModel">
+              <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="32" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-              <engineIcon:EngineIcon Grid.Column="0"
-                                     Icon="{x:Bind Icon}"
-                                     HorizontalAlignment="Center"
-                                     VerticalAlignment="Center" />
+                <engineIcon:EngineIcon Grid.Column="0"
+                                       Icon="{x:Bind Icon}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
 
-              <TextBlock Grid.Column="1"
-                         Text="{x:Bind Name}"
-                         VerticalAlignment="Center"
-                         TextWrapping="NoWrap"
-                         TextTrimming="CharacterEllipsis" />
+                <TextBlock Grid.Column="1"
+                           Text="{x:Bind Name}"
+                           VerticalAlignment="Center"
+                           TextWrapping="NoWrap"
+                           TextTrimming="CharacterEllipsis" />
 
-              <CheckBox Grid.Column="2"
-                        IsChecked="{x:Bind IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                        behaviors:PointerCursorBehavior.CursorType="Hand"
-                        VerticalAlignment="Center" />
-            </Grid>
-          </DataTemplate>
-        </ItemsControl.ItemTemplate>
-      </ItemsControl>
-    </enginePanel:EnginePanel>
+                <CheckBox Grid.Column="2"
+                          IsChecked="{x:Bind IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          behaviors:PointerCursorBehavior.CursorType="Hand"
+                          VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </enginePanel:EnginePanel>
     </Grid>
 
     <enginePanel:EnginePanel Grid.Column="3"

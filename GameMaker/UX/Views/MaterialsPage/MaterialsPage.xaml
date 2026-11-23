@@ -1,4 +1,4 @@
-﻿<Page x:Class="GameMaker.UX.Views.MaterialsPage.MaterialsPage"
+<Page x:Class="GameMaker.UX.Views.MaterialsPage.MaterialsPage"
       xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -76,17 +76,19 @@
                   VerticalAlignment="Bottom"
                   HorizontalAlignment="Stretch" />
 
-        <TextBox Grid.Column="0"
-                 Grid.Row="2"
-                 Grid.ColumnSpan="2"
-                 Header="Description"
-                 Text="{x:Bind ViewModel.SelectedEntity.Description, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
-                 AcceptsReturn="True"
-                 TextWrapping="Wrap"
-                 Height="120"
-                 MaxWidth="{StaticResource DescriptionMaxWidth}"
-                 ScrollViewer.VerticalScrollBarVisibility="Auto"
-                 VerticalAlignment="Top" />
+        <!-- the description stretches up to DescriptionMaxWidth, anchored left: a stretched box with a MaxWidth centres itself -->
+        <Grid Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" MaxWidth="{StaticResource DescriptionMaxWidth}" />
+          </Grid.ColumnDefinitions>
+          <TextBox Header="Description"
+                   Text="{x:Bind ViewModel.SelectedEntity.Description, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
+                   AcceptsReturn="True"
+                   TextWrapping="Wrap"
+                   Height="120"
+                   ScrollViewer.VerticalScrollBarVisibility="Auto"
+                   VerticalAlignment="Top" />
+        </Grid>
       </Grid>
     </enginePanel:EnginePanel>
   </Grid>

@@ -1,4 +1,4 @@
-﻿using GameEngine.Models;
+using GameEngine.Models;
 using GameEngine.Pages;
 using GameEngine.Services.GameState;
 using GameEngine.Services.Input;
@@ -61,7 +61,8 @@ public class MovementSystem(
 
         if (!movementModule.FixDirection) position.Direction = direction;
 
-        var dashing = gameStateService.ActiveMap is not { DisableDash: true } && inputService.Shift && movementModule.Dashing;
+        // nobody runs in battle, whatever the map or the entity allows
+        var dashing = gameStateService.Battle is null && gameStateService.ActiveMap is not { DisableDash: true } && inputService.Shift && movementModule.Dashing;
         var increment = (dashing ? 2.0 : 1.0) * movementModule.Speed;
         var distance = gameDataService.StepSize * gameDataService.ScaleFactor;
 

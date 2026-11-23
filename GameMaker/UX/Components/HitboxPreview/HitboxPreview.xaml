@@ -28,6 +28,9 @@
         </Flyout.FlyoutPresenterStyle>
         <gridArea:AreaCreatorView Hitboxes="{x:Bind Hitboxes, Mode=OneWay}"
                                   CharacterImage="{x:Bind CharacterImage, Mode=OneWay}"
+                                  StandOnAnchor="{x:Bind StandOnAnchor, Mode=OneWay}"
+                                  AnchorTileSize="{x:Bind AnchorBoxSize}"
+                                  CharacterHitboxes="{x:Bind CharacterHitboxes, Mode=OneWay}"
                                   ShowAnchor="{x:Bind ShowAnchor, Mode=OneWay}" />
       </Flyout>
     </Button.Flyout>
@@ -63,7 +66,33 @@
           </TransformGroup>
         </Canvas.RenderTransform>
 
-        <spriteImage:SpriteImage CharacterImage="{x:Bind CharacterImage, Mode=OneWay}" />
+        <spriteImage:SpriteImage CharacterImage="{x:Bind CharacterImage, Mode=OneWay}"
+                                 Canvas.Left="{x:Bind SpriteLeft, Mode=OneWay}"
+                                 Canvas.Top="{x:Bind SpriteTop, Mode=OneWay}" />
+
+        <!-- the character's own hitboxes, outlines only -->
+        <Canvas Canvas.Left="{x:Bind SpriteLeft, Mode=OneWay}"
+                Canvas.Top="{x:Bind SpriteTop, Mode=OneWay}">
+          <ItemsControl ItemsSource="{x:Bind CharacterHitboxes, Mode=OneWay}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <Canvas />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="areas:Area">
+                <Rectangle Stroke="{StaticResource LightBlueBrush}" StrokeThickness="1" StrokeDashArray="3,2"
+                           Width="{x:Bind Width, Mode=OneWay}"
+                           Height="{x:Bind Height, Mode=OneWay}">
+                  <Rectangle.RenderTransform>
+                    <TranslateTransform X="{x:Bind X, Mode=OneWay}"
+                                        Y="{x:Bind Y, Mode=OneWay}" />
+                  </Rectangle.RenderTransform>
+                </Rectangle>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </Canvas>
 
         <ItemsControl ItemsSource="{x:Bind PreviewsHitboxes, Mode=OneWay}">
           <ItemsControl.ItemsPanel>

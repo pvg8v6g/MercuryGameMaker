@@ -17,6 +17,13 @@ public sealed partial class AreaCreatorState(Action? gridMetricsChanged = null) 
         set => SetField(ref field, value);
     }
 
+    // where the character picture's top left goes: on the anchor, or standing on it (feet on the anchor tile)
+    public Position? SpritePosition
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     public int GridSize
     {
         get;
@@ -35,6 +42,7 @@ public sealed partial class AreaCreatorState(Action? gridMetricsChanged = null) 
         {
             SetField(ref field, value);
             OnPropertyChanged(nameof(InternalGridSize));
+            OnPropertyChanged(nameof(AnchorBoxSize));
             OnPropertyChanged(nameof(AnchorHalfBoxSize));
             _gridMetricsChanged?.Invoke();
         }
@@ -42,7 +50,22 @@ public sealed partial class AreaCreatorState(Action? gridMetricsChanged = null) 
 
     public int InternalGridSize => GridSize * BoxSize;
 
-    public double AnchorHalfBoxSize => BoxSize / 2.0;
+    // the anchor's own size when it's a real tile whatever the grid is divided into (a character standing on it),
+    // 0 to draw it one grid box big
+    public int AnchorSize
+    {
+        get;
+        set
+        {
+            SetField(ref field, value);
+            OnPropertyChanged(nameof(AnchorBoxSize));
+            OnPropertyChanged(nameof(AnchorHalfBoxSize));
+        }
+    }
+
+    public int AnchorBoxSize => AnchorSize > 0 ? AnchorSize : BoxSize;
+
+    public double AnchorHalfBoxSize => AnchorBoxSize / 2.0;
 
     public bool ShowGrid
     {

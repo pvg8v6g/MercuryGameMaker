@@ -1,4 +1,5 @@
-﻿using GameEngine.Models;
+using GameEngine.Models;
+using GameEngine.Models.Battle;
 using GameLibrary.Models.Weathers;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.Areas;
@@ -19,6 +20,12 @@ public class GameStateService : IGameStateService
     public EdgeTransfer? EdgeTransfer { get; set; }
 
     public GameMap? ActiveMap { get; set; }
+
+    public BattleRequest? BattleRequest { get; set; }
+
+    public ActiveBattle? Battle { get; set; }
+
+    public HashSet<Guid> InspectedEnemies { get; } = [];
 
     public MapEntity? Player { get; set; }
 

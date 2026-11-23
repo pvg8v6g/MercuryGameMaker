@@ -99,6 +99,35 @@ public partial class HitboxPreview
         set => SetValue(PreviewOffsetYProperty, value);
     }
 
+    // the character stands on the anchor tile instead of its picture's top left sitting on it (artes)
+    public static readonly DependencyProperty StandOnAnchorProperty = DependencyProperty.Register(
+        nameof(StandOnAnchor), typeof(bool), typeof(HitboxPreview), new PropertyMetadata(false, OnBindingsChanged));
+
+    public bool StandOnAnchor
+    {
+        get => (bool) GetValue(StandOnAnchorProperty);
+        set => SetValue(StandOnAnchorProperty, value);
+    }
+
+    // the character's own hitboxes, outlines only
+    public static readonly DependencyProperty CharacterHitboxesProperty = DependencyProperty.Register(
+        nameof(CharacterHitboxes), typeof(ObservableCollection<Area>), typeof(HitboxPreview), new PropertyMetadata(null, OnBindingsChanged));
+
+    public ObservableCollection<Area>? CharacterHitboxes
+    {
+        get => (ObservableCollection<Area>?) GetValue(CharacterHitboxesProperty);
+        set => SetValue(CharacterHitboxesProperty, value);
+    }
+
+    #endregion
+
+    #region Layout
+
+    // where the character picture's top left goes: the anchor, or standing on the anchor tile (feet on it, centred)
+    public double SpriteLeft => StandOnAnchor && CharacterImage?.Rect is { } rect ? (AnchorBoxSize - rect.Width) / 2.0 : 0.0;
+
+    public double SpriteTop => StandOnAnchor && CharacterImage?.Rect is { } rect ? AnchorBoxSize - rect.Height : 0.0;
+
     #endregion
 
     #region Constructor

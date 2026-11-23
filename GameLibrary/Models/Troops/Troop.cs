@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.Media;
 
@@ -13,6 +13,13 @@ public partial class Troop : BaseModel
         get;
         set => SetField(ref field, value);
     } = [];
+
+    // the battle map this troop is fought on (a map with Battle Map ticked)
+    public Guid? BattleMapId
+    {
+        get;
+        set => SetField(ref field, value);
+    }
 
     // the spots Random enemies start on, each enemy takes a different one picked at random
     public ObservableCollection<TroopSpawnPoint> EnemySpawnPoints

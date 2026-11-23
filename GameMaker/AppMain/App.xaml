@@ -12,6 +12,7 @@
         <ResourceDictionary Source="ms-appx:///UX/Resources/ToolTipResource.xaml" />
         <ResourceDictionary Source="ms-appx:///UX/Resources/TextFontResource.xaml" />
         <ResourceDictionary Source="ms-appx:///UX/Resources/ComboBoxResource.xaml" />
+        <ResourceDictionary Source="ms-appx:///UX/Resources/EngineComboBoxResource.xaml" />
         <ResourceDictionary Source="ms-appx:///UX/Resources/CheckboxResource.xaml" />
       </ResourceDictionary.MergedDictionaries>
 

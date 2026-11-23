@@ -328,6 +328,8 @@
                                       IsChecked="{x:Bind ViewModel.TestShowAreas, Mode=TwoWay}" />
                 <ToggleMenuFlyoutItem Text="Show Collisions"
                                       IsChecked="{x:Bind ViewModel.TestShowCollisions, Mode=TwoWay}" />
+                <ToggleMenuFlyoutItem Text="Show Arte Hitboxes"
+                                      IsChecked="{x:Bind ViewModel.TestShowArteHitboxes, Mode=TwoWay}" />
               </MenuFlyout>
             </SplitButton.Flyout>
           </SplitButton>

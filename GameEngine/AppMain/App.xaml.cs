@@ -1,4 +1,7 @@
 using GameLibrary.Utilities;
+using GameEngine.Battle;
+using GameEngine.Battle.Controllers;
+using GameEngine.Interface;
 using GameEngine.Navigation;
 using GameEngine.Pages;
 using GameEngine.Pages.Handlers;
@@ -107,6 +110,7 @@ public partial class App
         services.AddSingleton<IActionHandler, EntityTintHandler>();
         services.AddSingleton<IActionHandler, WeatherHandler>();
         services.AddSingleton<IActionHandler, EntityTransferHandler>();
+        services.AddSingleton<IActionHandler, InitiateBattleHandler>();
 
         // party and actors
         services.AddSingleton<IActionHandler, MoneyHandler>();
@@ -139,10 +143,23 @@ public partial class App
         services.AddSingleton<GameCamera>();
         services.AddSingleton<ScreenFade>();
         services.AddSingleton<PlayerSpawner>();
+        services.AddSingleton<BattleSpawner>();
         services.AddSingleton<MapAudio>();
         services.AddSingleton<MapWeather>();
         services.AddSingleton<DebugOverlay>();
         services.AddSingleton<MapScene>();
+
+        // the screen layers over the game, bottom first: the battle HUD, then (later) the menus
+        services.AddSingleton<BattleHud>();
+        services.AddSingleton<ScreenLayer>(provider => provider.GetRequiredService<BattleHud>());
+        services.AddSingleton<ScreenLayers>();
+
+        // the fight itself
+        services.AddSingleton<BattleAttributes>();
+        services.AddSingleton<HitCalculator>();
+        services.AddSingleton<PlayerController>();
+        services.AddSingleton<PlaceholderAiController>();
+        services.AddSingleton<BattleRunner>();
 
         #endregion
 

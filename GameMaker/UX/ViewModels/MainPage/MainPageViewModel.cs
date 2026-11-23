@@ -294,6 +294,12 @@ public partial class MainPageViewModel(
         set => SetTestSetting(value, TestShowCollisions, configuration => configuration.ShowCollisions = value);
     }
 
+    public bool TestShowArteHitboxes
+    {
+        get => locationService.Configuration?.ShowArteHitboxes ?? false;
+        set => SetTestSetting(value, TestShowArteHitboxes, configuration => configuration.ShowArteHitboxes = value);
+    }
+
     public double HoverX
     {
         get;
@@ -675,6 +681,7 @@ public partial class MainPageViewModel(
         OnPropertyChanged(nameof(TestShowHitboxes));
         OnPropertyChanged(nameof(TestShowAreas));
         OnPropertyChanged(nameof(TestShowCollisions));
+        OnPropertyChanged(nameof(TestShowArteHitboxes));
     }
 
     private bool IsLayerShown(MapLayer layer) => layer.Type switch

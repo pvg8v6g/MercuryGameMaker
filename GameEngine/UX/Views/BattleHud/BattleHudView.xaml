@@ -1,0 +1,234 @@
+<UserControl x:Class="GameEngine.UX.Views.BattleHud.BattleHudView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:interface="using:GameEngine.Interface"
+             mc:Ignorable="d"
+             IsHitTestVisible="False">
+
+  <UserControl.Resources>
+    <ItemsPanelTemplate x:Key="CanvasPanel">
+      <Canvas />
+    </ItemsPanelTemplate>
+
+    <!-- a bar that fills from the left by a fraction (0 to 1) -->
+    <DataTemplate x:Key="EnemyBarTemplate" x:DataType="interface:HudFighter">
+      <Canvas Visibility="{x:Bind ShowsBar, Mode=OneWay}">
+        <Grid Canvas.Left="{x:Bind BarX, Mode=OneWay}"
+              Canvas.Top="{x:Bind BarY, Mode=OneWay}"
+              Width="40"
+              Height="5">
+          <Rectangle Fill="{StaticResource InterfaceBarBackBrush}" Stroke="Black" StrokeThickness="1" />
+          <Rectangle Fill="{StaticResource InterfaceLifeBrush}" Margin="1" RenderTransformOrigin="0,0.5">
+            <Rectangle.RenderTransform>
+              <ScaleTransform ScaleX="{x:Bind LifeFraction, Mode=OneWay}" />
+            </Rectangle.RenderTransform>
+          </Rectangle>
+        </Grid>
+      </Canvas>
+    </DataTemplate>
+
+    <!-- a party member: face, name, Life and Mana. The one the player controls has a brighter edge -->
+    <DataTemplate x:Key="PartyPanelTemplate" x:DataType="interface:HudFighter">
+      <Grid Width="230" Margin="4,0">
+      <Border Style="{StaticResource InterfacePanelStyle}">
+        <Grid ColumnSpacing="8">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="56" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+
+          <!-- the face cell, cut out of its sheet and fitted into the box -->
+          <Viewbox Grid.Column="0" Width="56" Height="56" Stretch="Uniform">
+            <Canvas Width="{x:Bind FaceWidth, Mode=OneWay}" Height="{x:Bind FaceHeight, Mode=OneWay}">
+              <Canvas.Clip>
+                <RectangleGeometry Rect="{x:Bind FaceClip, Mode=OneWay}" />
+              </Canvas.Clip>
+              <Image Source="{x:Bind Face, Mode=OneWay}"
+                     Stretch="None"
+                     Canvas.Left="{x:Bind FaceLeft, Mode=OneWay}"
+                     Canvas.Top="{x:Bind FaceTop, Mode=OneWay}" />
+            </Canvas>
+          </Viewbox>
+
+          <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
+            <TextBlock Text="{x:Bind Name}" Style="{StaticResource InterfaceNameStyle}" TextTrimming="CharacterEllipsis" />
+
+            <Grid Height="10">
+              <Rectangle Fill="{StaticResource InterfaceBarBackBrush}" RadiusX="2" RadiusY="2" />
+              <Rectangle Fill="{StaticResource InterfaceLifeBrush}" RadiusX="2" RadiusY="2" RenderTransformOrigin="0,0.5">
+                <Rectangle.RenderTransform>
+                  <ScaleTransform ScaleX="{x:Bind LifeFraction, Mode=OneWay}" />
+                </Rectangle.RenderTransform>
+              </Rectangle>
+            </Grid>
+            <TextBlock Text="{x:Bind LifeText, Mode=OneWay}" Style="{StaticResource InterfaceSmallTextStyle}" />
+
+            <Grid Height="6">
+              <Rectangle Fill="{StaticResource InterfaceBarBackBrush}" RadiusX="2" RadiusY="2" />
+              <Rectangle Fill="{StaticResource InterfaceManaBrush}" RadiusX="2" RadiusY="2" RenderTransformOrigin="0,0.5">
+                <Rectangle.RenderTransform>
+                  <ScaleTransform ScaleX="{x:Bind ManaFraction, Mode=OneWay}" />
+                </Rectangle.RenderTransform>
+              </Rectangle>
+            </Grid>
+          </StackPanel>
+        </Grid>
+      </Border>
+      <!-- the one the player controls gets a brighter edge over the panel's own -->
+      <Border BorderBrush="{StaticResource InterfaceHighlightEdgeBrush}"
+              BorderThickness="2"
+              CornerRadius="6"
+              Visibility="{x:Bind IsLeader}" />
+      </Grid>
+    </DataTemplate>
+    <!-- an arte key: its icon (greyed while it cools down), the clock wipe over it, its key and its Mana cost.
+         Red when there isn't enough Mana, a bright edge while it's being cast -->
+    <DataTemplate x:Key="ArteSlotTemplate" x:DataType="interface:HudArteSlot">
+      <Grid Width="44" Height="44" Margin="2" ToolTipService.ToolTip="{x:Bind Name, Mode=OneWay}">
+        <Border Background="{StaticResource InterfacePanelBrush}"
+                BorderBrush="{StaticResource InterfacePanelEdgeBrush}"
+                BorderThickness="1"
+                CornerRadius="4" />
+        <Grid Width="40" Height="40" Visibility="{x:Bind HasArte, Mode=OneWay}">
+          <Grid.Clip>
+            <RectangleGeometry Rect="0,0,40,40" />
+          </Grid.Clip>
+          <Viewbox Stretch="Uniform" Opacity="{x:Bind IconOpacity, Mode=OneWay}">
+            <Canvas Width="{x:Bind IconWidth, Mode=OneWay}" Height="{x:Bind IconHeight, Mode=OneWay}">
+              <Canvas.Clip>
+                <RectangleGeometry Rect="{x:Bind IconClip, Mode=OneWay}" />
+              </Canvas.Clip>
+              <Image Source="{x:Bind Icon, Mode=OneWay}"
+                     Stretch="None"
+                     Canvas.Left="{x:Bind IconLeft, Mode=OneWay}"
+                     Canvas.Top="{x:Bind IconTop, Mode=OneWay}" />
+            </Canvas>
+          </Viewbox>
+          <Path Data="{x:Bind Wipe, Mode=OneWay}" Fill="#B4000000" />
+          <Rectangle Fill="#66D2443A" Visibility="{x:Bind NoMana, Mode=OneWay}" />
+        </Grid>
+        <Border BorderBrush="{StaticResource InterfaceHighlightEdgeBrush}"
+                BorderThickness="2"
+                CornerRadius="4"
+                Visibility="{x:Bind IsCasting, Mode=OneWay}" />
+        <TextBlock Text="{x:Bind Key}"
+                   Style="{StaticResource InterfaceSmallTextStyle}"
+                   Foreground="{StaticResource InterfaceTextBrush}"
+                   FontWeight="Bold"
+                   Margin="3,1,0,0"
+                   HorizontalAlignment="Left"
+                   VerticalAlignment="Top" />
+        <TextBlock Text="{x:Bind CostText, Mode=OneWay}"
+                   Style="{StaticResource InterfaceSmallTextStyle}"
+                   Foreground="{StaticResource InterfaceManaBrush}"
+                   FontWeight="Bold"
+                   Margin="0,0,3,0"
+                   HorizontalAlignment="Right"
+                   VerticalAlignment="Bottom" />
+      </Grid>
+    </DataTemplate>
+
+    <ItemsPanelTemplate x:Key="SlotRowPanel">
+      <StackPanel Orientation="Horizontal" />
+    </ItemsPanelTemplate>
+
+    <!-- a number floating up over a fighter: white damage, gold crits, green heals, grey misses -->
+    <DataTemplate x:Key="PopupTemplate" x:DataType="interface:HudPopup">
+      <Canvas>
+        <Grid Canvas.Left="{x:Bind X}"
+              Canvas.Top="{x:Bind Y, Mode=OneWay}"
+              Width="80"
+              Opacity="{x:Bind Opacity, Mode=OneWay}">
+          <TextBlock Text="{x:Bind Text}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"
+                     Foreground="White" Visibility="{x:Bind IsDamage}" />
+          <TextBlock Text="{x:Bind Text}" FontSize="26" FontWeight="ExtraBold" HorizontalAlignment="Center"
+                     Foreground="#FFF2C94C" Visibility="{x:Bind IsCritical}" />
+          <TextBlock Text="{x:Bind Text}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"
+                     Foreground="{StaticResource InterfaceLifeBrush}" Visibility="{x:Bind IsHeal}" />
+          <TextBlock Text="{x:Bind Text}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"
+                     Foreground="{StaticResource InterfaceSubtleTextBrush}" Visibility="{x:Bind IsMiss}" />
+        </Grid>
+      </Canvas>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <Grid Visibility="{x:Bind Hud.IsOpen, Mode=OneWay}">
+    <!-- the enemies' bars, in map pixels on a layer that moves with the camera -->
+    <Canvas>
+      <Canvas.RenderTransform>
+        <TranslateTransform X="{x:Bind Hud.OffsetX, Mode=OneWay}" Y="{x:Bind Hud.OffsetY, Mode=OneWay}" />
+      </Canvas.RenderTransform>
+      <ItemsControl ItemsPanel="{StaticResource CanvasPanel}"
+                    ItemTemplate="{StaticResource EnemyBarTemplate}"
+                    ItemsSource="{x:Bind Hud.Enemies}" />
+
+      <!-- the leader's cast, filling up over their head -->
+      <Grid Canvas.Left="{x:Bind Hud.CastX, Mode=OneWay}"
+            Canvas.Top="{x:Bind Hud.CastY, Mode=OneWay}"
+            Width="48"
+            Height="6"
+            Visibility="{x:Bind Hud.IsCasting, Mode=OneWay}">
+        <Rectangle Fill="{StaticResource InterfaceBarBackBrush}" Stroke="Black" StrokeThickness="1" />
+        <Rectangle Fill="{StaticResource InterfaceHighlightEdgeBrush}" Margin="1" RenderTransformOrigin="0,0.5">
+          <Rectangle.RenderTransform>
+            <ScaleTransform ScaleX="{x:Bind Hud.CastFraction, Mode=OneWay}" />
+          </Rectangle.RenderTransform>
+        </Rectangle>
+      </Grid>
+
+      <ItemsControl ItemsPanel="{StaticResource CanvasPanel}"
+                    ItemTemplate="{StaticResource PopupTemplate}"
+                    ItemsSource="{x:Bind Hud.Popups}" />
+    </Canvas>
+
+    <!-- a boss: one big bar across the top, with its name -->
+    <Border Style="{StaticResource InterfacePanelStyle}"
+            VerticalAlignment="Top"
+            HorizontalAlignment="Center"
+            Width="520"
+            Margin="0,16,0,0"
+            Visibility="{x:Bind Hud.HasBoss, Mode=OneWay}">
+      <StackPanel Spacing="4">
+        <TextBlock Text="{x:Bind Hud.Boss.Name, Mode=OneWay, FallbackValue=''}"
+                   Style="{StaticResource InterfaceNameStyle}"
+                   HorizontalAlignment="Center" />
+        <Grid Height="14">
+          <Rectangle Fill="{StaticResource InterfaceBarBackBrush}" RadiusX="3" RadiusY="3" />
+          <Rectangle Fill="{StaticResource InterfaceBossLifeBrush}" RadiusX="3" RadiusY="3" RenderTransformOrigin="0,0.5">
+            <Rectangle.RenderTransform>
+              <ScaleTransform ScaleX="{x:Bind Hud.Boss.LifeFraction, Mode=OneWay, FallbackValue=0}" />
+            </Rectangle.RenderTransform>
+          </Rectangle>
+        </Grid>
+      </StackPanel>
+    </Border>
+
+    <!-- along the bottom: the party on the left (the leader first), the leader's arte keys on the right in the same
+         rows as the keyboard -->
+    <Grid VerticalAlignment="Bottom" Margin="12,0,12,12" ColumnSpacing="12">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
+
+      <ItemsControl Grid.Column="0"
+                    VerticalAlignment="Bottom"
+                    ItemTemplate="{StaticResource PartyPanelTemplate}"
+                    ItemsSource="{x:Bind Hud.Party}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+      </ItemsControl>
+
+      <StackPanel Grid.Column="1" VerticalAlignment="Bottom">
+        <ItemsControl ItemsPanel="{StaticResource SlotRowPanel}" ItemTemplate="{StaticResource ArteSlotTemplate}" ItemsSource="{x:Bind Hud.SlotRow1}" />
+        <ItemsControl ItemsPanel="{StaticResource SlotRowPanel}" ItemTemplate="{StaticResource ArteSlotTemplate}" ItemsSource="{x:Bind Hud.SlotRow2}" Margin="10,0,0,0" />
+        <ItemsControl ItemsPanel="{StaticResource SlotRowPanel}" ItemTemplate="{StaticResource ArteSlotTemplate}" ItemsSource="{x:Bind Hud.SlotRow3}" Margin="20,0,0,0" />
+      </StackPanel>
+    </Grid>
+  </Grid>
+</UserControl>

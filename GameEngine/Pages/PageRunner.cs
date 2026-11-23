@@ -36,7 +36,7 @@ public class PageRunner(
     // a new map starts with nothing running, but a page that transferred the player finishes on the new map
     public void Clear()
     {
-        foreach (var left in _runs.Where(x => !x.Value.CarriesOver).Select(x => x.Key).ToArray()) _runs.Remove(left);
+        foreach (var left in _runs.Where(x => x.Value is { CarriesOver: false, WaitsForBattle: false }).Select(x => x.Key).ToArray()) _runs.Remove(left);
         foreach (var run in _runs.Values) run.CarriesOver = false;
         pageTouches.Take();
         gameStateService.IsPlayerBusy = _runs.Values.Any(x => x.BlocksPlayer);

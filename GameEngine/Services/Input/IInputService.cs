@@ -1,4 +1,4 @@
-﻿using Windows.System;
+using Windows.System;
 using GameLibrary.Enumerations;
 
 namespace GameEngine.Services.Input;
@@ -18,6 +18,9 @@ public interface IInputService
     Direction? Direction { get; }
 
     VirtualKey? Key { get; }
+
+    // whether this key is held down right now
+    bool IsDown(VirtualKey key);
 
     void KeyPressed(VirtualKey key);
 

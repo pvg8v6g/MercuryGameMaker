@@ -16,7 +16,6 @@
 
 # Claude Instructions
 
-- after any large changes run a dotnet build to make sure everything is working correctly.
 - i want a list of all the files changed at the end of your summary. It should look like this:
   ```
    - EnemyPage.xaml +5 -82

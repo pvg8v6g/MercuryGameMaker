@@ -3,6 +3,7 @@ using Windows.Foundation;
 using GameLibrary.Commands;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.Fighter;
+using GameLibrary.Models.GameMaps;
 using GameLibrary.Models.Media;
 using GameLibrary.Models.Troops;
 using GameLibrary.Services.GameData;
@@ -184,22 +185,25 @@ public partial class TroopsPageViewModel(
         set => SetField(ref field, value);
     } = true;
 
-    public string[] BackgroundFiles
+    // the maps a troop can be fought on: every map with Battle Map ticked
+    public GameMap[] BattleMaps
     {
         get;
         private set => SetField(ref field, value);
-    } = [None];
+    } = [];
 
-    public string? SelectedBackground
+    public GameMap? SelectedBattleMap
     {
-        get;
+        get => SelectedEntity?.BattleMapId is { } id ? BattleMaps.FirstOrDefault(x => x.Guid == id) : null;
         set
         {
-            if (value is null) return;
-            SetField(ref field, value);
+            // the combo box pushes null while its items are swapped, that never clears the troop's map
+            if (value is null || SelectedEntity is null || SelectedEntity.BattleMapId == value.Guid) return;
+            SelectedEntity.BattleMapId = value.Guid;
+            OnPropertyChanged();
             _ = RefreshBackground();
         }
-    } = None;
+    }
 
     public BitmapImage? BackgroundImage
     {
@@ -301,10 +305,9 @@ public partial class TroopsPageViewModel(
     {
         BgmFiles = [None, .. mediaService.GetMediaFiles(Cache.Media)];
 
-        var groundPath = Path.Combine(locationService.GraphicsDirectory!, "Maps", "Ground");
-        BackgroundFiles = Directory.Exists(groundPath)
-            ? [None, .. Directory.GetFiles(groundPath, "*.png").Select(Path.GetFileName).OfType<string>()]
-            : [None];
+        BattleMaps = [.. gameDataService.GameMaps.Where(x => x.BattleMap).OrderBy(x => x.Name)];
+        OnPropertyChanged(nameof(SelectedBattleMap));
+        _ = RefreshBackground();
 
         // rebuilt every visit so enemies added on the enemies page show up
         EnemyNewOptions =
@@ -321,6 +324,8 @@ public partial class TroopsPageViewModel(
     {
         RefreshMusic();
         OnPropertyChanged(nameof(PartySpawn));
+        OnPropertyChanged(nameof(SelectedBattleMap));
+        await RefreshBackground();
         RefreshSpawnPoints();
         await RefreshTroopEnemies();
         RefreshWarning();
@@ -474,16 +479,18 @@ public partial class TroopsPageViewModel(
         _refreshingMusic = false;
     }
 
+    // the arena shows the troop's battle map: its ground picture, at the map's size
     private async Task RefreshBackground()
     {
-        if (SelectedBackground == None)
+        if (SelectedBattleMap is not { } map)
         {
             BackgroundImage = null;
             return;
         }
 
-        var path = Path.Combine(locationService.GraphicsDirectory!, "Maps", "Ground", SelectedBackground!);
-        BackgroundImage = await graphicsService.GetImage(path);
+        ArenaTiles = Math.Max(map.Width, map.Height);
+        var path = new MapLayer(MapLayerType.Ground).ImagePath(locationService.GraphicsDirectory!, map.Id);
+        BackgroundImage = File.Exists(path) ? await graphicsService.GetImage(path) : null;
     }
 
     #endregion

@@ -161,11 +161,13 @@
                                        InputType="Integer"
                                        Text="{x:Bind ViewModel.BlockSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                        Tooltip="Placement snapping in pixels. Smaller blocks allow finer placement." />
-          <ComboBox Header="Background"
+          <ComboBox Header="Battle Map"
                     MinWidth="200"
-                    ItemsSource="{x:Bind ViewModel.BackgroundFiles, Mode=OneWay}"
-                    SelectedItem="{x:Bind ViewModel.SelectedBackground, Mode=TwoWay}"
-                    ToolTipService.ToolTip="A ground image from Graphics\Maps\Ground to place the enemies against." />
+                    PlaceholderText="Pick a battle map"
+                    ItemsSource="{x:Bind ViewModel.BattleMaps, Mode=OneWay}"
+                    SelectedItem="{x:Bind ViewModel.SelectedBattleMap, Mode=TwoWay}"
+                    DisplayMemberPath="Name"
+                    ToolTipService.ToolTip="The map this troop is fought on. Only maps with Battle Map ticked are listed. The arena shows its ground." />
           <CheckBox Content="Show Grid"
                     VerticalAlignment="Bottom"
                     behaviors:PointerCursorBehavior.CursorType="Hand"

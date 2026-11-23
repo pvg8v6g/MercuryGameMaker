@@ -1,4 +1,5 @@
-﻿using GameEngine.Models;
+using GameEngine.Models;
+using GameEngine.Models.Battle;
 using GameLibrary.Models.Weathers;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.Areas;
@@ -15,6 +16,15 @@ public interface IGameStateService
     EdgeTransfer? EdgeTransfer { get; set; }
 
     GameMap? ActiveMap { get; set; }
+
+    // set by Initiate Battle, the scene starts the battle on its next update
+    BattleRequest? BattleRequest { get; set; }
+
+    // the battle being fought, null on the story maps
+    ActiveBattle? Battle { get; set; }
+
+    // the enemies the player has inspected (their bestiary entry is filled in), their Life bars show in battle
+    HashSet<Guid> InspectedEnemies { get; }
 
     MapEntity? Player { get; set; }
 

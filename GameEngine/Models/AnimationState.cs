@@ -1,4 +1,5 @@
-using GameLibrary.Models.Animations;
+﻿using GameLibrary.Models.Animations;
+using GameLibrary.Models.Artes;
 using MercuryLibrary.ImageComponents;
 
 namespace GameEngine.Models;
@@ -31,6 +32,10 @@ public class PlayingAnimation(Animation animation, int lastFrame)
     public int LastFrame => lastFrame;
 
     public int Frame { get; set; }
+
+    // mirrors, turns and moves the whole animation about the middle of its target: an arte that moves and rotates one
+    // animation for each way its user faces. None plays it as drawn
+    public ArteAnimationPlacement? Placement { get; init; }
 
     // its sheets are still being measured, it starts when they are
     public bool Waiting { get; set; }

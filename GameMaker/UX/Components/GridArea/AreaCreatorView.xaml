@@ -54,12 +54,12 @@
               HorizontalAlignment="Left"
               VerticalAlignment="Top">
         <spriteImage:SpriteImage CharacterImage="{x:Bind CharacterImage, Mode=OneWay}"
-                                 Canvas.Left="{x:Bind State.AnchorPosition.X, FallbackValue='0', Mode=OneWay}"
-                                 Canvas.Top="{x:Bind State.AnchorPosition.Y, FallbackValue='0', Mode=OneWay}" />
+                                 Canvas.Left="{x:Bind State.SpritePosition.X, FallbackValue='0', Mode=OneWay}"
+                                 Canvas.Top="{x:Bind State.SpritePosition.Y, FallbackValue='0', Mode=OneWay}" />
 
         <!-- Anchor Marker -->
-        <Grid Width="{x:Bind State.BoxSize, Mode=OneWay}"
-              Height="{x:Bind State.BoxSize, Mode=OneWay}"
+        <Grid Width="{x:Bind State.AnchorBoxSize, Mode=OneWay}"
+              Height="{x:Bind State.AnchorBoxSize, Mode=OneWay}"
               IsHitTestVisible="False"
               Visibility="{x:Bind ShowAnchor, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
               Canvas.Left="{x:Bind State.AnchorPosition.X, FallbackValue='0', Mode=OneWay}"
@@ -69,12 +69,12 @@
           <Line X1="{x:Bind State.AnchorHalfBoxSize, Mode=OneWay}"
                 Y1="0"
                 X2="{x:Bind State.AnchorHalfBoxSize, Mode=OneWay}"
-                Y2="{x:Bind State.BoxSize, Mode=OneWay}"
+                Y2="{x:Bind State.AnchorBoxSize, Mode=OneWay}"
                 Stroke="{StaticResource LightBlueBrush}"
                 StrokeThickness="2" />
           <Line X1="0"
                 Y1="{x:Bind State.AnchorHalfBoxSize, Mode=OneWay}"
-                X2="{x:Bind State.BoxSize, Mode=OneWay}"
+                X2="{x:Bind State.AnchorBoxSize, Mode=OneWay}"
                 Y2="{x:Bind State.AnchorHalfBoxSize, Mode=OneWay}"
                 Stroke="{StaticResource LightBlueBrush}"
                 StrokeThickness="2" />
@@ -85,6 +85,29 @@
                    VerticalAlignment="Center" />
         </Grid>
       </Canvas>
+
+      <!-- the character's own hitboxes, outlines only -->
+      <gridArea:CanvasItemsControl ItemsSource="{x:Bind CharacterHitboxes, Mode=OneWay}"
+                                   IsHitTestVisible="False"
+                                   LeftPropertyName="X"
+                                   TopPropertyName="Y"
+                                   LeftOffset="{x:Bind State.SpritePosition.X, FallbackValue='0', Mode=OneWay}"
+                                   TopOffset="{x:Bind State.SpritePosition.Y, FallbackValue='0', Mode=OneWay}">
+        <gridArea:CanvasItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <Canvas />
+          </ItemsPanelTemplate>
+        </gridArea:CanvasItemsControl.ItemsPanel>
+        <gridArea:CanvasItemsControl.ItemTemplate>
+          <DataTemplate x:DataType="areas:Area">
+            <Rectangle Stroke="{StaticResource LightBlueBrush}"
+                       StrokeThickness="2"
+                       StrokeDashArray="3,2"
+                       Width="{x:Bind Width, Mode=OneWay}"
+                       Height="{x:Bind Height, Mode=OneWay}" />
+          </DataTemplate>
+        </gridArea:CanvasItemsControl.ItemTemplate>
+      </gridArea:CanvasItemsControl>
 
       <!-- Hitboxes -->
       <gridArea:CanvasItemsControl ItemsSource="{x:Bind Hitboxes, Mode=OneWay}"

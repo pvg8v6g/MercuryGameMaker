@@ -39,13 +39,18 @@ public class PageRun
     // the action the page is waiting on, its handler is asked every update until it's done
     public PageAction? Busy { get; set; }
 
-    // everything but a parallel process stops the player until it's done
-    public bool BlocksPlayer => Page.PageTrigger is not PageTrigger.ParallelProcess;
+    // everything but a parallel process stops the player until it's done, except a page waiting on a battle: the
+    // player fights it
+    public bool BlocksPlayer => Page.PageTrigger is not PageTrigger.ParallelProcess && !WaitsForBattle;
 
     public bool IsFinished => Lists.Count == 0 && Busy is null;
 
     // the page transferred the player, it carries on running on the new map
     public bool CarriesOver { get; set; }
+
+    // the page started a battle and waits for it to end: it lasts through the battle map and back, and carries on
+    // on the story map afterwards (to erase the enemy, for example)
+    public bool WaitsForBattle { get; set; }
 
     #endregion
 

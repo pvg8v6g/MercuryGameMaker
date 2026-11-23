@@ -1,6 +1,7 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using Windows.Foundation;
 using VirtualKey = Windows.System.VirtualKey;
+using GameEngine.Interface;
 using GameEngine.Scenes;
 using GameEngine.Services.GameState;
 using GameEngine.Services.Input;
@@ -21,7 +22,8 @@ public partial class MainGameViewModel(
     IGameDataService gameDataService,
     IGameStateService gameStateService,
     IStartService startService,
-    IWindowService windowService) : BaseViewModel
+    IWindowService windowService,
+    BattleHud battleHud) : BaseViewModel
 {
     #region Properties
 
@@ -29,6 +31,8 @@ public partial class MainGameViewModel(
     public Renderer Renderer => mapScene.Renderer;
 
     public DebugOverlay DebugOverlay => mapScene.DebugOverlay;
+
+    public BattleHud BattleHud => battleHud;
 
     public double GameWidth => gameDataService.GameWidth;
 

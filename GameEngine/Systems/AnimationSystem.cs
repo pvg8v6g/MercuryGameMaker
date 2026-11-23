@@ -1,7 +1,8 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using GameEngine.Models;
 using GameLibrary.Models.Actions;
 using GameLibrary.Models.Animations;
+using GameLibrary.Models.Artes;
 using GameLibrary.Models.Modules;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Graphics;
@@ -75,12 +76,14 @@ public class AnimationSystem(IGameDataService gameDataService, IGraphicsService 
 
     // starts the animation on the entity from its first frame. An animation whose sheets aren't measured yet (one no
     // page on the map plays) starts once they are, a frame or two later
-    public void Play(MapEntity entity, Guid? animationId)
+    // an animation can be mirrored, turned and moved about the middle of the entity, for an arte that moves and rotates
+    // one animation for each way its user faces
+    public void Play(MapEntity entity, Guid? animationId, ArteAnimationPlacement? placement = null)
     {
         // the last frame with a cell, a tint, or a shockwave or heat still going
         if (Find(animationId) is not { } animation || animation.LastFrame() is var lastFrame && lastFrame < 1) return;
 
-        var playing = new PlayingAnimation(animation, lastFrame);
+        var playing = new PlayingAnimation(animation, lastFrame) { Placement = placement };
         entity.State<AnimationState>().Playing.Add(playing);
         if (Sheets(animation).All(_cellSizes.ContainsKey)) return;
 
@@ -149,9 +152,10 @@ public class AnimationSystem(IGameDataService gameDataService, IGraphicsService 
             var sprite = playing.Cell(effect.Cell, path, AnimationZ);
             var picture = sprite.Picture;
             picture.Viewport = new Rect(effect.Index % SheetColumns * size, effect.Index / SheetColumns * size, size, size);
-            picture.ScaleX = (float) (effect.ScaleX * scale);
-            picture.ScaleY = (float) (effect.ScaleY * scale);
-            picture.Rotate = effect.Rotate;
+            var (scaleX, scaleY, rotate) = playing.Placement?.Turn(effect.ScaleX, effect.ScaleY, effect.Rotate) ?? (effect.ScaleX, effect.ScaleY, effect.Rotate);
+            picture.ScaleX = (float) (scaleX * scale);
+            picture.ScaleY = (float) (scaleY * scale);
+            picture.Rotate = (float) rotate;
             picture.Opacity = (float) effect.Opacity;
             picture.Hue = (float) effect.Hue;
             picture.Contrast = (float) effect.Contrast;
@@ -160,8 +164,9 @@ public class AnimationSystem(IGameDataService gameDataService, IGraphicsService 
             picture.BlendMode = effect.BlendMode;
             sprite.Width = size;
             sprite.Height = size;
-            sprite.X = centerX + (effect.X * scale) - (size * scale / 2.0);
-            sprite.Y = centerY + (effect.Y * scale) - (size * scale / 2.0);
+            var (x, y) = Placed(playing, effect.X, effect.Y);
+            sprite.X = centerX + (x * scale) - (size * scale / 2.0);
+            sprite.Y = centerY + (y * scale) - (size * scale / 2.0);
             playing.Showing.Add(sprite);
         }
     }
@@ -177,8 +182,9 @@ public class AnimationSystem(IGameDataService gameDataService, IGraphicsService 
             shockwave.ApplyTo((Shockwave) sprite.Picture, frame - shockwave.Frame, scale);
 
             // a shockwave is placed by its middle, it has no picture for the renderer to size
-            sprite.X = centerX + (shockwave.X * scale);
-            sprite.Y = centerY + (shockwave.Y * scale);
+            var (x, y) = Placed(playing, shockwave.X, shockwave.Y);
+            sprite.X = centerX + (x * scale);
+            sprite.Y = centerY + (y * scale);
             playing.Showing.Add(sprite);
         }
 
@@ -187,11 +193,18 @@ public class AnimationSystem(IGameDataService gameDataService, IGraphicsService 
             var sprite = playing.Distortion(heat, () => new HeatHaze { Z = DistortionZ });
             heat.ApplyTo((HeatHaze) sprite.Picture, frame - heat.Frame, scale);
 
-            // heat is placed by its top left
-            sprite.X = centerX + ((heat.X - (heat.Width / 2.0)) * scale);
-            sprite.Y = centerY + ((heat.Y - (heat.Height / 2.0)) * scale);
+            // heat is placed by its top left. Its middle moves with the animation, the box itself doesn't turn
+            var (x, y) = Placed(playing, heat.X, heat.Y);
+            sprite.X = centerX + ((x - (heat.Width / 2.0)) * scale);
+            sprite.Y = centerY + ((y - (heat.Height / 2.0)) * scale);
             playing.Showing.Add(sprite);
         }
+    }
+
+    // a spot in the animation (unscaled pixels from the target's middle), mirrored, turned and moved by its placement
+    private static (double X, double Y) Placed(PlayingAnimation playing, double x, double y)
+    {
+        return playing.Placement?.Place(x, y) ?? (x, y);
     }
 
     // the animation's tints on this frame, on the entity it plays on

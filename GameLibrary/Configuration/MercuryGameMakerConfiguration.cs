@@ -11,6 +11,9 @@ public class MercuryGameMakerConfiguration
 
     public bool ShowCollisions { get; set; }
 
+    // an arte's hitboxes flash briefly where it lands in battle
+    public bool ShowArteHitboxes { get; set; }
+
     // a test opens in a window unless this is on
     public bool TestFullScreen { get; set; }
 

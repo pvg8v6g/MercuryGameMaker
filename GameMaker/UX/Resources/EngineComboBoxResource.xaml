@@ -1,0 +1,12 @@
+<!-- EngineComboBox keeps WinUI's own ComboBox template (it adds its clear X to it in code), so this only gives it
+     the same look as every other ComboBox in ComboBoxResource.xaml. That implicit style is for ComboBox exactly and
+     doesn't reach a class derived from it, hence this one -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:behaviors="using:GameLibrary.Behaviors"
+                    xmlns:engineComboBox="using:GameMaker.UX.Components.EngineComboBox">
+  <Style TargetType="engineComboBox:EngineComboBox">
+    <Setter Property="behaviors:PointerCursorBehavior.CursorType" Value="Hand" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+</ResourceDictionary>

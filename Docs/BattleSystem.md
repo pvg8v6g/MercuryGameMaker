@@ -52,6 +52,56 @@ When a projectile only exists to activate other artes, the arte it belongs to ha
 
 An activated arte that has projectiles of its own would fire them from that point, which allows chains like a bomb that bursts into fragments. Whether chains are allowed, and how deep, is still open.
 
+### Where an arte's hitboxes go (user, 2026-11-21)
+
+- The anchor tile in the arte hitbox picker is **the tile the user stands on**, and every hitbox is drawn from it.
+- **Hitboxes per direction.** An arte with Rotate Arte With Character Direction has its own hitboxes for each way the
+  user faces: `Hitboxes` is Down (and the only set for artes that don't turn), plus `HitboxesLeft`, `HitboxesRight`
+  and `HitboxesUp`. In battle the set for the way the user faces is used **exactly as drawn**, with no turning.
+- **A direction with no hitboxes of its own** turns the Down hitboxes about the anchor's middle instead
+  (`Arte.TurnedFromDown`), and facing up those are measured from the top of the user's hitbox so they don't leave a
+  gap. So older artes keep working until their directions are drawn.
+- **The picker (editor):** a **Hitbox Direction** box (shown only for artes that turn) picks which set is drawn, and
+  **Fill from Down** gives every direction that's still empty the turned Down hitboxes as a starting point (it never
+  touches a direction that already has hitboxes). A **Preview Fighter** stands on the anchor, feet on the tile like in
+  battle, facing the picked direction, with their own body hitbox outlined in dashed blue. The preview fighter is only
+  for the editor and isn't saved.
+- Tried and rejected (user, 2026-11-21): laying every arte out from the user's hitbox, pushed out to its edge on the
+  side they face. Left and right swings came out at the feet instead of the middle of the body. One drawing turned
+  four ways can't fit a body that isn't square, which is why each direction is drawn by hand now.
+
+### Rotate Arte With Character Direction (user, 2026-11-21)
+
+An arte with **Rotate Arte With Character Direction** turns its hitboxes to the way the user faces, and it also picks
+its animations by direction, **by animation Id** (not by the order of the Animations list, which loads in file
+order). Facing down it plays the animation it was given, facing left the animation with Id + 1, facing right Id + 2,
+and facing up Id + 3. So a sword swing has four animations in a row
+(Down, Left, Right, Up), and the arte points at the first. This applies to both the caster animation and the target
+animation, and the direction is the user's facing (when the cast starts for the caster animation, when it lands for the
+target animation). If there's no animation with that Id, the given animation plays instead.
+
+**One animation, moved and rotated (user, 2026-11-21).** Instead of four animations, a turning arte can set
+**Direction Animations** to **MoveAndRotate** (the default, SeparateAnimations, is the Id rule above). Then each
+direction has its own **Animation X, Animation Y and Rotation** (`Arte.AnimationDown/Left/Right/Up`), edited on the
+Artes page for the direction picked in the Hitbox Direction box.
+
+- The **caster animation** is moved by the offset (unscaled pixels) and turned about the middle of the character,
+  clockwise in degrees: every cell's spot turns around that middle and every picture turns with it. Shockwaves and
+  heat move and turn with it too (a heat box keeps its shape).
+- The **target animation** turns the same way, but is never moved: it plays where the target was hit.
+- The rotations start at Down 0, Left 90, Right 270 and Up 180, so one animation already faces each way before
+  anything is moved.
+- **Mirror Left/Right** and **Mirror Up/Down** (per direction) flip the animation before it's turned: each cell's
+  spot is mirrored and its picture gets a negative width or height, with its own turn reversed inside one mirror
+  (both together are a half turn, so the cell's turn is unchanged). The target animation
+  mirrors too. The maths lives in `ArteAnimationPlacement` (Place and Turn), so the game and the editor preview
+  always agree.
+- **Animation Preview** on the Artes page (under the Rotate tick box): the preview fighter standing on the anchor
+  tile, the hitboxes the game uses for the picked direction (red, including the turned-Down fallback) and the
+  fighter's body hitbox (dashed blue). It shows the first frame with cells, and **Play** runs the caster animation
+  once at the game's 60 frames a second, placed the way the battle places it (by Id, or mirrored, turned and moved).
+  Sounds, shockwaves and heat aren't previewed.
+
 ### Contact projectiles, like arrows (user, 2026-11-19)
 
 An arrow flies up to five tiles. If it touches an enemy on the way, it detonates there, and the arte's one-tile hitbox lands right on that enemy, so the arrow has to actually hit. It never detonates on allies. If it hits nothing, it still detonates at the end of its route, because detonating is how every projectile is removed, but that detonation **only removes it**: no animation, no hitbox, no damage.
@@ -92,6 +142,7 @@ big area often falls outside the walls and hits nobody. Big areas are fine on th
 - **Free movement, exactly like the story maps (user, 2026-11-20).** Fighters move in small steps and can stand
   between tiles. Tiles are the unit for sizes and ranges (a 1x1 hitbox is 48x48 px), but hitboxes are placed from the
   fighter's exact position, not snapped to the grid.
+- **No running in battle (user, 2026-11-21).** Dashing (Shift) is off for everyone while a battle is on.
 - **Everyone moves at the same speed (user, 2026-11-20).** There's no speed per class or stat. On entering a battle,
   every character's movement speed is lowered by 1 from their story-map speed, and raised by 1 again when they return
   to the story map. States can still change speed during a battle (Quickfoot faster, Chilled slower, stances slower):
@@ -244,8 +295,9 @@ themselves), and every step reads those finished numbers.
 3. **Remove states.**
 4. **Add states.** Every state can be resisted on its own. **Bosses are immune to stun-lock effects** (Stunned,
    Sealed, Rooted and the like) **but can still be poisoned** and get other effects of that kind.
-5. **Base value = Damage Multiplier × Power.** Every arte has a **Damage Multiplier**, a whole number where **100 means
-   1× the user's Power** (Sword Swipe is 100, Dawnbreak per pillar might be 400). A **negative** multiplier heals.
+5. **Base value = Damage Multiplier × Power.** Every arte's `HpDamage` is its **Damage Multiplier**, used as it is:
+   **1 means 1× the user's Power** (user, 2026-11-21: it isn't a percentage, Sword Swipe stays 1). A **negative**
+   multiplier heals.
 6. **Defense ratio:** damage is multiplied by **Power ÷ (Power + Defense)**, the contest between the attacker's Power
    and the target's Defense. Equal Power and Defense lets half through, Defense 0 lets all of it through, and huge
    Defense crushes the hit toward 0 without ever being a guaranteed wall. **Skipped for healing.**
@@ -273,13 +325,13 @@ themselves), and every step reads those finished numbers.
 > **healing = |Damage Multiplier| × Power**, then element, critical, Variance and rounding (no Defense)
 
 It's a ratio formula, like Pokémon's Attack ÷ Defense, but bounded so a target with very low Defense can't make hits
-explode. Tavren's Sword Swipe (100) at level 1 (Power 28) against Defense 20 hits for about 16, and Variance 33% spreads
+explode. Tavren's Sword Swipe (1) at level 1 (Power 28) against Defense 20 hits for about 16, and Variance 33% spreads
 that to about 11-21. At level 50 (Power 280) against Defense 200 it's about 163.
 
 - **Healing never turns into damage (user, 2026-11-20).** Negative element rates are ignored for heals: if a heal's
   element rate comes out below 0%, it counts as 0% and the heal does nothing. So a Light heal on someone at -100%
   Light (undead, a skeleton) never hurts them. Only damage can be absorbed.
-- **Mana uses the same formula (user, 2026-11-20).** `ManaDamage` is a Mana Multiplier (100 = 1× Power):
+- **Mana uses the same formula (user, 2026-11-20).** `ManaDamage` is a Mana Multiplier (1 = 1× Power):
   Mana damage = Mana Multiplier × Power × (Power ÷ (Power + Defense)), and a negative Mana Multiplier restores Mana
   (no Defense). Soul Harvest and Mana-restoring artes use it.
 - **Defense is never a guaranteed wall.** A ratio never truly reaches zero, so a huge Defense (99999, 999999) crushes
@@ -580,3 +632,46 @@ Options the player sets for each AI-controlled party member in the menu:
 - `DetonateMovement` and `ActivateArteMovement` (with its `ArteId`) exist in move routes, but `MovementRouteSystem` skips both for now.
 - The projectile setting is built: `Entity.DetonateOnContact` (`ContactTarget`: None, Enemies, Allies, Anyone), picked in the projectile editor's header. The engine doesn't use it yet.
 - The projectile editor's missing-Detonate warning is built (`EntityEditorViewModel.ShowsDetonateWarning`). The in-battle safety net is part of the battle system, so it isn't built yet.
+
+## Battle HUD and screen layers (user, 2026-11-21)
+
+- **Screen layers:** everything drawn over the game (the battle HUD, the Escape menu, shops) is a layer that says whether
+  it **pauses** the game. The menu pauses; the battle HUD never does. They share one look
+  (`GameEngine\UX\Resources\Interface.xaml`), so the HUD isn't much different from the menu, just a layer down and never
+  pausing.
+- **Party panels** along the bottom: face, name, Life and Mana, the leader first with a brighter edge.
+- **Bosses** get one big Life bar across the top with their name.
+- **Other enemies** get a small Life bar over their heads, **but only once the player has inspected that enemy** (its
+  bestiary entry is filled in, `InspectedEnemies` in the game state). How enemies get inspected is still open (an
+  inspect arte or item, or fighting a number of them). For now every bar shows (`BattleHud.ShowAllEnemyBars`, TEMP) so
+  the look can be checked.
+
+## Build log
+
+- **Step 1, into battle and back (2026-11-21).** `InitiateBattleHandler` asks for the fight (`BattleRequest`) and the
+  page waits (`PageRun.WaitsForBattle`: it lasts through the battle map and back and doesn't hold the player still).
+  `MapScene` saves the story map, the player's exact spot and facing and their walking speed (`ActiveBattle`), fades
+  out, and loads the troop's battle map with `BattleSpawner`'s lineup: up to 4 party members on the party spawn points
+  (the leader is the player) and the enemies on their fixed spots or random points, feet on their tiles. Everyone
+  walks at the story speed minus 1. **F9 is a test key that ends the battle**, and the player fades back to the exact
+  spot with the saved speed put back. Not yet: transitions, troop music, fighters doing anything.
+- **Step 2a, fighters and the HUD (2026-11-21).** `BattleFighter` for everyone in the fight (the party's own actors, so
+  Life and Mana carry over; a fresh full copy of each enemy; Team, Original Team, Threat 0). `ScreenLayer` and
+  `ScreenLayers`, with `BattleHud` as the first layer. Attributes from equipment aren't added up yet (growths only).
+- **Step 3a, using artes (2026-11-21).** `BattleRunner`: the leader's arte keys (1-6, Q-Y, A-H; slot 0 is the weapon's
+  arte, then the actor's artes), Mana paid on use, the cast locks the caster (`BattleLockState`) and can't be
+  cancelled, then the arte detonates at the user: its hitboxes from the user's feet tile, turned to the way they face.
+  `HitCalculator` runs the hit order (hit roll, multiplier × Power, Defense ratio, elements, 3x crit, Variance) on an
+  `AttackerSnapshot`. Damage numbers, Threat, falling (enemies fade out, the party dims), victory and defeat (both just
+  end the battle for now; no game over yet). The HUD shows the leader's arte keys with a clock-wipe cooldown, red when
+  short of Mana, and a cast bar. Artes have a **Cooldown** field (60 = 1 second, 0 for
+  none) on the Artes page next to Cast Time; projectiles land at the user until step 5; equipment element resistances aren't counted yet.
+- **Step 4, controllers and a placeholder AI (2026-11-21).** `IFighterController` decides what a fighter does through
+  `IBattleActions` (the battle runner), so the rules are the same for the player and the AI. `PlayerController` drives
+  the leader (the arte keys; the arrow keys already walk the player). `PlaceholderAiController` drives everyone else,
+  party members and enemies alike: a Threat-weighted target (re-rolled every ~2 s, switched at once when it falls),
+  chases it, shuffles a little once close, and turns and uses its first ready arte whenever it would land. The real AI
+  system replaces it later without touching the rest.
+- **Debug: Show Arte Hitboxes (2026-11-21).** A test option in the editor's Test menu (`ShowArteHitboxes` in
+  config.json). When an arte lands, its hitboxes flash in bright yellow for 20 updates (1/3 second) where they landed,
+  whether they hit anyone or not (`DebugOverlay.FlashArteHitboxes`, called from `BattleRunner.Detonate`).

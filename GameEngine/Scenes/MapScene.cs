@@ -1,5 +1,8 @@
 using Windows.Foundation;
+using GameEngine.Battle;
+using GameEngine.Interface;
 using GameEngine.Models;
+using GameEngine.Models.Battle;
 using GameEngine.Navigation;
 using GameEngine.Pages;
 using GameEngine.Services.GameState;
@@ -7,6 +10,7 @@ using GameEngine.Services.Input;
 using GameEngine.Services.Party;
 using GameEngine.Systems;
 using GameLibrary.Enumerations;
+using GameLibrary.Models;
 using GameLibrary.Models.GameMaps;
 using GameLibrary.Models.Areas;
 using GameLibrary.Models.Modules;
@@ -43,6 +47,9 @@ public class MapScene(
     ScreenFade screenFade,
     MapWeather mapWeather,
     PartyService partyService,
+    BattleSpawner battleSpawner,
+    ScreenLayers screenLayers,
+    BattleRunner battleRunner,
     Renderer renderer)
 {
     #region Constants
@@ -65,6 +72,10 @@ public class MapScene(
     private int _fadeTimer;
     private bool _followsLeader;
 
+    // a battle starts loading once the screen is black, like a map change
+    private bool _battleWaitingForFade;
+    private bool _loadBattle;
+
     #endregion
 
     #region Properties
@@ -83,8 +94,9 @@ public class MapScene(
 
     #region Load
 
-    // the party leader appears on the spawn tile, or exactly at a spot (unscaled map pixels) when one is given
-    public async Task Load(GameMap map, SpawnPoint spawn, Point? at = null)
+    // the party leader appears on the spawn tile, or exactly at a spot (unscaled map pixels) when one is given.
+    // A battle also brings its fighters (the rest of the party and the enemies) and everyone's battle walking speed
+    public async Task Load(GameMap map, SpawnPoint spawn, Point? at = null, IReadOnlyList<Entity>? fighters = null, int? battleSpeed = null)
     {
         lock (_lock) gameStateService.IsTransferring = true;
         RememberPlaces();
@@ -97,6 +109,8 @@ public class MapScene(
             .Select(x => new MapEntity(jsonService.Copy(x)!))
             .ToList();
         foreach (var visitor in visitors) entities.Add(await Arrive(visitor));
+        var battleBodies = fighters?.Select(x => new MapEntity(x)).ToList() ?? [];
+        entities.AddRange(battleBodies);
         foreach (var entity in entities) ScalePositions(entity);
         foreach (var entity in entities) PutBack(map, entity);
         var player = await playerSpawner.Create(spawn, at) is { } leader ? new MapEntity(leader) : null;
@@ -105,6 +119,16 @@ public class MapScene(
             ScalePositions(player);
             entities.Add(player);
         }
+
+        // in battle everyone walks one slower than the player does on the story maps
+        if (battleSpeed is { } speed)
+        {
+            foreach (var body in battleBodies.Append(player).OfType<MapEntity>()) SetSpeed(body, speed);
+        }
+
+        // back from a battle: the player walks at exactly the speed saved when it started
+        var endedBattle = gameStateService.Battle is { IsEnding: true } ended ? ended : null;
+        if (endedBattle is not null && player is not null) SetSpeed(player, endedBattle.StorySpeed);
 
         var mapImages = await LoadMapImages(map);
         var (propSprites, footprints) = await LoadProps(map);
@@ -123,6 +147,7 @@ public class MapScene(
         {
             gameStateService.ActiveMap = map;
             gameStateService.Player = player;
+            if (endedBattle is not null) gameStateService.Battle = null;
             gameStateService.MapEntities.Clear();
             gameStateService.MapEntities.AddRange(entities);
             gameStateService.MapAreas.Clear();
@@ -147,6 +172,12 @@ public class MapScene(
 
         // not waited for, the map never holds up on a track loading
         _ = mapAudio.Play(map, FadeSeconds);
+    }
+
+    // every walking speed on the entity's pages, so whichever page is active walks at it
+    private static void SetSpeed(MapEntity entity, int speed)
+    {
+        foreach (var movement in entity.Entity.Pages.SelectMany(x => x.Modules).OfType<MovementModule>()) movement.Speed = speed;
     }
 
     // the player's sprite follows whoever leads the party, listened to once
@@ -403,11 +434,16 @@ public class MapScene(
         lock (_lock)
         {
             transfer = UpdateFade();
-            if (gameStateService.ActiveMap is { } map) UpdateMap(map, gameStateService.IsTransferring);
+            if (gameStateService.ActiveMap is { } map) UpdateMap(map, gameStateService.IsTransferring || screenLayers.IsPaused);
         }
 
         // loaded outside the lock, the load takes the lock itself once the map is ready
         if (transfer is not null) _ = Transfer(transfer);
+        if (_loadBattle)
+        {
+            _loadBattle = false;
+            _ = EnterBattle();
+        }
     }
 
     private void UpdateMap(GameMap map, bool paused)
@@ -420,10 +456,15 @@ public class MapScene(
 
         gameStateService.Player ??= gameStateService.MapEntities.FirstOrDefault(x => x.HasModule<InputModule>());
 
-        // pages start after the systems picked the active pages and movement found what was touched
-        if (!paused) pageRunner.Update();
+        // pages start after the systems picked the active pages and movement found what was touched, then the fight
+        if (!paused)
+        {
+            pageRunner.Update();
+            battleRunner.Update();
+        }
         UpdateCamera(map);
         mapWeather.Update(Camera);
+        screenLayers.Update(Camera);
         if (!paused)
         {
             foreach (var environment in _environments) environment.Update();
@@ -434,6 +475,14 @@ public class MapScene(
         if (paused) return;
 
         if (inputService.Lag > 0) inputService.Lag--;
+
+        // Initiate Battle asked for a fight: the map pauses and fades out, the battle loads on black
+        if (gameStateService.BattleRequest is { } request)
+        {
+            StartBattle(request);
+            return;
+        }
+
 
         // the map pauses (enemies, arrows, the player) for the whole transfer: fade out, load, fade in
         if (gameStateService.EdgeTransfer is not { } requested) return;
@@ -458,6 +507,8 @@ public class MapScene(
 
                 transfer = _transfer;
                 _transfer = null;
+                _loadBattle = _battleWaitingForFade;
+                _battleWaitingForFade = false;
                 _phase = TransferPhase.Loading;
                 break;
 
@@ -488,6 +539,61 @@ public class MapScene(
             lock (_lock) _phase = TransferPhase.FadingIn;
 
             // the map's audio already started fading out, it comes back with the map
+            if (gameStateService.ActiveMap is { } map) _ = mapAudio.Play(map, FadeSeconds);
+        }
+    }
+
+    // remembers exactly where the player stands and how fast they walk, so the battle can put both back afterwards
+    private void StartBattle(BattleRequest request)
+    {
+        gameStateService.BattleRequest = null;
+        if (gameStateService.ActiveMap is not { } here) return;
+
+        var scale = gameDataService.ScaleFactor;
+        var position = gameStateService.Player?.GetModule<PositionModule>();
+        var speed = gameStateService.Player?.GetModule<MovementModule>()?.Speed ?? new MovementModule().Speed;
+        var facing = position is null ? Direction.Down : (Direction) ((int) position.Direction % 4);
+        gameStateService.Battle = new ActiveBattle(request, here, (position?.X ?? 0) / scale, (position?.Y ?? 0) / scale, facing, speed);
+
+        gameStateService.IsTransferring = true;
+        _battleWaitingForFade = true;
+        _phase = TransferPhase.FadingOut;
+        _fadeTimer = 0;
+        mapAudio.Leave(request.BattleMap, FadeSeconds);
+    }
+
+    // the battle map with the party on its spawn points and the troop's enemies on theirs. A battle that fails to load
+    // fades back in on the story map instead of freezing the game
+    private async Task EnterBattle()
+    {
+        if (gameStateService.Battle is not { } battle) return;
+
+        try
+        {
+            var lineup = await battleSpawner.Lineup(battle.Request.Troop);
+            await Load(battle.Request.BattleMap, new SpawnPoint { Direction = lineup.LeaderFacing }, lineup.LeaderAt, lineup.Bodies, Math.Max(1, battle.StorySpeed - 1));
+
+            // the roster's bodies are on the map now, the leader's is the player
+            lock (_lock)
+            {
+                foreach (var entry in lineup.Roster)
+                {
+                    var body = entry.Body is null ? gameStateService.Player : gameStateService.MapEntities.FirstOrDefault(x => x.Entity == entry.Body);
+                    if (body is null) continue;
+
+                    var team = entry.IsEnemy ? BattleFighter.EnemyTeam : BattleFighter.PartyTeam;
+                    battle.Fighters.Add(new BattleFighter(body, entry.Stats, entry.IsEnemy, entry.Body is null, team));
+                }
+            }
+        }
+        catch
+        {
+            lock (_lock)
+            {
+                gameStateService.Battle = null;
+                _phase = TransferPhase.FadingIn;
+            }
+
             if (gameStateService.ActiveMap is { } map) _ = mapAudio.Play(map, FadeSeconds);
         }
     }

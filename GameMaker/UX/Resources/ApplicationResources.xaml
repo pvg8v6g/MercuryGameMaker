@@ -9,7 +9,7 @@
 
   <!-- the column on each data page that holds the description box: wider than the other star columns.
        Change it here and every page follows -->
-  <GridLength x:Key="DescriptionColumnWidth">1.5*</GridLength>
+  <GridLength x:Key="DescriptionColumnWidth">1.8*</GridLength>
 
   <!-- the widest a description box grows (it wraps inside this; the panels scroll sideways, so it needs a limit) -->
   <x:Double x:Key="DescriptionMaxWidth">640</x:Double>

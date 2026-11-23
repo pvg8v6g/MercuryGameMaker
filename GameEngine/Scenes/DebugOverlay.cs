@@ -34,6 +34,10 @@ public partial class DebugOverlay(
     private readonly DispatcherQueue _dispatcherQueue = DispatcherQueue.GetForCurrentThread();
     private GameMap? _map;
 
+    // arte hitboxes flashing where an arte landed, each with the updates it has left
+    private readonly List<(DebugShape Shape, int Left)> _flashes = [];
+    private bool _flashesChanged;
+
     #endregion
 
     #region Properties
@@ -51,6 +55,12 @@ public partial class DebugOverlay(
     } = [];
 
     public DebugBox[] Collisions
+    {
+        get;
+        private set => SetField(ref field, value);
+    } = [];
+
+    public DebugBox[] ArteHitboxes
     {
         get;
         private set => SetField(ref field, value);
@@ -84,22 +94,56 @@ public partial class DebugOverlay(
             ShowMapAreas(configuration);
         }
 
-        if (!configuration.ShowEntityHitboxes && !configuration.ShowAreas && !configuration.ShowCollisions) return;
+        if (!configuration.ShowEntityHitboxes && !configuration.ShowAreas && !configuration.ShowCollisions && !configuration.ShowArteHitboxes) return;
 
         var offsetX = -Math.Round(camera.X);
         var offsetY = -Math.Round(camera.Y);
         var hitboxes = configuration.ShowEntityHitboxes ? hitboxSystem.AllPlaced().Select(ToShape).ToArray() : [];
+        var flashes = TickFlashes();
         _dispatcherQueue.TryEnqueue(() =>
         {
             OffsetX = offsetX;
             OffsetY = offsetY;
             ShowHitboxes(hitboxes);
+            if (flashes is not null) ArteHitboxes = [.. flashes.Select(x => new DebugBox(x))];
         });
+    }
+
+    // an arte landed: its hitboxes (scaled map pixels) flash for a moment, whether they hit anyone or not.
+    // Called from the game loop, only does anything when testing with Show Arte Hitboxes on
+    public void FlashArteHitboxes(IEnumerable<(double X, double Y, double Width, double Height)> boxes)
+    {
+        if (!startService.IsTest || locationService.Configuration?.ShowArteHitboxes != true) return;
+
+        foreach (var box in boxes) _flashes.Add((new DebugShape(box.X, box.Y, box.Width, box.Height, ArteHitboxColor), FlashLength));
+        _flashesChanged = true;
     }
 
     #endregion
 
     #region Private Methods
+
+    // counts the flashes down. The boxes never move, so the list only goes to the ui when one starts or ends (null otherwise)
+    private DebugShape[]? TickFlashes()
+    {
+        for (var i = _flashes.Count - 1; i >= 0; i--)
+        {
+            var (shape, left) = _flashes[i];
+            if (left > 1)
+            {
+                _flashes[i] = (shape, left - 1);
+                continue;
+            }
+
+            _flashes.RemoveAt(i);
+            _flashesChanged = true;
+        }
+
+        if (!_flashesChanged) return null;
+
+        _flashesChanged = false;
+        return [.. _flashes.Select(x => x.Shape)];
+    }
 
     // the map's live areas: the ones painted in the editor plus the footprints of its props
     private void ShowMapAreas(MercuryGameMakerConfiguration configuration)
@@ -153,6 +197,10 @@ public partial class DebugOverlay(
 
     // how thick a collision's blocked side is drawn, in scaled map pixels
     private const double BarSize = 6.0;
+
+    // how long an arte's hitboxes flash, in updates (60 = 1 second), and their color (bright yellow, apart from the rest)
+    private const int FlashLength = 20;
+    private static readonly Color ArteHitboxColor = ColorHelper.FromArgb(255, 255, 220, 40);
 
     // the same colors the editor draws them in
     private static Color AreaColor(MapAreaType type) => type switch

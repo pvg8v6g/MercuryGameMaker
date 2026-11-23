@@ -41,6 +41,37 @@ public partial class AreaCreatorView
         set => SetValue(ShowAnchorProperty, value);
     }
 
+    // the character stands on the anchor tile (feet on it, the picture rising above, centred) instead of the picture's
+    // top left sitting on it. Artes are drawn from the tile their user stands on
+    public static readonly DependencyProperty StandOnAnchorProperty = DependencyProperty.Register(nameof(StandOnAnchor), typeof(bool),
+        typeof(AreaCreatorView), new PropertyMetadata(false, OnShowAnchorChanged));
+
+    public bool StandOnAnchor
+    {
+        get => (bool) GetValue(StandOnAnchorProperty);
+        set => SetValue(StandOnAnchorProperty, value);
+    }
+
+    // the size of the tile the character stands on (game pixels), kept whatever the grid is divided into
+    public static readonly DependencyProperty AnchorTileSizeProperty = DependencyProperty.Register(nameof(AnchorTileSize), typeof(int),
+        typeof(AreaCreatorView), new PropertyMetadata(48, OnShowAnchorChanged));
+
+    public int AnchorTileSize
+    {
+        get => (int) GetValue(AnchorTileSizeProperty);
+        set => SetValue(AnchorTileSizeProperty, value);
+    }
+
+    // the character's own hitboxes (offsets from the picture's top left), shown as outlines that can't be edited here
+    public static readonly DependencyProperty CharacterHitboxesProperty = DependencyProperty.Register(nameof(CharacterHitboxes),
+        typeof(ObservableCollection<Area>), typeof(AreaCreatorView), new PropertyMetadata(null));
+
+    public ObservableCollection<Area>? CharacterHitboxes
+    {
+        get => (ObservableCollection<Area>?) GetValue(CharacterHitboxesProperty);
+        set => SetValue(CharacterHitboxesProperty, value);
+    }
+
     #endregion
 
     #region Internal State
@@ -187,6 +218,32 @@ public partial class AreaCreatorView
     #region Private Methods
 
     private void LoadAnchor()
+    {
+        if (StandOnAnchor)
+        {
+            // the anchor is a whole game tile whatever the grid is divided into, and the picture stands on it the way
+            // the game draws a character on its tile, so the character's hitbox lands on the same grid lines
+            var tile = AnchorTileSize;
+            var center = Calculations.RoundToMultiple(State.InternalGridSize / 2.0, State.BoxSize, Rounding.Down);
+            State.AnchorSize = tile;
+            State.AnchorPosition = new Position { X = center, Y = center };
+            var size = CharacterImage?.Rect;
+            var width = size?.Width ?? tile;
+            var height = size?.Height ?? tile;
+            State.SpritePosition = new Position
+            {
+                X = center + (int) Math.Round((tile - width) / 2.0),
+                Y = center + (int) Math.Round(tile - height)
+            };
+            return;
+        }
+
+        State.AnchorSize = 0;
+        LoadTopLeftAnchor();
+        State.SpritePosition = State.AnchorPosition;
+    }
+
+    private void LoadTopLeftAnchor()
     {
         if (CharacterImage?.Rect is not null)
         {
