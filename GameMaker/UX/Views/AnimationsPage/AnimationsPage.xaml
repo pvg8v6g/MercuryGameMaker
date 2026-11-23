@@ -290,6 +290,46 @@
               </Flyout>
             </Button.Flyout>
           </Button>
+          <!-- a sound the animation plays on this frame without a cell, so an animation can be only sounds -->
+          <Button Content="Sound"
+                  ToolTipService.ToolTip="Play a sound on this frame without needing a cell. An animation can be nothing but sounds.">
+            <Button.Flyout>
+              <Flyout Placement="Bottom">
+                <StackPanel Width="320"
+                            Spacing="10">
+                  <CheckBox Content="Play A Sound On This Frame"
+                            IsChecked="{x:Bind ViewModel.PlaysSound, Mode=TwoWay}" />
+                  <StackPanel Spacing="10"
+                              Visibility="{x:Bind ViewModel.PlaysSound, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ComboBox Header="Sound Effect"
+                              HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.SfxFiles, Mode=OneWay}"
+                              SelectedItem="{x:Bind ViewModel.FrameSound.Name, Mode=TwoWay, FallbackValue={x:Null}}" />
+                    <Grid ColumnSpacing="10">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                      </Grid.ColumnDefinitions>
+                      <NumberBox Header="Volume"
+                                 Minimum="0"
+                                 SmallChange="0.1"
+                                 SpinButtonPlacementMode="Inline"
+                                 Value="{x:Bind ViewModel.FrameSound.Volume, Mode=TwoWay, FallbackValue=1}" />
+                      <NumberBox Grid.Column="1"
+                                 Header="Pitch"
+                                 Minimum="0"
+                                 SmallChange="0.1"
+                                 SpinButtonPlacementMode="Inline"
+                                 Value="{x:Bind ViewModel.FrameSound.Pitch, Mode=TwoWay, FallbackValue=1}" />
+                    </Grid>
+                    <Button Content="Preview Sound"
+                            HorizontalAlignment="Stretch"
+                            Command="{x:Bind ViewModel.PreviewFrameSoundCommand}" />
+                  </StackPanel>
+                </StackPanel>
+              </Flyout>
+            </Button.Flyout>
+          </Button>
           <Button Command="{x:Bind ViewModel.PlayCommand}"
                   Content="{x:Bind ViewModel.PlayButtonText, Mode=OneWay}" />
         </StackPanel>

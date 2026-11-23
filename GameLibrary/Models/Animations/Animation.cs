@@ -33,11 +33,19 @@ public partial class Animation : BaseModel
         set => SetField(ref field, value);
     } = [];
 
-    // the last frame anything shows on: a cell, a tint, or a shockwave or heat still going
+    // sounds played on their frame without a cell, so an animation can be only sounds
+    public ObservableCollection<AnimationSound> Sounds
+    {
+        get;
+        set => SetField(ref field, value);
+    } = [];
+
+    // the last frame anything happens on: a cell, a tint, a sound, or a shockwave or heat still going
     public int LastFrame()
     {
         return Effects.Select(x => x.Frame)
             .Concat(TargetTints.Select(x => x.Frame))
+            .Concat(Sounds.Select(x => x.Frame))
             .Concat(Shockwaves.Select(x => x.LastFrame))
             .Concat(HeatHazes.Select(x => x.LastFrame))
             .DefaultIfEmpty(0)

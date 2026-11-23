@@ -1,4 +1,4 @@
-using GameEngine.Battle.Controllers;
+﻿using GameEngine.Battle.Controllers;
 using GameLibrary.Models.Artes;
 using GameLibrary.Models.Fighter;
 
@@ -61,6 +61,9 @@ public class BattleFighter(MapEntity body, Fighter stats, bool isEnemy, bool isL
 
     // who decides what it does: the player for the leader, the AI for everyone else
     public IFighterController? Controller { get; set; }
+
+    // the states on it right now
+    public List<BattleState> States { get; } = [];
 
     // what the AI keeps between updates
     public BattleAiState Ai { get; } = new();

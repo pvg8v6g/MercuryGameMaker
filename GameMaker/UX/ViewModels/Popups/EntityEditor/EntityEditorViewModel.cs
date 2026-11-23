@@ -259,7 +259,7 @@ public class EntityEditorViewModel : BaseViewModel<Page>
         set
         {
             if (SelectedPage is null || value == Moves) return;
-            if (value) SelectedPage.Modules.Add(new MovementModule { Speed = 4, Dashing = false });
+            if (value) SelectedPage.Modules.Add(new MovementModule { Dashing = false });
             else SelectedPage.Modules.Remove(Movement!);
             OnPropertyChanged();
             OnPropertyChanged(nameof(Movement));
@@ -486,6 +486,8 @@ public class EntityEditorViewModel : BaseViewModel<Page>
     public RelayCommand CopyActionCommand => new(CopyAction);
 
     public RelayCommand PasteActionCommand => new(PasteAction);
+
+    public RelayCommand<ActionRow> MoveActionCommand => new(MoveAction);
 
     public AsyncRelayCommand AddMovementRouteCommand => new(AddMovementRoute);
 
@@ -893,6 +895,52 @@ public class EntityEditorViewModel : BaseViewModel<Page>
         target.Insert(index, action);
         RebuildActionRows();
         SelectActionRow(action);
+    }
+
+    // a row was dragged to a new place in the flat list. The action goes wherever the row it now sits above belongs:
+    // above that action in its list, at the end of a branch section when it's above that section's blank row (or its
+    // Else or End), and at the end of the page when it's last. So dragging a row past a branch's End takes it out of the
+    // branch, and dragging it between a branch's rows puts it in. A branch moves with everything inside it. Anything
+    // that isn't a real action, or a branch dropped inside itself, goes back where it was
+    private void MoveAction(ActionRow row)
+    {
+        var newIndex = ActionRows.IndexOf(row);
+        if (SelectedPage is null || row is not { Kind: ActionRowKind.Normal, Action: { } action } || newIndex < 0)
+        {
+            RebuildActionRows();
+            return;
+        }
+
+        var next = newIndex + 1 < ActionRows.Count ? ActionRows[newIndex + 1] : null;
+        var (target, before) = DropTarget(next);
+        if (action is BranchAction branch && (target == branch.BranchActions || target == branch.ElseActions || AllActions(branch.BranchActions.Concat(branch.ElseActions)).OfType<BranchAction>().Any(x => target == x.BranchActions || target == x.ElseActions)))
+        {
+            RebuildActionRows();
+            SelectActionRow(action);
+            return;
+        }
+
+        CollectionFor(row).Remove(action);
+        var index = before is not null && target.IndexOf(before) is >= 0 and var found ? found : target.Count;
+        target.Insert(index, action);
+        RebuildActionRows();
+        SelectActionRow(action);
+    }
+
+    // the list a row dropped above this one goes into, and the action it goes before (none: the end of that list)
+    private (ObservableCollection<PageAction> Target, PageAction? Before) DropTarget(ActionRow? next)
+    {
+        return next switch
+        {
+            null => (SelectedPage!.Actions, null),
+            { Kind: ActionRowKind.Normal, Action: { } action } => (CollectionFor(next), action),
+            { Kind: ActionRowKind.Blank } => (CollectionFor(next), null),
+
+            // just above Else is the end of the branch's first section, just above End the end of its last one
+            { Kind: ActionRowKind.Else, ParentBranch: { } branch } => (branch.BranchActions, null),
+            { Kind: ActionRowKind.End, ParentBranch: { } branch } => (branch.ElseBranch ? branch.ElseActions : branch.BranchActions, null),
+            _ => (SelectedPage!.Actions, null)
+        };
     }
 
     private void SelectActionRow(PageAction action)

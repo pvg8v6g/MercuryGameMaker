@@ -1,4 +1,4 @@
-using GameLibrary.Utilities;
+﻿using GameLibrary.Utilities;
 using GameEngine.Battle;
 using GameEngine.Battle.Controllers;
 using GameEngine.Interface;
@@ -155,6 +155,7 @@ public partial class App
         services.AddSingleton<ScreenLayers>();
 
         // the fight itself
+        services.AddSingleton<BattleStates>();
         services.AddSingleton<BattleAttributes>();
         services.AddSingleton<HitCalculator>();
         services.AddSingleton<PlayerController>();

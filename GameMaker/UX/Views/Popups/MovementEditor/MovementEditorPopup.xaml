@@ -68,8 +68,17 @@
     </DataTemplate>
 
     <DataTemplate x:Key="WaitTemplate" x:DataType="movements:WaitMovement">
-      <engineTextBox:EngineTextBox Header="Wait Time (ms)" InputType="Integer"
-                                   Text="{x:Bind Wait, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      <StackPanel Spacing="10">
+        <engineTextBox:EngineTextBox Header="Wait Time (ms)" InputType="Integer"
+                                     Text="{x:Bind Wait, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTipService.ToolTip="With Random on, the shortest the wait can be" />
+        <CheckBox Content="Random"
+                  IsChecked="{x:Bind Random, Mode=TwoWay}"
+                  ToolTipService.ToolTip="Each time the step runs it waits a random time between Wait Time and Max Wait Time" />
+        <engineTextBox:EngineTextBox Header="Max Wait Time (ms)" InputType="Integer"
+                                     Visibility="{x:Bind Random, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                     Text="{x:Bind MaxWait, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}" />
+      </StackPanel>
     </DataTemplate>
 
     <!-- picked in the popup itself, so the template has nothing of its own -->
@@ -112,6 +121,13 @@
                 ToolTipService.ToolTip="The route waits until the balloon has played through and gone" />
     </DataTemplate>
 
+    <!-- the animation is picked in the popup itself -->
+    <DataTemplate x:Key="AnimationTemplate" x:DataType="movements:AnimationMovement">
+      <CheckBox Content="Wait For Completion"
+                IsChecked="{x:Bind WaitForCompletion, Mode=TwoWay}"
+                ToolTipService.ToolTip="The route waits until the animation has played through, so the next step starts the moment it ends" />
+    </DataTemplate>
+
     <!-- picked in the popup itself, so the template has nothing of its own -->
     <DataTemplate x:Key="TurnTargetTemplate">
       <Grid />
@@ -133,6 +149,7 @@
                                                     CharacterImage="{StaticResource CharacterImageTemplate}"
                                                     ActivateArte="{StaticResource ActivateArteTemplate}"
                                                     Balloon="{StaticResource BalloonTemplate}"
+                                                    Animation="{StaticResource AnimationTemplate}"
                                                     TurnTarget="{StaticResource TurnTargetTemplate}"
                                                     Empty="{StaticResource EmptyTemplate}" />
   </UserControl.Resources>
@@ -196,6 +213,14 @@
             </DataTemplate>
           </ComboBox.ItemTemplate>
         </ComboBox>
+        <ComboBox Header="Animation"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Animations}"
+                  SelectedItem="{x:Bind ViewModel.SelectedAnimation, Mode=TwoWay}"
+                  DisplayMemberPath="Name"
+                  Visibility="{x:Bind ViewModel.ShowsAnimation, Converter={StaticResource BooleanToVisibilityConverter}}"
+                  ToolTipService.ToolTip="Plays on the entity. Animations are made on the Animations page" />
         <ContentControl HorizontalContentAlignment="Stretch"
                         VerticalContentAlignment="Top"
                         Content="{x:Bind ViewModel.Movement, Mode=OneWay}"

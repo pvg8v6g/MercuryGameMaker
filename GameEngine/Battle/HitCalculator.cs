@@ -16,6 +16,9 @@ public class HitCalculator(BattleAttributes attributes)
     private const double HitScale = 1.8;
     private const double HitFloor = 0.05;
 
+    // damage from behind (the target faces away from where the hit came from) does this many times the damage
+    private const double BehindMultiplier = 1.25;
+
     // a critical hit does this many times the damage or healing
     private const double CriticalMultiplier = 3.0;
 
@@ -32,7 +35,9 @@ public class HitCalculator(BattleAttributes attributes)
 
     #region Methods
 
-    public HitOutcome Resolve(Arte arte, AttackerSnapshot attacker, BattleFighter target)
+    // afterHit runs once the hit roll is passed and before any damage is worked out: the arte's states go on then, so
+    // they count toward its own damage
+    public HitOutcome Resolve(Arte arte, AttackerSnapshot attacker, BattleFighter target, Action? afterHit = null, bool fromBehind = false)
     {
         var heals = arte.HpDamage < 0;
 
@@ -46,6 +51,9 @@ public class HitCalculator(BattleAttributes attributes)
             if (_random.NextDouble() >= chance) return HitOutcome.Miss;
         }
 
+        // 3. and 4. remove and add states
+        afterHit?.Invoke();
+
         // 5. the arte's multiplier times the attacker's Power (1 is 1x Power), 6. the Defense ratio, skipped for healing
         var value = Math.Abs(arte.HpDamage) * attacker.Power;
         if (!heals)
@@ -58,6 +66,9 @@ public class HitCalculator(BattleAttributes attributes)
         var rate = ElementRate(arte, target);
         if (heals && rate < 0) rate = 0;
         value *= rate / 100.0;
+
+        // 7b. a hit on an opponent from behind: a bit more damage (never healing, never a friendly)
+        if (fromBehind && !heals && !friendly) value *= BehindMultiplier;
 
         // 8. critical
         var critical = _random.NextDouble() < CriticalChance(attacker);
@@ -77,11 +88,11 @@ public class HitCalculator(BattleAttributes attributes)
     #region Private Methods
 
     // rate = 100% + the sum of (each element's rate - 100%); no elements is a plain 100%
-    private static double ElementRate(Arte arte, BattleFighter target)
+    private double ElementRate(Arte arte, BattleFighter target)
     {
         if (arte.Elements.Count == 0) return 100;
 
-        return 100 + arte.Elements.Sum(element => target.Stats.Elements.GetValueOrDefault(element, 100) - 100.0);
+        return 100 + arte.Elements.Sum(element => attributes.ElementRate(target, element) - 100.0);
     }
 
     // crits stay rare: the best critter in the party tops out near 10%

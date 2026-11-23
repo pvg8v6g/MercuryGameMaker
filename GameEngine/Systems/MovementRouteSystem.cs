@@ -1,4 +1,6 @@
+using Windows.Foundation;
 using GameEngine.Models;
+using GameEngine.Models.Battle;
 using GameEngine.Navigation;
 using GameEngine.Pages;
 using GameEngine.Services.GameState;
@@ -15,7 +17,10 @@ namespace GameEngine.Systems;
 /// Walks entities through their movement routes one step at a time. A move is a tile, waits are in milliseconds.
 /// A blocked step waits until the way is clear, or is skipped when the route skips what it can't do.
 /// Move toward and move away find their way with the navigation service and search again as they go.
-/// Steps for systems that don't exist yet (artes, detonate) are skipped.
+/// Detonate and Activate Arte only mean something to an arte projectile in a battle: the step is noted on the
+/// projectile's state for the battle runner (Detonate also ends the route), and on every other entity it's skipped.
+/// Place Randomly puts the entity on a random open tile of the area it stands in, and Play Animation can hold the route
+/// until the animation ends.
 /// </summary>
 public class MovementRouteSystem(
     IGameDataService gameDataService,
@@ -24,7 +29,8 @@ public class MovementRouteSystem(
     NavigationService navigationService,
     PathWalker pathWalker,
     HitboxSystem hitboxSystem,
-    BalloonSystem balloonSystem) : IEntitySystem
+    BalloonSystem balloonSystem,
+    AnimationSystem animationSystem) : IEntitySystem
 {
     #region Constants
 
@@ -88,6 +94,12 @@ public class MovementRouteSystem(
             var result = target?.GetModule<PositionModule>() is { } targetPosition ? Run(target, targetPosition, state, movement) : StepResult.Done;
 
             if (result == StepResult.Busy) return;
+            if (result == StepResult.End)
+            {
+                state.Route = null;
+                return;
+            }
+
             if (result == StepResult.Blocked && !route.SkipIfInterrupted) return;
 
             state.Index++;
@@ -134,8 +146,23 @@ public class MovementRouteSystem(
                 var fled = pathWalker.Follow(entity, position, state.Walk, awayGoal);
                 return fled == WalkResult.Stuck ? StepResult.Done : Result(fled);
 
+            // a random wait picks its length once, when the step starts
             case WaitMovement wait:
-                return Wait(state, wait.Wait);
+                return Wait(state, wait.Random && !state.StepStarted ? _random.Next(wait.Wait, Math.Max(wait.Wait, wait.MaxWait) + 1) : wait.Wait);
+
+            case PlaceRandomlyMovement:
+                PlaceRandomly(entity, position, state);
+                return StepResult.Done;
+
+            // waiting holds the route until the animation has played through (an animation that doesn't exist never holds it)
+            case AnimationMovement animation:
+                if (!state.StepStarted)
+                {
+                    state.StepStarted = true;
+                    animationSystem.Play(entity, animation.AnimationId);
+                }
+
+                return animation.WaitForCompletion && animationSystem.IsPlaying(entity) ? StepResult.Busy : StepResult.Done;
 
             case TurnMovement turn:
                 Turn(entity, position, turn.Random ? Directions[_random.Next(Directions.Length)] : turn.Direction);
@@ -207,6 +234,16 @@ public class MovementRouteSystem(
                 if (!string.IsNullOrEmpty(media.MediaName)) audioService.PlaySfx(media.MediaName, media.Volume, media.Pitch);
                 return StepResult.Done;
 
+            // a projectile goes off here and its route is over, the battle runner removes it
+            case DetonateMovement when entity.State<ProjectileState>() is { IsProjectile: true } projectile:
+                projectile.Detonated = true;
+                return StepResult.End;
+
+            // the arte goes off where the projectile is, and the projectile keeps going
+            case ActivateArteMovement { ArteId: { } arteId } when entity.State<ProjectileState>() is { IsProjectile: true } projectile:
+                projectile.Activations.Enqueue(arteId);
+                return StepResult.Done;
+
             default:
                 return StepResult.Done;
         }
@@ -271,6 +308,80 @@ public class MovementRouteSystem(
         if (entity.GetModule<EntityHitboxModule>() is not { } hitboxModule || entity.GetModule<PositionModule>() is not { } position) return [];
         var state = entity.State<HitboxState>();
         return HitboxSystem.Areas(hitboxModule, position.Direction).Select(state.Get).ToArray();
+    }
+
+    #endregion
+
+    #region Place Randomly
+
+    // the entity's feet go on a random open tile of the area it stands in: every tile it could reach from its own
+    // without crossing a collision area on its level (the walls of a battle field). A tile another entity was placed on
+    // is skipped while there are free ones. The whole entity moves with its feet, so its picture stands on the tile
+    private void PlaceRandomly(MapEntity entity, PositionModule position, RouteState state)
+    {
+        if (gameStateService.ActiveMap is not { } map) return;
+
+        var tile = Tile;
+        var feet = FeetTile(entity, position);
+        var start = ((int) Math.Floor((feet.X + (tile / 2.0)) / tile), (int) Math.Floor((feet.Y + (tile / 2.0)) / tile));
+        var open = OpenArea(map.Width, map.Height, start, HitboxSystem.Level(position));
+        if (open.Count == 0) return;
+
+        var taken = gameStateService.MapEntities
+            .Where(x => x != entity && !x.IsErased)
+            .Select(x => x.State<RouteState>().PlacedTile)
+            .OfType<(int X, int Y)>()
+            .ToHashSet();
+        var free = open.Where(x => !taken.Contains(x)).ToArray();
+        var pick = free.Length > 0 ? free[_random.Next(free.Length)] : open[_random.Next(open.Count)];
+
+        position.X += (pick.X * tile) - feet.X;
+        position.Y += (pick.Y * tile) - feet.Y;
+        state.PlacedTile = pick;
+        state.Walk.Reset();
+
+        // a projectile jumped, so its contact check doesn't sweep across everything between where it was and here
+        if (entity.State<ProjectileState>() is { IsProjectile: true } projectile) projectile.Jumped = true;
+    }
+
+    // the tiles reachable from the start tile, walking tile to tile, without stepping on a collision area of the level
+    private List<(int X, int Y)> OpenArea(int width, int height, (int X, int Y) start, int level)
+    {
+        var scale = gameDataService.ScaleFactor;
+        var tile = Tile;
+        var walls = gameStateService.MapAreas
+            .Where(x => x.AreaType == MapAreaType.Collision && x.Level == level)
+            .Select(x => (X: x.OffsetX * scale, Y: x.OffsetY * scale, Width: x.Width * scale, Height: x.Height * scale))
+            .ToArray();
+
+        var open = new List<(int X, int Y)>();
+        var seen = new HashSet<(int X, int Y)> { start };
+        var waiting = new Queue<(int X, int Y)>([start]);
+        while (waiting.TryDequeue(out var cell))
+        {
+            if (cell.X < 0 || cell.Y < 0 || cell.X >= width || cell.Y >= height) continue;
+
+            var (x, y) = (cell.X * tile, cell.Y * tile);
+            if (walls.Any(wall => wall.X < x + tile && x < wall.X + wall.Width && wall.Y < y + tile && y < wall.Y + wall.Height)) continue;
+
+            open.Add(cell);
+            foreach (var next in new[] { (cell.X + 1, cell.Y), (cell.X - 1, cell.Y), (cell.X, cell.Y + 1), (cell.X, cell.Y - 1) })
+            {
+                if (seen.Add(next)) waiting.Enqueue(next);
+            }
+        }
+
+        return open;
+    }
+
+    // the top left of the tile the entity stands on: under the middle of the bottom of its picture
+    private Point FeetTile(MapEntity entity, PositionModule position)
+    {
+        var scale = gameDataService.ScaleFactor;
+        var tile = Tile;
+        var sprite = entity.State<CharacterImageState>().Sprite;
+        var (width, height) = sprite is null ? (tile, tile) : (sprite.Width * scale, sprite.Height * scale);
+        return new Point(position.X + ((width - tile) / 2.0), position.Y + height - tile);
     }
 
     #endregion
@@ -346,7 +457,10 @@ public class MovementRouteSystem(
     {
         Done,
         Busy,
-        Blocked
+        Blocked,
+
+        // the route stops here (a projectile detonated)
+        End
     }
 
     #endregion

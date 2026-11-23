@@ -8,7 +8,7 @@ namespace GameEngine.Battle;
 /// The battle formulas look the attributes up by name. (Later this should be a setting so other games can name their
 /// attributes anything; for now these are the names on the Attributes page.)
 /// </summary>
-public class BattleAttributes(IGameDataService gameDataService)
+public class BattleAttributes(IGameDataService gameDataService, BattleStates states)
 {
     #region Constants
 
@@ -34,7 +34,21 @@ public class BattleAttributes(IGameDataService gameDataService)
             value += equipment.AttributeStats.GetValueOrDefault(attribute.Guid);
         }
 
-        return Math.Max(0, value);
+        return Math.Max(0, value + states.AttributeChange(fighter, attribute.Guid));
+    }
+
+    // the fighter's total rate for one element: its own rate (100% when unset) plus what each piece of equipment changes
+    // it by from 100%. Garrick at 100% Fire in 50% Fire armor ends at 50%. (and so do its states, like wards)
+    public double ElementRate(BattleFighter fighter, Guid element)
+    {
+        var rate = (double) fighter.Stats.Elements.GetValueOrDefault(element, 100);
+        foreach (var slot in fighter.Stats.Equipment.Values)
+        {
+            if (slot.Id is not { } id || gameDataService.Equipment.FirstOrDefault(x => x.Guid == id) is not { } equipment) continue;
+            rate += equipment.ElementResist.GetValueOrDefault(element, 100) - 100;
+        }
+
+        return rate + states.ElementChange(fighter, element);
     }
 
     // the attacker's numbers frozen now, for a hit now or for whatever it set off later (a projectile, a state)

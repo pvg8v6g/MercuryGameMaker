@@ -121,7 +121,7 @@
                               Visibility="{x:Bind ViewModel.Moves, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <engineTextBox:EngineTextBox Header="Speed"
                                                  InputType="Integer"
-                                                 Text="{x:Bind ViewModel.Movement.Speed, Mode=TwoWay, FallbackValue='4', UpdateSourceTrigger=PropertyChanged}"
+                                                 Text="{x:Bind ViewModel.Movement.Speed, Mode=TwoWay, FallbackValue='8', UpdateSourceTrigger=PropertyChanged}"
                                                  ToolTipService.ToolTip="Walking speed, the player walks at 8. Patrols and the Set Speed route step change it while they run." />
                     <CheckBox Content="Steps While Walking"
                               IsChecked="{x:Bind ViewModel.Movement.Stepping, Mode=TwoWay, FallbackValue=True}"
@@ -328,6 +328,8 @@
           <engineListView:EngineListView Grid.Row="1"
                                          ItemsSource="{x:Bind ViewModel.ActionRows, Mode=OneWay}"
                                          SelectedIndex="{x:Bind ViewModel.SelectedActionRowIndex, Mode=TwoWay}"
+                                         CanReorder="True"
+                                         ReorderedCommand="{x:Bind ViewModel.MoveActionCommand}"
                                          NewOptions="{x:Bind ViewModel.ActionNewOptions}"
                                          DoubleTapCommand="{x:Bind ViewModel.DoubleTapActionCommand}"
                                          EditCommand="{x:Bind ViewModel.EditActionCommand}"

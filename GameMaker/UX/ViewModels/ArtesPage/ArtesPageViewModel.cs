@@ -71,6 +71,11 @@ public class ArtesPageViewModel(
     // where the one animation goes for the picked direction, when the arte moves and rotates one animation
     public ArteAnimationPlacement? SelectedAnimationPlacement => SelectedEntity?.AnimationFor(ShownDirection);
 
+    // an arte whose projectiles activate artes that fire projectiles, deeper than the battle allows, gets cut off
+    public bool ShowsChainWarning => SelectedEntity is { } arte && ArteChains.IsCutOff(arte, id => gameDataService.Artes.FirstOrDefault(x => x.Guid == id));
+
+    public string ChainWarning => $"This arte's chain of projectiles goes more than {ArteChains.MaxDepth} deep (projectiles activating artes that fire projectiles). The battle stops there, so the last artes in the chain won't do anything.";
+
     public bool ShowsAnimationPlacement => SelectedEntity is { DirectionRotate: true, DirectionAnimations: DirectionAnimations.MoveAndRotate };
 
     // a line under the turning mode saying what it does, so the choice reads without a tooltip
@@ -199,6 +204,7 @@ public class ArtesPageViewModel(
 
     protected override Task OnSelectedIndexChanged(int index)
     {
+        OnPropertyChanged(nameof(ShowsChainWarning));
         RefreshToggles();
         WatchArte();
         LinkHitboxes();
@@ -295,6 +301,7 @@ public class ArtesPageViewModel(
         var projectile = SelectedEntity.Projectiles[SelectedProjectileIndex];
         var popupViewModel = new EntityEditorViewModel(projectile, gameDataService, JsonService, graphicsService, locationService, navigationService, "Projectile");
         await navigationService.ShowEntityEditorPopup(popupViewModel);
+        OnPropertyChanged(nameof(ShowsChainWarning));
     }
 
     private void OnHitboxesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)

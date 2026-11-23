@@ -134,7 +134,7 @@
       <StackPanel Orientation="Horizontal" />
     </ItemsPanelTemplate>
 
-    <!-- a number floating up over a fighter: white damage, gold crits, green heals, grey misses -->
+    <!-- a number floating up over a fighter: white damage, red crits, green heals, blue crit heals, grey misses -->
     <DataTemplate x:Key="PopupTemplate" x:DataType="interface:HudPopup">
       <Canvas>
         <Grid Canvas.Left="{x:Bind X}"
@@ -144,9 +144,11 @@
           <TextBlock Text="{x:Bind Text}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"
                      Foreground="White" Visibility="{x:Bind IsDamage}" />
           <TextBlock Text="{x:Bind Text}" FontSize="26" FontWeight="ExtraBold" HorizontalAlignment="Center"
-                     Foreground="#FFF2C94C" Visibility="{x:Bind IsCritical}" />
+                     Foreground="#FFE5484D" Visibility="{x:Bind IsCritical}" />
           <TextBlock Text="{x:Bind Text}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"
                      Foreground="{StaticResource InterfaceLifeBrush}" Visibility="{x:Bind IsHeal}" />
+          <TextBlock Text="{x:Bind Text}" FontSize="26" FontWeight="ExtraBold" HorizontalAlignment="Center"
+                     Foreground="#FF4FA3FF" Visibility="{x:Bind IsCriticalHeal}" />
           <TextBlock Text="{x:Bind Text}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"
                      Foreground="{StaticResource InterfaceSubtleTextBrush}" Visibility="{x:Bind IsMiss}" />
         </Grid>

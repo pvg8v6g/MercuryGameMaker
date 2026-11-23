@@ -503,7 +503,19 @@
                              Grid.Row="1"
                              Title="Projectiles"
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-      <engineListView:EngineListView MinHeight="300"
+      <Grid RowSpacing="8">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Foreground="{StaticResource LightYellowBrush}"
+                   TextWrapping="Wrap"
+                   Visibility="{x:Bind ViewModel.ShowsChainWarning, Mode=OneWay}"
+                   Text="{x:Bind ViewModel.ChainWarning}" />
+
+      <engineListView:EngineListView Grid.Row="1"
+                                     MinHeight="300"
                                      VerticalAlignment="Stretch"
                                      ItemsSource="{x:Bind ViewModel.SelectedEntity.Projectiles, Mode=OneWay}"
                                      SelectedIndex="{x:Bind ViewModel.SelectedProjectileIndex, Mode=TwoWay}"
@@ -514,6 +526,7 @@
                                      PasteCommand="{x:Bind ViewModel.PasteProjectileCommand}"
                                      DeleteCommand="{x:Bind ViewModel.DeleteProjectileCommand}"
                                      CopiedModel="{x:Bind ViewModel.CopiedProjectile, Mode=OneWay}" />
+      </Grid>
     </enginePanel:EnginePanel>
 
     <!-- the state lists get their own half-and-half column so their length never sizes the top row (which would

@@ -26,6 +26,8 @@ namespace GameLibrary.Models.Movements;
 [JsonDerivedType(typeof(WaitMovement), "wait_movement")]
 [JsonDerivedType(typeof(DetonateMovement), "detonate_movement")]
 [JsonDerivedType(typeof(ActivateArteMovement), "activate_arte_movement")]
+[JsonDerivedType(typeof(PlaceRandomlyMovement), "place_randomly_movement")]
+[JsonDerivedType(typeof(AnimationMovement), "animation_movement")]
 public abstract partial class Movement : PropertyChangedUpdater
 {
     #region Properties

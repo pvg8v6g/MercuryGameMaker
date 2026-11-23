@@ -84,9 +84,38 @@ public class AnimationsPageViewModel(
             SelectedCell = null;
             RefreshFrameTint();
             RefreshFrameDistortions();
+            RefreshFrameSound();
             _ = RebuildSprites();
         }
     } = 1;
+
+    // the files in the SFX folder, for the frame's sound
+    public string[] SfxFiles
+    {
+        get;
+        private set => SetField(ref field, value);
+    } = [];
+
+    // the animation plays a sound of its own on this frame, with no cell (an animation can be only sounds)
+    public bool PlaysSound
+    {
+        get => FrameSound is not null;
+        set
+        {
+            if (SelectedEntity is null || value == PlaysSound) return;
+
+            if (value) SelectedEntity.Sounds.Add(new AnimationSound { Frame = SelectedFrame });
+            else SelectedEntity.Sounds.Remove(FrameSound!);
+            RefreshFrameSound();
+        }
+    }
+
+    public AnimationSound? FrameSound => SelectedEntity?.Sounds.FirstOrDefault(x => x.Frame == SelectedFrame);
+
+    public RelayCommand PreviewFrameSoundCommand => new(() =>
+    {
+        if (FrameSound is { Name: { Length: > 0 } name } sound) audioService.PlaySfx(name, sound.Volume, sound.Pitch);
+    });
 
     // the animation tints its target on this frame (a poison animation turning the character green)
     public bool TintsTarget
@@ -267,6 +296,7 @@ public class AnimationsPageViewModel(
     protected override async Task LoadedAction()
     {
         RefreshAnimationImageFiles();
+        SfxFiles = mediaService.GetMediaFiles(Cache.Sfx);
         await LoadActorSprite();
         UpdateAnchor();
         await RebuildSprites();
@@ -279,10 +309,17 @@ public class AnimationsPageViewModel(
         SelectedFrame = 1;
         RefreshFrameTint();
         RefreshFrameDistortions();
+        RefreshFrameSound();
         await RebuildSprites();
     }
 
     #endregion
+
+    private void RefreshFrameSound()
+    {
+        OnPropertyChanged(nameof(PlaysSound));
+        OnPropertyChanged(nameof(FrameSound));
+    }
 
     private void RefreshFrameTint()
     {
@@ -383,7 +420,7 @@ public class AnimationsPageViewModel(
     {
         if (SelectedEntity is null) return;
 
-        // the last frame with a cell, a tint, or a shockwave or heat still going, the way the game plays it
+        // the last frame with a cell, a tint, a sound, or a shockwave or heat still going, the way the game plays it
         _lastFrame = SelectedEntity.LastFrame();
         if (_lastFrame < 1) return;
 
@@ -439,6 +476,12 @@ public class AnimationsPageViewModel(
         {
             if (string.IsNullOrEmpty(sfx.Name)) continue;
             audioService.PlaySfx(sfx.Name, sfx.Volume, sfx.Pitch);
+        }
+
+        // the animation's own sounds, the ones that aren't on a cell
+        foreach (var sound in SelectedEntity.Sounds.Where(x => x.Frame == frame))
+        {
+            if (!string.IsNullOrEmpty(sound.Name)) audioService.PlaySfx(sound.Name, sound.Volume, sound.Pitch);
         }
     }
 

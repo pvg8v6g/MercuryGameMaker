@@ -12,7 +12,21 @@ public class StatesPageViewModel(IGameDataService gameDataService, IJsonService 
 
     public IGameDataService GameDataService => gameDataService;
 
-    public ObservableCollection<ElementEffectViewModel> ElementEffects { get; } = [];
+    public ObservableCollection<StateChangeViewModel> AttributeChanges { get; } = [];
+
+    public ObservableCollection<StateChangeViewModel> ElementChanges { get; } = [];
+
+    public Guid? SelectedTickArte
+    {
+        get => SelectedEntity?.TickArte;
+        set
+        {
+            if (SelectedEntity is null) return;
+            SelectedEntity.TickArte = value;
+            OnPropertyChanged();
+        }
+    }
+
 
     public Guid? SelectedTickAnimation
     {
@@ -29,23 +43,15 @@ public class StatesPageViewModel(IGameDataService gameDataService, IJsonService 
 
     protected override ObservableCollection<State> EntityCollection => gameDataService.States;
 
-    public RelayCommand ClearTickAnimationCommand => new(ClearTickAnimation);
-
     #endregion
 
     #region Actions
-
-    private void ClearTickAnimation()
-    {
-        if (SelectedEntity is null) return;
-        SelectedEntity.TickAnimation = Guid.Empty;
-        OnPropertyChanged(nameof(SelectedTickAnimation));
-    }
 
     protected override Task OnSelectedIndexChanged(int index)
     {
         RefreshStats();
         OnPropertyChanged(nameof(SelectedTickAnimation));
+        OnPropertyChanged(nameof(SelectedTickArte));
         return Task.CompletedTask;
     }
 
@@ -55,16 +61,13 @@ public class StatesPageViewModel(IGameDataService gameDataService, IJsonService 
 
     private void RefreshStats()
     {
-        ElementEffects.Clear();
+        AttributeChanges.Clear();
+        ElementChanges.Clear();
 
         if (SelectedEntity is null) return;
 
-        foreach (var element in GameDataService.Elements)
-        {
-            ElementEffects.Add(new ElementEffectViewModel(element, SelectedEntity));
-        }
-
-        OnPropertyChanged(nameof(ElementEffects));
+        foreach (var attribute in GameDataService.Attributes) AttributeChanges.Add(new StateChangeViewModel(attribute, SelectedEntity, false));
+        foreach (var element in GameDataService.Elements) ElementChanges.Add(new StateChangeViewModel(element, SelectedEntity, true));
     }
 
     #endregion

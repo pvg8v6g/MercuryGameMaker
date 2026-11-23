@@ -539,15 +539,4 @@ public class ActionEditorViewModel(PageAction action, IGameDataService gameDataS
     });
 
     #endregion
-
-    #region Relays
-
-    public RelayCommand ClearItemCommand => new(() =>
-    {
-        if (AsChangeItem is null) return;
-        AsChangeItem.ItemId = null;
-        AsChangeItem.ItemName = null;
-    });
-
-    #endregion
 }

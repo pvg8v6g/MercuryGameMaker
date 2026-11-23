@@ -9,6 +9,7 @@
       xmlns:engineIcon="using:GameMaker.UX.Components.EngineIcon"
       xmlns:iconView="using:GameMaker.UX.Components.IconView"
       xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+      xmlns:engineComboBox="using:GameMaker.UX.Components.EngineComboBox"
       xmlns:animations="using:GameLibrary.Models.Animations"
       xmlns:behaviors="using:GameLibrary.Behaviors"
       mc:Ignorable="d"
@@ -17,6 +18,7 @@
         RowSpacing="10"
         Padding="5">
     <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
     <Grid.ColumnDefinitions>
@@ -25,6 +27,7 @@
       <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
     <engineListView:EngineListView Grid.Column="0"
+                                   Grid.RowSpan="2"
                                    ItemsSource="{x:Bind ViewModel.GameDataService.States}"
                                    SelectedIndex="{x:Bind ViewModel.SelectedIndex, Mode=TwoWay}"
                                    NewCommand="{x:Bind ViewModel.NewEntityCommand}"
@@ -39,8 +42,6 @@
       <Grid ColumnSpacing="40"
             RowSpacing="15">
         <Grid.RowDefinitions>
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
@@ -71,52 +72,21 @@
                                      Text="{x:Bind ViewModel.SelectedEntity.Ticks, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
                                      Tooltip="Duration in frames (60 = 1 second). Zero causes a permanent effect." />
 
-        <engineTextBox:EngineTextBox Grid.Column="0"
-                                     Grid.Row="2"
-                                     Header="HP Damage"
-                                     InputType="Integer"
-                                     Text="{x:Bind ViewModel.SelectedEntity.HpDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="Flat HP damage applied each tick. Negative values heal." />
-
-        <engineTextBox:EngineTextBox Grid.Column="1"
-                                     Grid.Row="2"
-                                     Header="HP Percent"
-                                     InputType="Double"
-                                     Text="{x:Bind ViewModel.SelectedEntity.HpPercent, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="Percentage of max HP damage applied each tick. Negative values heal." />
-
-        <engineTextBox:EngineTextBox Grid.Column="0"
-                                     Grid.Row="3"
-                                     Header="Mana Damage"
-                                     InputType="Integer"
-                                     Text="{x:Bind ViewModel.SelectedEntity.ManaDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="Flat mana damage applied each tick. Negative values restore." />
-
-        <engineTextBox:EngineTextBox Grid.Column="1"
-                                     Grid.Row="3"
-                                     Header="Mana Percent"
-                                     InputType="Double"
-                                     Text="{x:Bind ViewModel.SelectedEntity.ManaPercent, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="Percentage of max mana damage applied each tick. Negative values restore." />
-      </Grid>
-    </enginePanel:EnginePanel>
-    <StackPanel Grid.Column="2"
-                Orientation="Horizontal"
-                Spacing="10">
-      <enginePanel:EnginePanel Title="Tick Animation"
-                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-        <StackPanel Orientation="Horizontal"
+        <StackPanel Grid.Column="1"
+                    Grid.ColumnSpan="2"
+                    Grid.Row="1"
+                    Orientation="Horizontal"
                     Spacing="5"
-                    VerticalAlignment="Top">
-          <ComboBox Header="Animation"
-                    PlaceholderText="None"
-                    ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
-                    SelectedValue="{x:Bind ViewModel.SelectedTickAnimation, Mode=TwoWay}"
-                    SelectedValuePath="Guid"
-                    MinWidth="180"
-                    MinHeight="48"
-                    ToolTipService.ToolTip="This animation plays every time this state affects the fighter."
-                    HorizontalAlignment="Stretch">
+                    VerticalAlignment="Bottom">
+          <engineComboBox:EngineComboBox Header="Tick Animation"
+                                         IsClearable="True"
+                                         PlaceholderText="None"
+                                         ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
+                                         SelectedValue="{x:Bind ViewModel.SelectedTickAnimation, Mode=TwoWay}"
+                                         SelectedValuePath="Guid"
+                                         MinWidth="180"
+                                         MinHeight="48"
+                                         ToolTipService.ToolTip="This animation plays every time this state affects the fighter.">
             <ComboBox.ItemTemplate>
               <DataTemplate x:DataType="animations:Animation">
                 <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
@@ -125,50 +95,142 @@
                 </StackPanel>
               </DataTemplate>
             </ComboBox.ItemTemplate>
-          </ComboBox>
-          <Button Content="Clear"
-                  Command="{x:Bind ViewModel.ClearTickAnimationCommand}"
-                  behaviors:PointerCursorBehavior.CursorType="Hand"
-                  ToolTipService.ToolTip="Remove the tick animation from this state."
-                  VerticalAlignment="Bottom" />
+          </engineComboBox:EngineComboBox>
         </StackPanel>
-      </enginePanel:EnginePanel>
-      <enginePanel:EnginePanel Title="Element Effect"
+      </Grid>
+    </enginePanel:EnginePanel>
+    <StackPanel Grid.Column="1"
+                Grid.Row="1"
+                Orientation="Horizontal"
+                Spacing="10"
+                VerticalAlignment="Top">
+      <enginePanel:EnginePanel Title="Attribute Changes"
                                Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-        <ItemsControl ItemsSource="{x:Bind ViewModel.ElementEffects, Mode=OneWay}">
+        <ItemsControl ItemsSource="{x:Bind ViewModel.AttributeChanges, Mode=OneWay}">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
               <StackPanel Spacing="15" />
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="statesPage:ElementEffectViewModel">
+            <DataTemplate x:DataType="statesPage:StateChangeViewModel">
               <Grid ColumnSpacing="10">
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="32" />
-                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="100" />
                   <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-
                 <engineIcon:EngineIcon Grid.Column="0"
                                        Icon="{x:Bind Icon}"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center" />
-
                 <TextBlock Grid.Column="1"
                            Text="{x:Bind Name}"
                            VerticalAlignment="Center"
                            TextWrapping="NoWrap"
                            TextTrimming="CharacterEllipsis" />
-
-                <CheckBox Grid.Column="2"
-                          IsChecked="{x:Bind IsAffected, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                          behaviors:PointerCursorBehavior.CursorType="Hand"
-                          VerticalAlignment="Center" />
+                <engineTextBox:EngineTextBox Grid.Column="2"
+                                             InputType="Integer"
+                                             Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             VerticalAlignment="Center"
+                                             Tooltip="Added to this attribute while the state lasts, for each stack. Negative lowers it. 0 is no change." />
               </Grid>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
+      </enginePanel:EnginePanel>
+      <enginePanel:EnginePanel Title="Element Changes"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <ItemsControl ItemsSource="{x:Bind ViewModel.ElementChanges, Mode=OneWay}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Spacing="15" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="statesPage:StateChangeViewModel">
+              <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="32" />
+                  <ColumnDefinition Width="100" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <engineIcon:EngineIcon Grid.Column="0"
+                                       Icon="{x:Bind Icon}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1"
+                           Text="{x:Bind Name}"
+                           VerticalAlignment="Center"
+                           TextWrapping="NoWrap"
+                           TextTrimming="CharacterEllipsis" />
+                <StackPanel Grid.Column="2"
+                            Orientation="Horizontal">
+                  <engineTextBox:EngineTextBox InputType="Integer"
+                                               Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                               VerticalAlignment="Center"
+                                               Tooltip="The rate this state sets for this element, added to the fighter's other rates the way equipment is, for each stack. 100% is no change, 50% takes 50 points off (halving a normal fighter's), below 0% heals. " />
+                  <TextBlock VerticalAlignment="Center">%</TextBlock>
+                </StackPanel>
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </enginePanel:EnginePanel>
+    </StackPanel>
+    <StackPanel Grid.Column="2"
+                Grid.RowSpan="2"
+                Orientation="Horizontal"
+                Spacing="10">
+      <enginePanel:EnginePanel Title="Behavior"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <StackPanel Spacing="10">
+          <CheckBox Content="Stackable"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.Stackable, Mode=TwoWay, FallbackValue=False}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="More than one of it can be on a fighter, up to Max Stacks. Applied again while it's there, a state that isn't stackable does nothing. All the stacks share one timer." />
+          <engineTextBox:EngineTextBox Header="Max Stacks"
+                                       InputType="Integer"
+                                       Text="{x:Bind ViewModel.SelectedEntity.MaxStacks, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}"
+                                       Tooltip="The most stacks of it a fighter can have. Only used when the state is stackable." />
+          <CheckBox Content="Remains After Battle"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.RemainsAfterBattle, Mode=TwoWay, FallbackValue=False}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="Every state is removed when a battle ends unless it says it lasts." />
+          <CheckBox Content="Ends When Source Falls"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.EndsWhenSourceFalls, Mode=TwoWay, FallbackValue=False}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="For taunts, Feared and links: it ends when whoever applied it falls. Poisons and burns keep going." />
+          <CheckBox Content="Stun-Lock"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.StunLock, Mode=TwoWay, FallbackValue=False}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="Stun, frozen, sealed, rooted and the like. A fighter holding one can do nothing: no walking, turning or artes, and a cast is broken. Bosses are immune to these." />
+          <CheckBox Content="Can Still Use Artes"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.CanUseArtes, Mode=TwoWay, FallbackValue=False}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="A stun-lock fighter can still use artes where it stands (it can't walk or turn). Off by default." />
+          <CheckBox Content="Hidden"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.Hidden, Mode=TwoWay, FallbackValue=False}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="Never shows on the HUD." />
+          <engineTextBox:EngineTextBox Header="Tick Interval"
+                                       InputType="Integer"
+                                       Text="{x:Bind ViewModel.SelectedEntity.TickInterval, Mode=TwoWay, FallbackValue='60', UpdateSourceTrigger=PropertyChanged}"
+                                       Tooltip="Frames between each Tick Arte (60 = 1 second)." />
+          <engineComboBox:EngineComboBox Header="Tick Arte"
+                                         IsClearable="True"
+                                         PlaceholderText="None"
+                                         ItemsSource="{x:Bind ViewModel.GameDataService.Artes, Mode=OneWay}"
+                                         DisplayMemberPath="Name"
+                                         SelectedValue="{x:Bind ViewModel.SelectedTickArte, Mode=TwoWay}"
+                                         SelectedValuePath="Guid"
+                                         MinWidth="180"
+                                         ToolTipService.ToolTip="This arte is activated on the fighter holding the state every Tick Interval, owned by whoever applied the state, so it uses their Power. It costs nothing and has no cast or cooldown. The state's damage element comes from this arte's Element Type on the Artes page, so weaknesses and resistances apply to it." />
+          <TextBlock Foreground="{StaticResource LightYellowBrush}"
+                     TextWrapping="Wrap"
+                     MaxWidth="260"
+                     Text="The element of a state's damage is set on its Tick Arte (Element Type on the Artes page)." />
+        </StackPanel>
       </enginePanel:EnginePanel>
     </StackPanel>
   </Grid>

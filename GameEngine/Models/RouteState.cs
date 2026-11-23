@@ -23,6 +23,9 @@ public class RouteState
 
     public int WaitUpdates { get; set; }
 
+    // the tile Place Randomly last put the entity on, so the next entity placed picks another one
+    public (int X, int Y)? PlacedTile { get; set; }
+
     // a walk the step is taking: a tile one way, or a path toward or away from something
     public WalkState Walk { get; } = new();
 }

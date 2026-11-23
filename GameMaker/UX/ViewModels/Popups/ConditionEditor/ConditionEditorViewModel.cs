@@ -52,28 +52,4 @@ public class ConditionEditorViewModel(Condition condition, IGameDataService game
     public bool IsLevel => Condition is LevelCondition;
 
     #endregion
-
-    #region Relays
-
-    public RelayCommand ClearOwnItemCommand => new(() =>
-    {
-        if (AsItem is not null) AsItem.OwnItem = null;
-    });
-
-    public RelayCommand ClearDoNotOwnItemCommand => new(() =>
-    {
-        if (AsItem is not null) AsItem.DoNotOwnItem = null;
-    });
-
-    public RelayCommand ClearOwnActorCommand => new(() =>
-    {
-        if (AsActor is not null) AsActor.OwnActor = null;
-    });
-
-    public RelayCommand ClearDoNotOwnActorCommand => new(() =>
-    {
-        if (AsActor is not null) AsActor.DoNotOwnActor = null;
-    });
-
-    #endregion
 }
