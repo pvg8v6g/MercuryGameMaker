@@ -13,9 +13,11 @@
                Command="{Binding Command, ElementName=EngineRadioIconControl}"
                CommandParameter="{Binding CommandIndex}"
                ToolTipService.ToolTip="{Binding Tooltip}"
-               PointerEntered="OnPointerEntered">
+               Click="OnClick"
+               PointerEntered="OnPointerEntered"
+               PointerExited="OnPointerExited">
     <FlyoutBase.AttachedFlyout>
-      <MenuFlyout />
+      <MenuFlyout x:Name="Menu" Placement="Bottom" Opened="OnMenuOpened" Closed="OnMenuClosed" />
     </FlyoutBase.AttachedFlyout>
     <Grid>
       <!-- Template with Rect (clipped Canvas) -->

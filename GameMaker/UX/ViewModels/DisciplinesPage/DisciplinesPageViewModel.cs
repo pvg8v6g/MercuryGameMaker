@@ -67,7 +67,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
             AvailableGrowths = GameDataService.Growths,
             Icon = GameDataService.GameSettings.LifeIcon,
             AttributeGuid = GameDataService.LifeAttributeGuid,
-            Name = "Life",
+            Name = GameDataService.GameSettings.LifeName,
             GrowthGuid = null
         };
         InitializeSetting(lifeSetting);
@@ -78,7 +78,7 @@ public class DisciplinesPageViewModel(IGameDataService gameDataService, IJsonSer
             AvailableGrowths = GameDataService.Growths,
             Icon = GameDataService.GameSettings.ManaIcon,
             AttributeGuid = GameDataService.ManaAttributeGuid,
-            Name = "Mana",
+            Name = GameDataService.GameSettings.ManaName,
             GrowthGuid = null
         };
         InitializeSetting(manaSetting);

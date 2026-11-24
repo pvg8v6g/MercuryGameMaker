@@ -5,7 +5,8 @@ namespace GameEngine.Battle.Controllers;
 
 /// <summary>
 /// A stand-in until the real AI system: picks a target weighted by Threat, chases it, moves around a little at random
-/// once it's close, and swings its first arte (the weapon attack) whenever that would land.
+/// once it's close, and swings its first arte (the weapon attack) whenever that would land. A ready healing arte goes
+/// first when an ally (or itself) is below 70% Life and in its reach.
 /// Targeting has two speeds (Docs\BattleSystem.md, Threat): it checks every update and switches at once when its target
 /// falls, but the weighted pick is only re-rolled every couple of seconds, so it commits to a chase.
 /// </summary>
@@ -21,6 +22,9 @@ public class PlaceholderAiController : IFighterController
     private const double CloseTiles = 1.6;
     private const int ThinkMin = 15;
     private const int ThinkMax = 45;
+
+    // an ally (or itself) below this share of its Life gets healed when a healing arte is ready and would reach it
+    private const double HealBelow = 0.7;
 
     #endregion
 
@@ -40,7 +44,7 @@ public class PlaceholderAiController : IFighterController
 
         // a swing, once it has thought about it for a moment
         if (state.ThinkIn > 0) state.ThinkIn--;
-        else if (Attack(fighter, battle, target)) state.ThinkIn = _random.Next(ThinkMin, ThinkMax);
+        else if (Heal(fighter, battle) || Attack(fighter, battle, target)) state.ThinkIn = _random.Next(ThinkMin, ThinkMax);
 
         var me = battle.Feet(fighter);
         var them = battle.Feet(target);
@@ -94,6 +98,35 @@ public class PlaceholderAiController : IFighterController
         }
 
         state.Target = candidates[^1];
+    }
+
+    // a ready healing arte (negative damage) that would reach a hurt ally facing some way, the most hurt first
+    private static bool Heal(BattleFighter fighter, IBattleActions battle)
+    {
+        var hurt = battle.Fighters
+            .Where(x => !x.IsDown && !battle.IsOpponent(fighter, x) && x.Stats.MaxLife > 0 && x.Stats.Life < x.Stats.MaxLife * HealBelow)
+            .OrderBy(x => (double) x.Stats.Life / x.Stats.MaxLife)
+            .ToArray();
+        if (hurt.Length == 0) return false;
+
+        foreach (var arte in fighter.Slots.OfType<GameLibrary.Models.Artes.Arte>().Where(x => x.HpDamage < 0))
+        {
+            if (!battle.CanUse(fighter, arte)) continue;
+
+            foreach (var ally in hurt)
+            {
+                foreach (var facing in new[] { Direction.Down, Direction.Left, Direction.Right, Direction.Up })
+                {
+                    if (!battle.WouldHit(fighter, arte, ally, facing)) continue;
+
+                    battle.Face(fighter, facing);
+                    battle.Use(fighter, arte);
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     // the first arte that's ready and would land facing some way: turn that way and use it

@@ -152,14 +152,23 @@ public partial class App
         // the screen layers over the game, bottom first: the battle HUD, then (later) the menus
         services.AddSingleton<BattleHud>();
         services.AddSingleton<ScreenLayer>(provider => provider.GetRequiredService<BattleHud>());
+        services.AddSingleton<InterfaceImages>();
+        services.AddSingleton<VictoryScreen>();
+        services.AddSingleton<ScreenLayer>(provider => provider.GetRequiredService<VictoryScreen>());
+        services.AddSingleton<GameOverScreen>();
+        services.AddSingleton<ScreenLayer>(provider => provider.GetRequiredService<GameOverScreen>());
         services.AddSingleton<ScreenLayers>();
 
         // the fight itself
         services.AddSingleton<BattleStates>();
+        services.AddSingleton<BattleStateTester>();
         services.AddSingleton<BattleAttributes>();
+        services.AddSingleton<PartyStates>();
         services.AddSingleton<HitCalculator>();
         services.AddSingleton<PlayerController>();
         services.AddSingleton<PlaceholderAiController>();
+        services.AddSingleton<BattleDrops>();
+        services.AddSingleton<GameOverSequence>();
         services.AddSingleton<BattleRunner>();
 
         #endregion

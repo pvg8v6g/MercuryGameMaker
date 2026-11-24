@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:statesPage="using:GameMaker.UX.ViewModels.StatesPage"
+      xmlns:equipmentPage="using:GameMaker.UX.ViewModels.EquipmentPage"
       xmlns:engineListView="using:GameMaker.UX.Components.EngineListView"
       xmlns:enginePanel="using:GameMaker.UX.Components.EnginePanel"
       xmlns:engineIcon="using:GameMaker.UX.Components.EngineIcon"
@@ -70,7 +71,7 @@
                                      Header="Duration (Ticks)"
                                      InputType="Integer"
                                      Text="{x:Bind ViewModel.SelectedEntity.Ticks, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="Duration in frames (60 = 1 second). Zero causes a permanent effect." />
+                                     Tooltip="How many ticks it lasts, each one Tick Interval long (5 ticks at an interval of 60 is 5 seconds). A state with nothing to tick still uses the interval, so at 60 this is plain seconds. Zero causes a permanent effect." />
 
         <StackPanel Grid.Column="1"
                     Grid.ColumnSpan="2"
@@ -83,19 +84,10 @@
                                          PlaceholderText="None"
                                          ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
                                          SelectedValue="{x:Bind ViewModel.SelectedTickAnimation, Mode=TwoWay}"
+                                         DisplayMemberPath="Name"
                                          SelectedValuePath="Guid"
                                          MinWidth="180"
-                                         MinHeight="48"
-                                         ToolTipService.ToolTip="This animation plays every time this state affects the fighter.">
-            <ComboBox.ItemTemplate>
-              <DataTemplate x:DataType="animations:Animation">
-                <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
-                  <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
-                  <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
-                </StackPanel>
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </engineComboBox:EngineComboBox>
+                                         ToolTipService.ToolTip="This animation plays every time this state affects the fighter." />
         </StackPanel>
       </Grid>
     </enginePanel:EnginePanel>
@@ -106,38 +98,78 @@
                 VerticalAlignment="Top">
       <enginePanel:EnginePanel Title="Attribute Changes"
                                Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-        <ItemsControl ItemsSource="{x:Bind ViewModel.AttributeChanges, Mode=OneWay}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <StackPanel Spacing="15" />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="statesPage:StateChangeViewModel">
-              <Grid ColumnSpacing="10">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="32" />
-                  <ColumnDefinition Width="100" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <engineIcon:EngineIcon Grid.Column="0"
-                                       Icon="{x:Bind Icon}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
-                <TextBlock Grid.Column="1"
-                           Text="{x:Bind Name}"
-                           VerticalAlignment="Center"
-                           TextWrapping="NoWrap"
-                           TextTrimming="CharacterEllipsis" />
-                <engineTextBox:EngineTextBox Grid.Column="2"
-                                             InputType="Integer"
-                                             Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                             VerticalAlignment="Center"
-                                             Tooltip="Added to this attribute while the state lasts, for each stack. Negative lowers it. 0 is no change." />
-              </Grid>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+        <StackPanel Spacing="10">
+          <TextBlock TextWrapping="Wrap"
+                     MaxWidth="330"
+                     Foreground="{StaticResource LightYellowBrush}"
+                     Text="Two ways to change an attribute while the state lasts, for each stack. Flat adds or takes away a set amount (-20 is 20 less). Percent scales it (-20 is 20% less), so it means as much at level 50 as at level 1. Flat is applied first. 0 is no change." />
+          <Grid ColumnSpacing="10">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="32" />
+              <ColumnDefinition Width="100" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Column="1"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                       Text="Attribute" />
+            <TextBlock Grid.Column="2"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                       Width="90"
+                       Text="Flat"
+                       ToolTipService.ToolTip="Adds or takes away a set amount: -20 is 20 less." />
+            <TextBlock Grid.Column="3"
+                       Style="{StaticResource BodyStrongTextBlockStyle}"
+                       Width="90"
+                       Text="Percent"
+                       ToolTipService.ToolTip="Scales the attribute: -20 is 20% less." />
+          </Grid>
+          <ItemsControl ItemsSource="{x:Bind ViewModel.AttributeChanges, Mode=OneWay}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Spacing="15" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="statesPage:StateChangeViewModel">
+                <Grid ColumnSpacing="10">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="32" />
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+                  <engineIcon:EngineIcon Grid.Column="0"
+                                         Icon="{x:Bind Icon}"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center" />
+                  <TextBlock Grid.Column="1"
+                             Text="{x:Bind Name}"
+                             VerticalAlignment="Center"
+                             TextWrapping="NoWrap"
+                             TextTrimming="CharacterEllipsis" />
+                  <engineTextBox:EngineTextBox Grid.Column="2"
+                                               Width="90"
+                                               BoxMinWidth="0"
+                                               InputType="Integer"
+                                               Text="{x:Bind Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                               VerticalAlignment="Center"
+                                               Tooltip="Added to this attribute while the state lasts, for each stack. Negative lowers it. 0 is no change." />
+                  <StackPanel Grid.Column="3"
+                              Orientation="Horizontal">
+                    <engineTextBox:EngineTextBox InputType="Integer"
+                                                 Width="90"
+                                                 BoxMinWidth="0"
+                                                 Text="{x:Bind Percent, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                 VerticalAlignment="Center"
+                                                 Tooltip="Changes this attribute by a percent while the state lasts, for each stack, after the flat change: -20 is 20% less. 0 is no change." />
+                    <TextBlock VerticalAlignment="Center">%</TextBlock>
+                  </StackPanel>
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
       </enginePanel:EnginePanel>
       <enginePanel:EnginePanel Title="Element Changes"
                                Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
@@ -177,6 +209,42 @@
           </ItemsControl.ItemTemplate>
         </ItemsControl>
       </enginePanel:EnginePanel>
+      <!-- states that can't go on a fighter while it holds this one (Venom Ward keeps Poisoned off) -->
+      <enginePanel:EnginePanel Title="Resist States"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <ItemsControl ItemsSource="{x:Bind ViewModel.StateResists, Mode=OneWay}">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <StackPanel Spacing="15" />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+          <ItemsControl.ItemTemplate>
+            <DataTemplate x:DataType="equipmentPage:StateResistViewModel">
+              <Grid ColumnSpacing="10"
+                    ToolTipService.ToolTip="A fighter holding this state can't be given the ticked state.">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="32" />
+                  <ColumnDefinition Width="140" />
+                  <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <engineIcon:EngineIcon Grid.Column="0"
+                                       Icon="{x:Bind Icon}"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center" />
+                <TextBlock Grid.Column="1"
+                           Text="{x:Bind Name}"
+                           VerticalAlignment="Center"
+                           TextWrapping="NoWrap"
+                           TextTrimming="CharacterEllipsis" />
+                <CheckBox Grid.Column="2"
+                          IsChecked="{x:Bind IsResisted, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          behaviors:PointerCursorBehavior.CursorType="Hand"
+                          VerticalAlignment="Center" />
+              </Grid>
+            </DataTemplate>
+          </ItemsControl.ItemTemplate>
+        </ItemsControl>
+      </enginePanel:EnginePanel>
     </StackPanel>
     <StackPanel Grid.Column="2"
                 Grid.RowSpan="2"
@@ -185,12 +253,17 @@
       <enginePanel:EnginePanel Title="Behavior"
                                Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
         <StackPanel Spacing="10">
+          <CheckBox Content="Friendly"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.Friendly, Mode=TwoWay, FallbackValue=False}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="A good state: buffs, wards, regeneration. Artes and items that remove negative states leave friendly ones alone. Off means it's an ailment or debuff." />
           <CheckBox Content="Stackable"
                     IsChecked="{x:Bind ViewModel.SelectedEntity.Stackable, Mode=TwoWay, FallbackValue=False}"
                     behaviors:PointerCursorBehavior.CursorType="Hand"
                     ToolTipService.ToolTip="More than one of it can be on a fighter, up to Max Stacks. Applied again while it's there, a state that isn't stackable does nothing. All the stacks share one timer." />
           <engineTextBox:EngineTextBox Header="Max Stacks"
                                        InputType="Integer"
+                                       IsEnabled="{x:Bind ViewModel.SelectedEntity.Stackable, Mode=OneWay, FallbackValue=False}"
                                        Text="{x:Bind ViewModel.SelectedEntity.MaxStacks, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}"
                                        Tooltip="The most stacks of it a fighter can have. Only used when the state is stackable." />
           <CheckBox Content="Remains After Battle"
@@ -207,16 +280,29 @@
                     ToolTipService.ToolTip="Stun, frozen, sealed, rooted and the like. A fighter holding one can do nothing: no walking, turning or artes, and a cast is broken. Bosses are immune to these." />
           <CheckBox Content="Can Still Use Artes"
                     IsChecked="{x:Bind ViewModel.SelectedEntity.CanUseArtes, Mode=TwoWay, FallbackValue=False}"
+                    IsEnabled="{x:Bind ViewModel.SelectedEntity.StunLock, Mode=OneWay, FallbackValue=False}"
                     behaviors:PointerCursorBehavior.CursorType="Hand"
                     ToolTipService.ToolTip="A stun-lock fighter can still use artes where it stands (it can't walk or turn). Off by default." />
+          <CheckBox Content="Silence"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.Silence, Mode=TwoWay, FallbackValue=False}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="The holder can't use artes while it lasts, and a cast is broken. It can still walk, turn and use items. Bosses aren't immune." />
+          <CheckBox Content="No Items"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.NoItems, Mode=TwoWay, FallbackValue=False}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="The holder can't use items while it lasts. It can still walk, turn and use artes." />
           <CheckBox Content="Hidden"
                     IsChecked="{x:Bind ViewModel.SelectedEntity.Hidden, Mode=TwoWay, FallbackValue=False}"
                     behaviors:PointerCursorBehavior.CursorType="Hand"
                     ToolTipService.ToolTip="Never shows on the HUD." />
+          <engineTextBox:EngineTextBox Header="Move Speed (%)"
+                                       InputType="Integer"
+                                       Text="{x:Bind ViewModel.SelectedEntity.MoveSpeed, Mode=TwoWay, FallbackValue='100', UpdateSourceTrigger=PropertyChanged}"
+                                       Tooltip="How fast the holder walks in battle while it lasts: 100 is normal, 60 is a slow. Several states' speeds multiply." />
           <engineTextBox:EngineTextBox Header="Tick Interval"
                                        InputType="Integer"
                                        Text="{x:Bind ViewModel.SelectedEntity.TickInterval, Mode=TwoWay, FallbackValue='60', UpdateSourceTrigger=PropertyChanged}"
-                                       Tooltip="Frames between each Tick Arte (60 = 1 second)." />
+                                       Tooltip="Frames in one tick (60 = 1 second). The Tick Arte and Tick Animation go off once each tick, and Duration counts these ticks." />
           <engineComboBox:EngineComboBox Header="Tick Arte"
                                          IsClearable="True"
                                          PlaceholderText="None"

@@ -18,7 +18,10 @@ public class BattleState(State state, AttackerSnapshot attacker)
     public int Stacks { get; set; } = 1;
 
     // updates left, ignored when the state is permanent (Ticks 0)
-    public int Left { get; set; } = state.Ticks;
+    public int Left { get; set; } = Frames(state);
+
+    // how long a state lasts, in updates: its Ticks are counted in Tick Intervals (Ticks 5 at 60 is 5 ticks, 5 seconds)
+    public static int Frames(State state) => state.Ticks * Math.Max(1, state.TickInterval);
 
     // updates until its Tick Arte goes off next
     public int NextTick { get; set; } = Math.Max(1, state.TickInterval);

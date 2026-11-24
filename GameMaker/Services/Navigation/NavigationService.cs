@@ -56,6 +56,12 @@ public partial class NavigationService(Func<Type, EngineTask> engineTaskFactory)
 
     #endregion
 
+    #region Fields
+
+    private string? _appName;
+
+    #endregion
+
     #region Functions
 
     public void SetTopBar<T>() where T : Page
@@ -66,8 +72,20 @@ public partial class NavigationService(Func<Type, EngineTask> engineTaskFactory)
     public void NavigateTo<T>() where T : Page
     {
         if (ActiveFrame?.Content is T) return;
-        ActiveFrame?.Navigate(typeof(T));
+        if (ActiveFrame?.Navigate(typeof(T)) != true) return;
+
+        // the app's name is the window's own title, set in MainWindow.xaml
+        _appName ??= MainWindow.Window.Title;
+        MainWindow.Window.Title = $"{_appName} - {PageTitle(typeof(T).Name)}";
     }
+
+    // the page's name as the top bar shows it: the class name without "Page", in words
+    private static string PageTitle(string pageName) => pageName switch
+    {
+        "ItemsPage" => "Consumables",
+        "MediaPlayerPage" => "Media",
+        _ => string.Concat(pageName.Replace("Page", "").Select((x, i) => i > 0 && char.IsUpper(x) ? $" {x}" : $"{x}"))
+    };
 
     public async Task ShowProgressPopup<T>(string? label) where T : EngineTask
     {

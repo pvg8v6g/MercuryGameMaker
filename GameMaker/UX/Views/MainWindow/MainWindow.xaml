@@ -5,6 +5,6 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:homeView="using:GameMaker.UX.Views.HomeView"
         mc:Ignorable="d"
-        Title="Mercury Library Demo App">
+        Title="Mercury Game Maker">
   <homeView:HomeView />
 </Window>

@@ -1,4 +1,6 @@
-﻿using GameLibrary.Utilities;
+﻿using GameLibrary.Models.Media;
+using System.Collections.Concurrent;
+using GameLibrary.Utilities;
 using Windows.Media.Audio;
 using Windows.Media.Render;
 using Windows.Storage;
@@ -22,6 +24,9 @@ public class AudioService(IMediaService mediaService) : IAudioService
     // speed, which is the expected resample behaviour).
     private readonly List<AudioFileInputNode> _soundPool = [];
     private readonly Lock _soundPoolLock = new();
+
+    // who's waiting on a sound to be over (PlaySfxToEnd)
+    private readonly ConcurrentDictionary<AudioFileInputNode, TaskCompletionSource> _finishers = [];
 
     private readonly SemaphoreSlim _initLock = new(1, 1);
     private AudioGraph? _graph;
@@ -49,7 +54,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     #region BGM
 
-    public async Task PlayBgm(string file, double volume = 1.0, double pitch = 1.0)
+    public async Task PlayBgm(string file, double volume, double pitch)
     {
         StopBgm();
         var request = _bgmRequest;
@@ -65,7 +70,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
         StopChannel(ref _bgm);
     }
 
-    public void FadeInBgm(double seconds, double volume = 0.8)
+    public void FadeInBgm(double seconds, double volume)
     {
         Fade(_bgm, volume, seconds, ref _bgmFade);
     }
@@ -84,7 +89,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     #region BGS
 
-    public async Task PlayBgs(string file, double volume = 1.0, double pitch = 1.0)
+    public async Task PlayBgs(string file, double volume, double pitch)
     {
         StopBgs();
         var request = _bgsRequest;
@@ -100,7 +105,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
         StopChannel(ref _bgs);
     }
 
-    public void FadeInBgs(double seconds, double volume = 0.8)
+    public void FadeInBgs(double seconds, double volume)
     {
         Fade(_bgs, volume, seconds, ref _bgsFade);
     }
@@ -121,7 +126,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     // the weather's own loop (rain on the roof), next to the BGS so a map's ambience and the weather play together.
     // Heard from indoors it's muffled: an equalizer cuts its highs, the way walls do
-    public async Task PlayWeather(string file, double volume = 1.0, double pitch = 1.0)
+    public async Task PlayWeather(string file, double volume, double pitch)
     {
         StopWeather();
         var request = _weatherRequest;
@@ -177,7 +182,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     #region ME
 
-    public async Task PlayMe(string file, double volume = 1.0, double pitch = 1.0)
+    public async Task PlayMe(string file, double volume, double pitch)
     {
         StopMe();
         _me = await CreateLoopingNode(mediaService.GetMe(file), volume, pitch);
@@ -191,7 +196,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     public void FadeInMe(double seconds)
     {
-        Fade(_me, 0.8, seconds, ref _meFade);
+        Fade(_me, AudioDefaults.Volume, seconds, ref _meFade);
     }
 
     public void FadeOutMe(double seconds)
@@ -208,18 +213,36 @@ public class AudioService(IMediaService mediaService) : IAudioService
 
     #region SFX
 
-    public void PlaySfx(string file, double volume = 1.0, double pitch = 1.0)
+    public void PlaySfx(string file, double volume, double pitch)
     {
         PlayOneShot(mediaService.GetSfx(file), volume, pitch).Forget();
     }
 
+    // finishes when the sound is over (played out or stopped), not when it starts. A missing file finishes at once
+    public async Task PlaySfxToEnd(string file, double volume, double pitch)
+    {
+        var done = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        await PlayOneShot(mediaService.GetSfx(file), volume, pitch, false, done);
+        await done.Task;
+    }
+
+    // every sound effect stops, which ends any PlaySfxToEnd waiting on one
+    public void StopSfx()
+    {
+        lock (_soundPoolLock)
+        {
+            foreach (var node in _soundPool.ToArray()) DisposeNode(node);
+            _soundPool.Clear();
+        }
+    }
+
     // a sound heard through walls (thunder from indoors): the same muffle as the weather's sound
-    public void PlayMuffledSfx(string file, double volume = 1.0, double pitch = 1.0)
+    public void PlayMuffledSfx(string file, double volume, double pitch)
     {
         PlayOneShot(mediaService.GetSfx(file), volume, pitch, true).Forget();
     }
 
-    public void PlayFootstep(string file, double volume = 1.0, double pitch = 1.0)
+    public void PlayFootstep(string file, double volume, double pitch)
     {
         PlayOneShot(mediaService.GetFootstep(file), volume, pitch).Forget();
     }
@@ -241,12 +264,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
         StopBgm();
         StopBgs();
         StopMe();
-
-        lock (_soundPoolLock)
-        {
-            foreach (var node in _soundPool.ToArray()) DisposeNode(node);
-            _soundPool.Clear();
-        }
+        StopSfx();
     }
 
     #endregion
@@ -294,11 +312,18 @@ public class AudioService(IMediaService mediaService) : IAudioService
         return node;
     }
 
-    private async Task PlayOneShot(Uri source, double volume, double pitch, bool muffled = false)
+    // done (when given) is completed once the sound is over, however it ends: played out, pushed out of the pool, stopped
+    // or never started
+    private async Task PlayOneShot(Uri source, double volume, double pitch, bool muffled = false, TaskCompletionSource? done = null)
     {
         var node = await CreateNode(source, volume, pitch);
-        if (node is null) return;
+        if (node is null)
+        {
+            done?.TrySetResult();
+            return;
+        }
 
+        if (done is not null) _finishers[node] = done;
         if (muffled && _graph is not null) node.EffectDefinitions.Add(MuffleDefinition(_graph));
 
         node.FileCompleted += OnOneShotFinished;
@@ -360,6 +385,7 @@ public class AudioService(IMediaService mediaService) : IAudioService
         node.FileCompleted -= OnOneShotFinished;
         node.Stop();
         node.Dispose();
+        if (_finishers.TryRemove(node, out var done)) done.TrySetResult();
     }
 
     private static void Fade(AudioFileInputNode? node, double target, double seconds, ref CancellationTokenSource? tokenSource)

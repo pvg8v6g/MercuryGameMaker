@@ -16,21 +16,38 @@
       <StackPanel x:Name="EditorRoot"
                   Width="240"
                   Spacing="12">
-        <ComboBox Header="Item"
-                  PlaceholderText="Item"
-                  ItemsSource="{Binding AllItems, Mode=OneWay}"
-                  SelectedValue="{Binding SelectedItemGuid, Mode=TwoWay, FallbackValue={x:Null}}"
-                  SelectedValuePath="Guid"
-                  HorizontalAlignment="Stretch">
-          <ComboBox.ItemTemplate>
-            <DataTemplate x:DataType="items:Item">
-              <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
-                <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
-                <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
-              </StackPanel>
-            </DataTemplate>
-          </ComboBox.ItemTemplate>
-        </ComboBox>
+        <!-- No dropdown here: a ComboBox opens a popup inside this flyout, and WinUI crashed on that popup while it
+             was scrolled or closed ("Child collection must not be modified during measure or arrange"). The items
+             sit in a plain list with a search box instead, all at a fixed size, so nothing pops up or resizes. -->
+        <StackPanel Spacing="8">
+          <TextBlock Text="Item" />
+          <TextBox PlaceholderText="Search items"
+                   MinWidth="0"
+                   Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+          <ListView ItemsSource="{Binding FilteredItems, Mode=OneWay}"
+                    SelectedItem="{Binding PickedItem, Mode=TwoWay}"
+                    SelectionMode="Single"
+                    Height="240"
+                    Background="{StaticResource MediumGreyBrush}">
+            <ListView.ItemTemplate>
+              <DataTemplate x:DataType="items:Item">
+                <StackPanel Orientation="Horizontal" Spacing="10" Height="36">
+                  <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
+                  <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
+                </StackPanel>
+              </DataTemplate>
+            </ListView.ItemTemplate>
+          </ListView>
+
+          <!-- the picked item stays shown here even when a search hides it from the list -->
+          <StackPanel Orientation="Horizontal" Spacing="10" Height="36">
+            <TextBlock Text="Picked:" VerticalAlignment="Center" />
+            <engineIcon:EngineIcon Icon="{Binding PickedItem.Icon, Mode=OneWay}" VerticalAlignment="Center" />
+            <TextBlock Text="{Binding PickedItem.Name, Mode=OneWay, FallbackValue=None, TargetNullValue=None}"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis" />
+          </StackPanel>
+        </StackPanel>
 
         <engineTextBox:EngineTextBox Header="Chance %"
                                      InputType="Integer"

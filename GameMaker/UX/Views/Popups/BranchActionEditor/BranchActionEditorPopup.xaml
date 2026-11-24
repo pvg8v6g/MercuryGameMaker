@@ -48,8 +48,10 @@
                 <StackPanel Spacing="12"
                             Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SelfSwitch}">
                     <TextBlock Text="Self Switch" FontWeight="Bold" />
-                    <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
-                                                 Text="{x:Bind ViewModel.Branch.SelfSwitchConditionEntity, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+                    <ComboBox Header="Entity" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.EntityTargets}"
+                              SelectedItem="{x:Bind ViewModel.SelfSwitchTarget, Mode=TwoWay}"
+                              DisplayMemberPath="Name" />
                     <ComboBox Header="Self Switch Key" PlaceholderText="None" HorizontalAlignment="Stretch"
                               ItemsSource="{extensions:EnumValues EnumType=enums:SelfSwitch}"
                               SelectedItem="{x:Bind ViewModel.Branch.SelfSwitchConditionKey, Mode=TwoWay}" />
@@ -273,8 +275,10 @@
                 <StackPanel Spacing="12"
                             Visibility="{x:Bind ViewModel.Branch.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=EntityDirection}">
                     <TextBlock Text="Entity Direction" FontWeight="Bold" />
-                    <engineTextBox:EngineTextBox Header="Entity Id" PlaceholderText="None"
-                                                 Text="{x:Bind ViewModel.Branch.EntityDirectionConditionEntity, Mode=TwoWay, Converter={StaticResource NullableGuidToStringConverter}, UpdateSourceTrigger=PropertyChanged}" />
+                    <ComboBox Header="Entity" HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.EntityTargets}"
+                              SelectedItem="{x:Bind ViewModel.EntityDirectionTarget, Mode=TwoWay}"
+                              DisplayMemberPath="Name" />
                     <ComboBox Header="Direction" PlaceholderText="None" HorizontalAlignment="Stretch"
                               ItemsSource="{extensions:EnumValues EnumType=enums:Direction}"
                               SelectedItem="{x:Bind ViewModel.Branch.EntityDirectionConditionDirection, Mode=TwoWay}" />

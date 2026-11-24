@@ -92,12 +92,12 @@ public class ActorManaHandler(PartyService partyService) : ActorHandler<ActorMan
     protected override void Change(Fighter actor, ActorManaAction action) => actor.Mana = Math.Clamp(actor.Mana + action.ManaValue, 0, actor.MaxMana);
 }
 
-// Actor Experience: adds the amount, never below 0. Levels don't come from experience yet, there is no experience table
+// Actor Experience: adds the amount, never below 0, and levels the actor up when its total reaches the next level's
 public class ActorExperienceHandler(PartyService partyService) : ActorHandler<ActorExperienceAction>(partyService)
 {
     protected override Guid? ActorId(ActorExperienceAction action) => action.ActorId;
 
-    protected override void Change(Fighter actor, ActorExperienceAction action) => actor.Experience = Math.Max(0, actor.Experience + action.Experience);
+    protected override void Change(Fighter actor, ActorExperienceAction action) => Party.GainExperience(actor, action.Experience);
 }
 
 // Actor Level: adds the amount of levels (negative takes them away), the discipline's growths set the stats

@@ -1,4 +1,5 @@
 using GameEngine.Models.Battle;
+using GameLibrary.Models.Fighter;
 using GameLibrary.Services.GameData;
 
 namespace GameEngine.Battle;
@@ -27,14 +28,28 @@ public class BattleAttributes(IGameDataService gameDataService, BattleStates sta
     {
         if (gameDataService.Attributes.FirstOrDefault(x => x.Name == name) is not { } attribute) return 0;
 
-        var value = (double) fighter.Stats.Attributes.GetValueOrDefault(attribute.Guid);
-        foreach (var slot in fighter.Stats.Equipment.Values)
+        var value = Base(fighter.Stats, attribute.Guid);
+
+        // flat changes first, then the percent ones, so a -20% Defense state means as much at level 50 as at level 1
+        return Math.Max(0, (value + states.AttributeChange(fighter, attribute.Guid)) * (1 + (states.AttributePercent(fighter, attribute.Guid) / 100.0)));
+    }
+
+    // an actor's attribute outside battle: what its growths and equipment give it, with no states
+    public double Base(Fighter stats, string name)
+    {
+        return gameDataService.Attributes.FirstOrDefault(x => x.Name == name) is { } attribute ? Base(stats, attribute.Guid) : 0;
+    }
+
+    private double Base(Fighter stats, Guid attribute)
+    {
+        var value = (double) stats.Attributes.GetValueOrDefault(attribute);
+        foreach (var slot in stats.Equipment.Values)
         {
             if (slot.Id is not { } id || gameDataService.Equipment.FirstOrDefault(x => x.Guid == id) is not { } equipment) continue;
-            value += equipment.AttributeStats.GetValueOrDefault(attribute.Guid);
+            value += equipment.AttributeStats.GetValueOrDefault(attribute);
         }
 
-        return Math.Max(0, value + states.AttributeChange(fighter, attribute.Guid));
+        return value;
     }
 
     // the fighter's total rate for one element: its own rate (100% when unset) plus what each piece of equipment changes

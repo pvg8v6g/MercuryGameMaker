@@ -19,7 +19,7 @@ public class InitiateBattleHandler(IGameDataService gameDataService, IGameStateS
         if (gameDataService.Troops.FirstOrDefault(x => x.Guid == action.TroopId) is not { } troop) return ActionResult.Done;
         if (gameDataService.GameMaps.FirstOrDefault(x => x.Guid == troop.BattleMapId) is not { } battleMap) return ActionResult.Done;
 
-        gameStateService.BattleRequest = new BattleRequest(troop, battleMap, action.CanRun, action.CanLose);
+        gameStateService.BattleRequest = new BattleRequest(troop, battleMap);
         run.WaitsForBattle = true;
         return ActionResult.Busy;
     }

@@ -64,7 +64,9 @@ public class MovementSystem(
 
         // nobody runs in battle, whatever the map or the entity allows
         var dashing = gameStateService.Battle is null && gameStateService.ActiveMap is not { DisableDash: true } && inputService.Shift && movementModule.Dashing;
-        var increment = (dashing ? 2.0 : 1.0) * movementModule.Speed;
+        // a fighter's states can slow it in battle (Chilled); outside battle nothing does
+        var slowed = gameStateService.Battle is null ? 1.0 : movement.SpeedFactor;
+        var increment = (dashing ? 2.0 : 1.0) * movementModule.Speed * slowed;
         var distance = gameDataService.StepSize * gameDataService.ScaleFactor;
 
         var (unitX, unitY) = direction switch

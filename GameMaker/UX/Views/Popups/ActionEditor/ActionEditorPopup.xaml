@@ -536,8 +536,6 @@
             </DataTemplate>
           </ComboBox.ItemTemplate>
         </ComboBox>
-        <CheckBox Content="Can Run" IsChecked="{x:Bind ViewModel.AsInitiateBattle.CanRun, Mode=TwoWay}" />
-        <CheckBox Content="Can Lose" IsChecked="{x:Bind ViewModel.AsInitiateBattle.CanLose, Mode=TwoWay}" />
       </StackPanel>
 
       <!-- Save -->
@@ -574,7 +572,7 @@
                   SelectedItem="{x:Bind ViewModel.AsPlayMedia.Path, Mode=TwoWay}"
                   ToolTipService.ToolTip="BGM and BGS replace the map's music or background sound, ME plays once over the music, SFX is a sound effect." />
         <engineTextBox:EngineTextBox Header="Volume" InputType="Double"
-                                     Text="{x:Bind ViewModel.AsPlayMedia.Volume, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}" />
+                                     Text="{x:Bind ViewModel.AsPlayMedia.Volume, Mode=TwoWay, FallbackValue='0.8', UpdateSourceTrigger=PropertyChanged}" />
         <engineTextBox:EngineTextBox Header="Pitch" InputType="Double"
                                      Text="{x:Bind ViewModel.AsPlayMedia.Pitch, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}" />
       </StackPanel>
@@ -650,8 +648,11 @@
 
         <StackPanel Spacing="10"
                     Visibility="{x:Bind ViewModel.AsFlow.ConditionType, Mode=OneWay, Converter={StaticResource EnumToVisibilityConverter}, ConverterParameter=SelfSwitch}">
-          <engineTextBox:EngineTextBox Header="Self Switch Entity Id" InputType="Integer" PlaceholderText="None"
-                                       Text="{x:Bind ViewModel.AsFlow.SelfSwitchEntity, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+          <ComboBox Header="Self Switch Entity"
+                    HorizontalAlignment="Stretch"
+                    ItemsSource="{x:Bind ViewModel.SwitchTargets}"
+                    SelectedItem="{x:Bind ViewModel.SelfSwitchTarget, Mode=TwoWay}"
+                    DisplayMemberPath="Name" />
           <ComboBox Header="Self Switch Key" PlaceholderText="None" HorizontalAlignment="Stretch"
                     ItemsSource="{extensions:EnumValues EnumType=enums:SelfSwitch}"
                     SelectedItem="{x:Bind ViewModel.AsFlow.SelfSwitchKey, Mode=TwoWay}" />

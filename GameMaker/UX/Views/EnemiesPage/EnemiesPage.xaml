@@ -126,7 +126,7 @@
 
           <engineTextBox:EngineTextBox Grid.Column="1"
                                        Grid.Row="2"
-                                       Header="Money"
+                                       Header="{x:Bind ViewModel.GameDataService.GameSettings.MoneyName, Mode=OneWay}"
                                        InputType="Integer"
                                        Text="{x:Bind ViewModel.SelectedEntity.MonetaryValue, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
                                        Tooltip="How much money does this enemy give when defeated?" />
@@ -172,11 +172,11 @@
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
       <StackPanel Orientation="Vertical" Spacing="20">
         <StackPanel Orientation="Horizontal" Spacing="10">
-          <engineTextBox:EngineTextBox Header="Life"
+          <engineTextBox:EngineTextBox Header="{x:Bind ViewModel.GameDataService.GameSettings.LifeName, Mode=OneWay}"
                                        InputType="Integer"
                                        Text="{x:Bind ViewModel.SelectedEntity.MaxLife, Mode=TwoWay, FallbackValue='100', UpdateSourceTrigger=PropertyChanged}"
                                        Tooltip="The maximum life for this enemy." />
-          <engineTextBox:EngineTextBox Header="Mana"
+          <engineTextBox:EngineTextBox Header="{x:Bind ViewModel.GameDataService.GameSettings.ManaName, Mode=OneWay}"
                                        InputType="Integer"
                                        Text="{x:Bind ViewModel.SelectedEntity.MaxMana, Mode=TwoWay, FallbackValue='50', UpdateSourceTrigger=PropertyChanged}"
                                        Tooltip="The maximum mana for this enemy." />

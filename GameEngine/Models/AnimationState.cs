@@ -43,6 +43,9 @@ public class PlayingAnimation(Animation animation, int lastFrame)
     // the last tint it put on its target, faded out when it ends if it's still on
     public AnimationTint? LastTint { get; set; }
 
+    // makes every play of the animation a different bolt of lightning
+    public int Seed { get; } = Random.Shared.Next();
+
     // the cells on the frame showing now
     public List<SceneSprite> Showing { get; } = [];
 
@@ -60,9 +63,9 @@ public class PlayingAnimation(Animation animation, int lastFrame)
         return sprite;
     }
 
-    // the shockwave's or heat's sprite, kept for as long as it goes on. It has no picture to size, so the renderer
+    // the shockwave's, heat's or lightning's sprite, kept for as long as it goes on. It has no picture to size, so the renderer
     // puts it exactly where it's placed
-    public SceneSprite Distortion(object source, Func<Distortion> create)
+    public SceneSprite Distortion(object source, Func<PictureBox> create)
     {
         if (_distortions.TryGetValue(source, out var sprite)) return sprite;
 

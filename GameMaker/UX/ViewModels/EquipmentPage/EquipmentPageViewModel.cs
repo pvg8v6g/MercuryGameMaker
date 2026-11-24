@@ -84,7 +84,7 @@ public class EquipmentPageViewModel(IGameDataService gameDataService, IJsonServi
 
         foreach (var state in GameDataService.States)
         {
-            StateResistanceStats.Add(new StateResistViewModel(state, SelectedEntity));
+            StateResistanceStats.Add(new StateResistViewModel(state, SelectedEntity.ResistStates));
         }
 
         OnPropertyChanged(nameof(AttributeStats));

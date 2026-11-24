@@ -30,13 +30,13 @@ public class MediaPlayerPageViewModel(IMediaService mediaService, IAudioService 
     {
         get;
         set => SetField(ref field, value);
-    } = 1.0;
+    } = AudioDefaults.Volume;
 
     public double Pitch
     {
         get;
         set => SetField(ref field, value);
-    } = 1.0;
+    } = AudioDefaults.Pitch;
 
     public bool ControlsEnabled
     {

@@ -46,6 +46,10 @@ public interface IGameStateService
 
     HashSet<Guid> OwnedParty { get; }
 
+    // the states on each actor outside battle, by actor: they wear down on the story map, come out of a fight when they
+    // remain after it, and go into the next fight with what's left of them
+    Dictionary<Guid, List<GameEngine.Models.Battle.CarriedState>> CarriedStates { get; }
+
     Dictionary<string, bool> Switches { get; }
 
     Dictionary<string, string> Variables { get; }

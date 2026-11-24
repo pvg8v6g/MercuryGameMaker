@@ -255,7 +255,7 @@ public partial class TroopsPageViewModel(
 
     public double BgmVolume
     {
-        get => SelectedEntity?.Bgm?.Volume ?? 1.0;
+        get => SelectedEntity?.Bgm?.Volume ?? AudioDefaults.Volume;
         set
         {
             if (SelectedEntity?.Bgm is null) return;
@@ -266,7 +266,7 @@ public partial class TroopsPageViewModel(
 
     public double BgmPitch
     {
-        get => SelectedEntity?.Bgm?.Pitch ?? 1.0;
+        get => SelectedEntity?.Bgm?.Pitch ?? AudioDefaults.Pitch;
         set
         {
             if (SelectedEntity?.Bgm is null) return;

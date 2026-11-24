@@ -38,4 +38,18 @@ public class StateChangeViewModel(Attribute attribute, State state, bool isEleme
             }
         }
     }
+
+    // attributes only: the percent the state changes it by, for each stack (-20 is 20% less, 0 is no change)
+    public string Percent
+    {
+        get => state.AttributePercents.GetValueOrDefault(attribute.Guid).ToString();
+        set
+        {
+            if (int.TryParse(value, out var result) && result != 0) state.AttributePercents[attribute.Guid] = result;
+            else if (value.IsNullOrEmpty() || result == 0) state.AttributePercents.Remove(attribute.Guid);
+            else return;
+
+            OnPropertyChanged();
+        }
+    }
 }

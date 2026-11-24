@@ -65,6 +65,17 @@
                      Minimum="1" Maximum="999"
                      SpinButtonPlacementMode="Inline"
                      Margin="40,0,0,0" />
+          <NumberBox Header="EXP Base"
+                     Value="{x:Bind ViewModel.ExperienceBase, Mode=TwoWay}"
+                     Minimum="1" Maximum="100000"
+                     SpinButtonPlacementMode="Inline"
+                     Margin="20,0,0,0" />
+          <NumberBox Header="EXP Exponent"
+                     Value="{x:Bind ViewModel.ExperienceExponent, Mode=TwoWay}"
+                     Minimum="1" Maximum="5" SmallChange="0.1"
+                     SpinButtonPlacementMode="Inline" />
+          <TextBlock Text="{x:Bind ViewModel.ExperiencePreview, Mode=OneWay}"
+                     VerticalAlignment="Bottom" Opacity="0.7" />
         </StackPanel>
 
         <lvc:CartesianChart Grid.Row="2"

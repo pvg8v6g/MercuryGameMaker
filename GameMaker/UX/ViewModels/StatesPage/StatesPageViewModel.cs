@@ -3,6 +3,7 @@ using GameLibrary.Commands;
 using GameLibrary.Models.States;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Json;
+using GameMaker.UX.ViewModels.EquipmentPage;
 
 namespace GameMaker.UX.ViewModels.StatesPage;
 
@@ -16,17 +17,19 @@ public class StatesPageViewModel(IGameDataService gameDataService, IJsonService 
 
     public ObservableCollection<StateChangeViewModel> ElementChanges { get; } = [];
 
+    // the other states this one keeps off its holder
+    public ObservableCollection<StateResistViewModel> StateResists { get; } = [];
+
     public Guid? SelectedTickArte
     {
         get => SelectedEntity?.TickArte;
         set
         {
-            if (SelectedEntity is null) return;
+            if (SelectedEntity is null || SelectedEntity.TickArte == value) return;
             SelectedEntity.TickArte = value;
             OnPropertyChanged();
         }
     }
-
 
     public Guid? SelectedTickAnimation
     {
@@ -35,7 +38,7 @@ public class StatesPageViewModel(IGameDataService gameDataService, IJsonService 
             : SelectedEntity.TickAnimation;
         set
         {
-            if (SelectedEntity is null) return;
+            if (SelectedEntity is null || SelectedEntity.TickAnimation == (value ?? Guid.Empty)) return;
             SelectedEntity.TickAnimation = value ?? Guid.Empty;
             OnPropertyChanged();
         }
@@ -63,11 +66,13 @@ public class StatesPageViewModel(IGameDataService gameDataService, IJsonService 
     {
         AttributeChanges.Clear();
         ElementChanges.Clear();
+        StateResists.Clear();
 
         if (SelectedEntity is null) return;
 
         foreach (var attribute in GameDataService.Attributes) AttributeChanges.Add(new StateChangeViewModel(attribute, SelectedEntity, false));
         foreach (var element in GameDataService.Elements) ElementChanges.Add(new StateChangeViewModel(element, SelectedEntity, true));
+        foreach (var state in GameDataService.States.Where(x => x != SelectedEntity)) StateResists.Add(new StateResistViewModel(state, SelectedEntity.ResistStates));
     }
 
     #endregion

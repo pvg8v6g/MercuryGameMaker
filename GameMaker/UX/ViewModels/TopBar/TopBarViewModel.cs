@@ -134,6 +134,7 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
                     new MenuItemModel { Header = "Elements", CommandIndex = "10.2" },
                     new MenuItemModel { Header = "Growths", CommandIndex = "10.3" },
                     new MenuItemModel { Header = "Balloon Icons", CommandIndex = "10.4" },
+                    new MenuItemModel { Header = "Terms", CommandIndex = "10.5" },
                 ]
             }
         ];
@@ -200,6 +201,7 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
             case "13": // props
                 navigationService.NavigateTo<Views.PropsPage.PropsPage>();
                 break;
+            case "10": // settings
             case "10.1": // attributes
                 EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;
                 navigationService.NavigateTo<Views.AttributesPage.AttributesPage>();
@@ -215,6 +217,10 @@ public class TopBarViewModel(IGraphicsService graphicsService, INavigationServic
             case "10.4": // balloon icons
                 EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;
                 navigationService.NavigateTo<Views.BalloonIconsPage.BalloonIconsPage>();
+                break;
+            case "10.5": // terms
+                EngineImages.FirstOrDefault(x => x.CommandIndex == "10")?.IsChecked = true;
+                navigationService.NavigateTo<Views.TermsPage.TermsPage>();
                 break;
             case "11": // media
                 navigationService.NavigateTo<Views.MediaPlayerPage.MediaPlayerPage>();

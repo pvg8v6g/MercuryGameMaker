@@ -36,14 +36,14 @@ public class HitCalculator(BattleAttributes attributes)
     #region Methods
 
     // afterHit runs once the hit roll is passed and before any damage is worked out: the arte's states go on then, so
-    // they count toward its own damage
-    public HitOutcome Resolve(Arte arte, AttackerSnapshot attacker, BattleFighter target, Action? afterHit = null, bool fromBehind = false)
+    // they count toward its own damage. A state's tick never misses (the state already landed), but it can still crit
+    public HitOutcome Resolve(Arte arte, AttackerSnapshot attacker, BattleFighter target, Action? afterHit = null, bool fromBehind = false, bool tick = false)
     {
         var heals = arte.HpDamage < 0;
 
-        // 2. hit or miss: healing, and anything landing on the attacker's own side, never misses
+        // 2. hit or miss: healing, a state's tick, and anything landing on the attacker's own side never miss
         var friendly = target.OriginalTeam == attacker.Team;
-        if (!heals && !friendly)
+        if (!heals && !friendly && !tick)
         {
             var accuracy = attacker.Accuracy;
             var evasion = attributes.Value(target, BattleAttributes.Evasion);

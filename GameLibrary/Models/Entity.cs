@@ -23,5 +23,13 @@ public partial class Entity : BaseModel
         set => SetField(ref field, value);
     }
 
+    // arte projectiles only: a contact projectile that reaches its Detonate step without touching anyone goes off with
+    // its full arte there instead of just being removed (a glob of acid splats where it lands). Walls still only remove it
+    public bool DetonateAtRouteEnd
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     #endregion
 }

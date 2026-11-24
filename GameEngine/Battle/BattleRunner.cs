@@ -14,6 +14,7 @@ using GameEngine.Systems;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.Actions;
 using GameLibrary.Models.Artes;
+using GameLibrary.Models.Items;
 using GameLibrary.Models.Modules;
 using GameLibrary.Models.Movements;
 using GameLibrary.Services.GameData;
@@ -39,6 +40,8 @@ public class BattleRunner(
     MovementRouteSystem movementRouteSystem,
     BattleAttributes attributes,
     BattleStates states,
+    BattleStateTester stateTester,
+    PartyStates partyStates,
     HitCalculator hitCalculator,
     MovementSystem movementSystem,
     PlayerController playerController,
@@ -48,15 +51,33 @@ public class BattleRunner(
     IJsonService jsonService,
     CharacterImageSystem characterImageSystem,
     PlayerSpawner playerSpawner,
-    PartyService partyService) : IBattleActions
+    PartyService partyService,
+    BattleDrops drops,
+    VictoryScreen victoryScreen,
+    GameOverScreen gameOverScreen,
+    GameOverSequence gameOverSequence,
+    MapAudio mapAudio) : IBattleActions
 {
     #region Constants
 
     // the tiny cooldown after any arte, only so one key press can't fire two
     private const int GlobalCooldown = 8;
 
-    // the pause between the last enemy falling and the battle ending (drops get picked up here later)
+    // the pause between the last enemy falling and the battle ending
     private const int EndDelay = 60;
+
+    // the same pause when drops are lying on the map: about 5 seconds to pick them up, and what's left is lost
+    private const int PickupDelay = 300;
+
+    // running away: the key is held this many updates (3 seconds) to fill the bar, and then it can still fail. Tuning values
+    private const int FleeUpdates = 180;
+    private const double FleeFailChance = 0.1;
+
+    // the one cooldown every item in the party shares: 15 seconds. A tuning value
+    private const int ItemCooldownUpdates = 900;
+
+    // how long the battle music takes to fade out once the last enemy has fallen
+    private const double MusicFadeSeconds = 6.0;
 
     #endregion
 
@@ -65,8 +86,33 @@ public class BattleRunner(
     private ActiveBattle? _battle;
     private int _endTimer;
 
+    // how long the pause after the last enemy falls lasts: the full pickup time when anything dropped, whether or not it's
+    // all taken sooner, otherwise the short pause
+    private int _endWait = EndDelay;
+
     // the last enemy has fallen and the rewards are handed out
     private bool _won;
+
+    // the victory screen is up (or was), and the battle ends once it's closed
+    private bool _summarized;
+
+    // how long the party has held the flee key: it stops fighting while the bar fills, and the enemies don't
+    private int _fleeProgress;
+
+    // every party member on the field is down and the enemies aren't: the party lost, and that's final (a win can't follow)
+    private bool _lost;
+
+    // the game over screen is up (or was), and the defeat is settled once it's closed
+    private bool _gameOver;
+
+    // how the fight began, so a retry can put it all back: the party's Life and Mana, the money and the bag
+    private readonly List<(BattleFighter fighter, int life, int mana)> _startStats = [];
+    private int _startMoney;
+    private readonly Dictionary<Guid, int> _startItems = [];
+    private Dictionary<Guid, List<CarriedState>> _startStates = [];
+
+    // what the win handed out, listed on the victory screen
+    private readonly BattleRewards _rewards = new();
 
     private readonly List<BattleProjectile> _projectiles = [];
 
@@ -90,10 +136,35 @@ public class BattleRunner(
             return;
         }
 
-        UpdateProjectiles();
-        foreach (var fighter in battle.Fighters) Tick(fighter);
-        foreach (var fighter in battle.Fighters.Where(x => !x.IsDown)) fighter.Controller?.Update(fighter, this);
+        // the victory screen has the party's attention: the fight is over, and it ends the moment the screen closes
+        if (_summarized)
+        {
+            if (!victoryScreen.IsActive) End(battle);
+            return;
+        }
 
+        // the game over screen has the party's attention: the defeat is settled the moment it's closed
+        if (_gameOver)
+        {
+            if (!gameOverScreen.IsActive) Settle(battle);
+            return;
+        }
+
+        // TEST: F5 to F8 put states on the fighters
+        stateTester.Update(battle);
+
+        UpdateFlee(battle);
+        if (battle.IsEnding) return;
+
+        UpdateProjectiles();
+        if (battle.ItemCooldown > 0) battle.ItemCooldown--;
+        foreach (var fighter in battle.Fighters) Tick(fighter);
+
+        // a party that's running away doesn't fight: nobody on its side decides anything until the key is let go
+        var fleeing = _fleeProgress > 0;
+        foreach (var fighter in battle.Fighters.Where(x => !x.IsDown && !(fleeing && !x.IsEnemy))) fighter.Controller?.Update(fighter, this);
+
+        Collect(battle);
         CheckForEnd(battle);
     }
 
@@ -109,7 +180,30 @@ public class BattleRunner(
 
     public bool CanUse(BattleFighter fighter, Arte arte)
     {
-        return !fighter.IsDown && fighter.Casting is null && fighter.GlobalCooldown <= 0 && !fighter.Cooldowns.ContainsKey(arte.Guid) && fighter.Stats.Mana >= arte.Cost && !states.BlocksArtes(fighter);
+        return !fighter.IsDown && !(_fleeProgress > 0 && !fighter.IsEnemy) && fighter.Casting is null && fighter.GlobalCooldown <= 0 && !fighter.Cooldowns.ContainsKey(arte.Guid) && fighter.Stats.Mana >= arte.Cost && !states.BlocksArtes(fighter);
+    }
+
+    // an item is used where the fighter stands: it costs nothing but the item itself (it leaves the bag) and starts the
+    // party's shared item cooldown. No cast, no lock. Only a free fighter can use one: not down, running, casting or stunned
+    public void UseItem(BattleFighter fighter, int slot)
+    {
+        if (_battle is not { } battle || fighter.IsEnemy || _won || _lost) return;
+        if (battle.ItemSlots.ElementAtOrDefault(slot) is not { } item) return;
+        if (fighter.IsDown || _fleeProgress > 0 || fighter.Casting is not null || states.BlocksItems(fighter) || battle.ItemCooldown > 0) return;
+
+        // an item that's already gone (spent, or sold from a page mid fight) empties its slot and does nothing
+        if (gameStateService.Items.GetValueOrDefault(item.Guid) <= 0)
+        {
+            ClearItem(battle, item);
+            return;
+        }
+
+        partyService.ChangeItem(item.Guid, -1);
+        if (gameStateService.Items.GetValueOrDefault(item.Guid) <= 0) ClearItem(battle, item);
+
+        battle.ItemCooldown = battle.ItemCooldownTotal = ItemCooldownUpdates;
+        animationSystem.Play(fighter.Body, item.CasterAnimation);
+        LandItem(item, fighter);
     }
 
     // an arte with projectiles is judged by a straight line as far as its projectiles step forward (placeholder AI)
@@ -184,7 +278,7 @@ public class BattleRunner(
             var body = new MapEntity(entity) { ActivePage = page };
             body.State<ProjectileState>().IsProjectile = true;
             gameStateService.MapEntities.Add(body);
-            _projectiles.Add(new BattleProjectile(body, arte, attacker, routes, entity.DetonateOnContact, depth));
+            _projectiles.Add(new BattleProjectile(body, arte, attacker, routes, entity.DetonateOnContact, entity.DetonateAtRouteEnd, depth));
         }
     }
 
@@ -230,8 +324,8 @@ public class BattleRunner(
         }
 
         // the Detonate step, and the safety net: a projectile that ran out of routes goes off wherever it stopped. Either
-        // way a contact projectile that touched nobody only goes away
-        if (state.Detonated || !NextRoute(projectile)) GoOff(projectile, projectile.Contact == ContactTarget.None);
+        // way a contact projectile that touched nobody only goes away, unless it's set to detonate at its route's end
+        if (state.Detonated || !NextRoute(projectile)) GoOff(projectile, projectile.Contact == ContactTarget.None || projectile.DetonatesAtEnd);
     }
 
     // keeps the projectile on a route: the one it's on, or the next of its page's routes. False when none are left
@@ -395,8 +489,18 @@ public class BattleRunner(
         _battle = battle;
         _endTimer = 0;
         _won = false;
+        _summarized = false;
+        _lost = false;
+        _gameOver = false;
+        _fleeProgress = 0;
+        _endWait = EndDelay;
+        _rewards.Clear();
+        Remember(battle);
+        partyStates.CarryIn(battle.Fighters);
         _projectiles.Clear();
+        drops.Clear();
         playerController.Reset();
+        FillItemSlots(battle);
         foreach (var fighter in battle.Fighters)
         {
             fighter.Slots = SlotsFor(fighter);
@@ -404,6 +508,108 @@ public class BattleRunner(
         }
 
         _ = MeasureProjectiles(battle.Fighters.SelectMany(x => x.Slots).OfType<Arte>());
+    }
+
+    // the item keys start with the first consumables in the bag that can be used in battle, in the Items list's order. The
+    // menu will let the player choose later
+    private void FillItemSlots(ActiveBattle battle)
+    {
+        Array.Clear(battle.ItemSlots);
+        battle.ItemCooldown = 0;
+        battle.ItemCooldownTotal = 0;
+
+        var usable = gameDataService.Consumables
+            .Where(x => (x.ItemUse is ItemUse.Anywhere or ItemUse.BattleOnly) && gameStateService.Items.GetValueOrDefault(x.Guid) > 0)
+            .Take(battle.ItemSlots.Length)
+            .ToArray();
+        for (var i = 0; i < usable.Length; i++) battle.ItemSlots[i] = usable[i];
+    }
+
+    // the last of an item is used: every key holding it empties, and the cooldown carries on
+    private static void ClearItem(ActiveBattle battle, Consumable item)
+    {
+        for (var i = 0; i < battle.ItemSlots.Length; i++)
+        {
+            if (battle.ItemSlots[i] == item) battle.ItemSlots[i] = null;
+        }
+    }
+
+    // the item lands around the user: its hitboxes (drawn facing down, and they don't turn) from the user's feet tile,
+    // on whoever its scope lets it touch, the user included
+    private void LandItem(Consumable item, BattleFighter user)
+    {
+        if (_battle is not { } battle) return;
+
+        var attacker = attributes.Snapshot(user);
+        var scale = gameDataService.ScaleFactor;
+        var feet = FeetTile(user.Body);
+        var boxes = item.Hitboxes.Select(x => new Rect(feet.X + (x.OffsetX * scale), feet.Y + (x.OffsetY * scale), x.Width * scale, x.Height * scale)).ToArray();
+        debugOverlay.FlashArteHitboxes(boxes.Select(x => (x.X, x.Y, x.Width, x.Height)));
+
+        var revives = item.ClearAllStates || item.RemoveStates.Contains(Incapacitated());
+        var targets = battle.Fighters.Where(x => InScope(item.EffectScope, user, attacker.Team, x, revives) && Touches(x, boxes, item.EffectScope)).ToArray();
+        foreach (var target in targets)
+        {
+            animationSystem.Play(target.Body, item.TargetAnimation);
+            LandItemOn(item, attacker, target);
+        }
+    }
+
+    // one item landing on one fighter: states first (a revive brings the fallen back before anything heals them), then Life
+    // and Mana. An item never misses, ignores Defense, Power and elements, and never crits: it's a flat amount plus a
+    // percent of the target's maximum, spread by Variance. Negative restores, as everywhere else
+    private void LandItemOn(Consumable item, AttackerSnapshot attacker, BattleFighter target)
+    {
+        var wasDown = target.IsDown;
+        if (item.ClearAllStates)
+        {
+            target.States.Clear();
+            if (target.IsDown) GetUp(target);
+        }
+
+        foreach (var id in item.RemoveStates)
+        {
+            if (id != Incapacitated()) states.Remove(target, id);
+            else if (target.IsDown) GetUp(target);
+        }
+
+        if (item.RemoveNegativeStates) states.RemoveNegative(target);
+        foreach (var id in item.AddStates) states.Add(target, id, attacker, item.StateChances.GetValueOrDefault(id, 100));
+
+        // a revive that heals nothing still gets them up with 1 Life
+        if (wasDown && !target.IsDown && target.Stats.Life <= 0) target.Stats.Life = 1;
+
+        var stats = target.Stats;
+        if (item.HpDamage != 0 || item.HpPercent != 0)
+        {
+            var amount = ItemAmount(item, item.HpDamage, item.HpPercent, stats.MaxLife);
+            var before = stats.Life;
+            stats.Life = Math.Clamp(stats.Life - amount, 0, stats.MaxLife);
+            var change = before - stats.Life;
+            attacker.Source.Threat += change > 0 ? change : -change * 0.5;
+            if (amount >= 0) battleHud.Popup(change.ToString(), Head(target), HudPopupKind.Damage);
+            else battleHud.Popup((-change).ToString(), Head(target), HudPopupKind.Heal);
+        }
+
+        if (item.ManaDamage != 0 || item.ManaPercent != 0)
+        {
+            var amount = ItemAmount(item, item.ManaDamage, item.ManaPercent, stats.MaxMana);
+            var before = stats.Mana;
+            stats.Mana = Math.Clamp(stats.Mana - amount, 0, stats.MaxMana);
+            var change = before - stats.Mana;
+            if (change != 0) battleHud.Popup($"{(change < 0 ? "+" : "-")}{Math.Abs(change)} {gameDataService.GameSettings.ManaName}", Head(target), change < 0 ? HudPopupKind.Heal : HudPopupKind.Damage);
+        }
+
+        if (stats.Life <= 0 && !target.IsDown) Fall(target);
+    }
+
+    // flat plus a percent of the maximum, then spread by the item's Variance (never more than half either way)
+    private static int ItemAmount(Consumable item, int flat, int percent, int maximum)
+    {
+        var value = flat + (percent / 100.0 * maximum);
+        var variance = Math.Clamp(item.Variance / 100.0, 0, 0.5);
+        value *= 1 + (((Random.Shared.NextDouble() * 2) - 1) * variance);
+        return (int) Math.Round(value);
     }
 
     // slot 0 is the weapon's attack, then the artes the fighter knows, in the order they were learned
@@ -415,11 +621,18 @@ public class BattleRunner(
             gameDataService.Equipment.FirstOrDefault(x => x.Guid == weaponId)?.Arte is { } weaponArte) known.Add(weaponArte);
 
         known.AddRange(fighter.Stats.Artes);
-        known.AddRange(fighter.Stats.ConditionalArtes.Where(x => x.Conditions.Count == 0).Select(x => x.ArteGuid).OfType<Guid>());
+        known.AddRange(fighter.Stats.ConditionalArtes.Where(x => Learned(fighter, x)).Select(x => x.ArteGuid).OfType<Guid>());
 
         var artes = known.Distinct().Select(id => gameDataService.Artes.FirstOrDefault(x => x.Guid == id)).OfType<Arte>().Take(slots.Length).ToArray();
         for (var i = 0; i < artes.Length; i++) slots[i] = artes[i];
         return slots;
+    }
+
+    // a conditional arte is known once every condition is met. In battle only Level conditions are checked, against the
+    // fighter's own level (an enemy learns its stronger artes as it grows); any other kind of condition keeps it unknown
+    private static bool Learned(BattleFighter fighter, GameLibrary.Models.Fighter.FighterArte arte)
+    {
+        return arte.Conditions.All(x => x is GameLibrary.Models.Conditions.LevelCondition level && fighter.Stats.Level >= level.Level);
     }
 
     // cooldowns run down and casts finish
@@ -460,7 +673,8 @@ public class BattleRunner(
         // the state allows them, which also breaks a cast in progress
         var lockState = fighter.Body.State<BattleLockState>();
         lockState.Stunned = !fighter.IsDown && states.IsStunned(fighter);
-        if (lockState.Stunned && fighter.Casting is not null && states.BlocksArtes(fighter))
+        fighter.Body.State<MovementState>().SpeedFactor = states.SpeedFactor(fighter);
+        if (fighter.Casting is not null && states.BlocksArtes(fighter))
         {
             fighter.Casting = null;
             Lock(fighter, false);
@@ -527,7 +741,7 @@ public class BattleRunner(
     {
         // once the hit lands: states are removed (a revive brings the fighter back first) and then added, so they count
         // toward the arte's own damage
-        var outcome = hitCalculator.Resolve(arte, attacker, target, () => ApplyStates(arte, attacker, target), origin is not null && IsBehind(target, origin));
+        var outcome = hitCalculator.Resolve(arte, attacker, target, () => ApplyStates(arte, attacker, target), origin is not null && IsBehind(target, origin), tick: origin is null);
         if (outcome.Missed)
         {
             battleHud.Popup("Miss", Head(target), HudPopupKind.Miss);
@@ -539,8 +753,9 @@ public class BattleRunner(
         stats.Life = Math.Clamp(stats.Life - outcome.LifeChange, 0, stats.MaxLife);
         var change = before - stats.Life;
 
-        // Threat: all the damage dealt, half of the healing actually done (overheal doesn't count)
-        attacker.Source.Threat += change > 0 ? change : -change * 0.5;
+        // Threat: all the damage dealt, half of the healing actually done (overheal doesn't count). Hurting yourself (a
+        // carried poison whose enemy is gone) builds none
+        if (attacker.Source != target || change < 0) attacker.Source.Threat += change > 0 ? change : -change * 0.5;
 
         // a heal shows green even when it restores nothing (the target was already full), a crit shows red on a hit and
         // blue on a heal
@@ -582,7 +797,9 @@ public class BattleRunner(
             }
         }
 
-        foreach (var id in arte.AddStates) states.Add(target, id, attacker);
+        if (arte.RemoveNegativeStates) states.RemoveNegative(target);
+
+        foreach (var id in arte.AddStates) states.Add(target, id, attacker, arte.StateChances.GetValueOrDefault(id, 100));
     }
 
     // Incapacitated: every state goes and Incapacitated goes on, it can't move, nobody bumps into it, and enemies fade away.
@@ -598,6 +815,33 @@ public class BattleRunner(
         Lock(fighter, true);
         Solid(fighter, false);
         movementRouteSystem.FadeTo(fighter.Body, fighter.IsEnemy ? 0 : 0.4, 400);
+
+        // an enemy leaves its money and drops where it fell, and they stay until someone picks them up or the battle ends
+        if (fighter.IsEnemy) drops.Spawn(fighter.Stats, Feet(fighter), (int) (fighter.Body.GetModule<PositionModule>()?.SortZ ?? 0));
+    }
+
+    // a party member whose feet are over a pickup takes it: money goes to the party and an item into its bag
+    private void Collect(ActiveBattle battle)
+    {
+        // a lost battle leaves everything on the floor
+        if (_lost) return;
+
+        var collectors = battle.Fighters.Where(x => !x.IsEnemy && !x.IsDown).ToArray();
+        foreach (var (pickup, who) in drops.Update([.. collectors.Select(Feet)], Tile * 0.6))
+        {
+            if (pickup.ItemId is { } item)
+            {
+                partyService.ChangeItem(item, pickup.Amount);
+                _rewards.AddItem(item, pickup.Name, pickup.Icon, pickup.Amount);
+            }
+            else
+            {
+                gameStateService.Money += pickup.Amount;
+                _rewards.Money += pickup.Amount;
+            }
+
+            battleHud.Popup(pickup.ItemId is null ? $"+{pickup.Name}" : pickup.Name, Head(collectors[who]), HudPopupKind.Heal);
+        }
     }
 
     private void GetUp(BattleFighter fighter)
@@ -609,20 +853,131 @@ public class BattleRunner(
         movementRouteSystem.FadeTo(fighter.Body, 1, 200);
     }
 
-    // victory when every enemy is down, defeat when every party member is (no game over screen yet, it just ends)
+    // holding Shift runs away (only in a battle that can be run from, and only while the leader is on their feet): a bar
+    // fills over a few seconds and letting go empties it at once. When it's full the escape can still fail and the fight
+    // carries on, and trying again costs nothing. A successful escape ends the battle with no EXP, no spoils and no
+    // victory screen
+    private void UpdateFlee(ActiveBattle battle)
+    {
+        var leader = battle.Fighters.FirstOrDefault(x => x.IsLeader);
+        var holding = CanRun(battle) && !_won && !_lost && leader is { IsDown: false } && inputService.Shift;
+        _fleeProgress = holding ? _fleeProgress + 1 : 0;
+        battle.FleeFraction = Math.Min(1.0, _fleeProgress / (double) FleeUpdates);
+        if (_fleeProgress < FleeUpdates || leader is null) return;
+
+        _fleeProgress = 0;
+        battle.FleeFraction = 0;
+        if (Random.Shared.NextDouble() < FleeFailChance)
+        {
+            battleHud.Popup("Couldn't escape!", Head(leader), HudPopupKind.Miss);
+            return;
+        }
+
+        battleHud.Popup("Escaped!", Head(leader), HudPopupKind.Heal);
+        End(battle);
+    }
+
+    // running away is the troop's setting (Can Run on the Troops page), so it's the same wherever the fight starts from
+    private static bool CanRun(ActiveBattle battle) => battle.Request.Troop.CanRun;
+
+    // victory when every enemy is down, defeat when every party member is. The first one settled is final, and a win comes
+    // first: if both sides fall in the same update the party won. A party that's lost stays lost even if the last enemy
+    // then falls to something lingering (a poison it left behind), so defeat never shows Victory
     private void CheckForEnd(ActiveBattle battle)
     {
         var enemiesDown = battle.Fighters.Where(x => x.OriginalTeam == BattleFighter.EnemyTeam).All(x => x.IsDown);
         var partyDown = battle.Fighters.Where(x => x.OriginalTeam == BattleFighter.PartyTeam).All(x => x.IsDown);
-        if (enemiesDown && !_won) Win(battle);
+        if (!_won && !_lost)
+        {
+            if (enemiesDown) Win(battle);
+            else if (partyDown) Lose();
+        }
 
-        if (!enemiesDown && !partyDown)
+        if (_lost)
+        {
+            Defeat(battle);
+            return;
+        }
+
+        if (!_won)
         {
             _endTimer = 0;
             return;
         }
 
-        if (++_endTimer >= EndDelay) End(battle);
+        // a won battle waits out its whole pause, so the party can pick up what the enemies left and nothing cuts it short
+        if (++_endTimer < _endWait) return;
+
+        // a win shows the victory screen first, and the battle ends when it's closed. Anything still lying there is lost
+        _summarized = true;
+        drops.Clear();
+        victoryScreen.Show(_rewards);
+    }
+
+    // every party member on the field is down: the party lost. Nobody is left to pick anything up, so what the enemies
+    // that fell dropped is lost, and no EXP or spoils are handed out
+    private void Lose()
+    {
+        _lost = true;
+        _endTimer = 0;
+        drops.Clear();
+    }
+
+    // after the same short pause a win has, a battle that can't be lost for good just ends and the story carries on (the
+    // fallen get up with 1 Life), and any other opens the game over screen. What follows is settled when it's closed
+    private void Defeat(ActiveBattle battle)
+    {
+        if (++_endTimer < EndDelay) return;
+
+        if (CanLose(battle))
+        {
+            End(battle);
+            return;
+        }
+
+        _gameOver = true;
+        gameOverScreen.Show(gameDataService.GameSettings.Defeat);
+    }
+
+    // a scripted fight (a tutorial, a story loss) is a troop marked Can Lose (Troops page), and losing it is never a game
+    // over, wherever the fight starts from
+    private static bool CanLose(ActiveBattle battle) => battle.Request.Troop.CanLose;
+
+    // the game over screen was closed. Retry puts the party, the money and the bag back the way they were when the fight
+    // began and asks for the same fight again once the party is back on the story map. Game Over is the game over
+    // sequence's business (it has nowhere to go yet, so it just returns the party to the story map)
+    private void Settle(ActiveBattle battle)
+    {
+        if (gameDataService.GameSettings.Defeat != DefeatOutcome.Retry)
+        {
+            gameOverSequence.Play(() => End(battle));
+            return;
+        }
+
+        End(battle);
+        foreach (var (fighter, life, mana) in _startStats)
+        {
+            fighter.Stats.Life = life;
+            fighter.Stats.Mana = mana;
+        }
+
+        gameStateService.Money = _startMoney;
+        gameStateService.Items.Clear();
+        foreach (var (id, count) in _startItems) gameStateService.Items[id] = count;
+        partyStates.Restore(_startStates);
+
+        battle.Retry = true;
+    }
+
+    // how the party stands as the fight begins, for a retry
+    private void Remember(ActiveBattle battle)
+    {
+        _startStats.Clear();
+        _startStats.AddRange(battle.Fighters.Where(x => !x.IsEnemy).Select(x => (x, x.Stats.Life, x.Stats.Mana)));
+        _startMoney = gameStateService.Money;
+        _startItems.Clear();
+        foreach (var (id, count) in gameStateService.Items) _startItems[id] = count;
+        _startStates = partyStates.Snapshot();
     }
 
     // the battle is officially won the moment the last enemy falls: everyone on the field is on their feet with every state
@@ -631,15 +986,33 @@ public class BattleRunner(
     private void Win(ActiveBattle battle)
     {
         _won = true;
+        mapAudio.FadeOutBgm(MusicFadeSeconds);
+        _endWait = drops.Count > 0 ? PickupDelay : EndDelay;
 
         var experience = battle.Fighters.Where(x => x.OriginalTeam == BattleFighter.EnemyTeam).Sum(x => x.Stats.Experience);
+        _rewards.Experience = experience;
         var fallen = battle.Fighters.Where(x => !x.IsEnemy && x.IsDown).Select(x => x.Stats).ToHashSet();
         foreach (var id in gameStateService.OwnedParty)
         {
-            if (partyService.Actor(id) is not { } actor || fallen.Contains(actor)) continue;
+            if (partyService.Actor(id) is not { } actor) continue;
 
-            actor.Experience += experience;
-            if (experience > 0 && battle.Fighters.FirstOrDefault(x => x.Stats == actor) is { } onField) battleHud.Popup($"+{experience} EXP", Head(onField), HudPopupKind.Heal);
+            if (fallen.Contains(actor))
+            {
+                _rewards.Members.Add(new BattleRewards.Member(actor.Name, actor.FaceName, actor.FaceIndex, 0, actor.Level, actor.Level, true));
+                continue;
+            }
+
+            var before = actor.Level;
+            var levels = partyService.GainExperience(actor, experience);
+            _rewards.Members.Add(new BattleRewards.Member(actor.Name, actor.FaceName, actor.FaceIndex, experience, before, actor.Level, false));
+            if (battle.Fighters.FirstOrDefault(x => x.Stats == actor) is not { } onField) continue;
+
+            if (experience > 0) battleHud.Popup($"+{experience} EXP", Head(onField), HudPopupKind.Heal);
+            if (levels <= 0) continue;
+
+            // the level-up recovery clears the states too, even the ones that would have remained after the battle
+            onField.States.Clear();
+            battleHud.Popup($"Level {actor.Level}!", Head(onField), HudPopupKind.Heal);
         }
 
         foreach (var fighter in battle.Fighters)
@@ -658,7 +1031,13 @@ public class BattleRunner(
         foreach (var projectile in _projectiles) Remove(projectile);
         _projectiles.Clear();
 
+        // whatever wasn't picked up is lost
+        drops.Clear();
+
         foreach (var fighter in battle.Fighters) states.EndOfBattle(fighter);
+
+        // what remains (and what's left of its clock) goes back with the party
+        partyStates.CarryOut(battle.Fighters);
 
         foreach (var fighter in battle.Fighters.Where(x => !x.IsEnemy))
         {

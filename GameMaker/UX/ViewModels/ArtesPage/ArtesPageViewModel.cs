@@ -15,6 +15,7 @@ using GameLibrary.Utilities.Calculations;
 using GameLibrary.Utilities.ComponentModels;
 using GameMaker.Services.Navigation;
 using GameMaker.UX.Components.GridArea;
+using GameMaker.UX.ViewModels.StatesPage;
 using GameMaker.UX.ViewModels.Popups.EntityEditor;
 
 namespace GameMaker.UX.ViewModels.ArtesPage;
@@ -142,7 +143,7 @@ public class ArtesPageViewModel(
         private set => SetField(ref field, value);
     }
 
-    public ObservableCollection<ArteToggleViewModel> AddStates { get; } = [];
+    public ObservableCollection<AddStateViewModel> AddStates { get; } = [];
 
     public ObservableCollection<ArteToggleViewModel> RemoveStates { get; } = [];
 
@@ -323,7 +324,7 @@ public class ArtesPageViewModel(
 
         foreach (var state in gameDataService.States)
         {
-            AddStates.Add(new ArteToggleViewModel(state.Name, state.Icon, SelectedEntity.AddStates, state.Guid));
+            AddStates.Add(new AddStateViewModel(state, SelectedEntity.AddStates, SelectedEntity.StateChances));
             RemoveStates.Add(new ArteToggleViewModel(state.Name, state.Icon, SelectedEntity.RemoveStates, state.Guid));
         }
 

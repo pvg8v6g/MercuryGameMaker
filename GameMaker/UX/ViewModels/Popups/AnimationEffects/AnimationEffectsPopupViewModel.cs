@@ -92,7 +92,7 @@ public class AnimationEffectsPopupViewModel : PropertyChangedUpdater
 
     public double SfxVolume
     {
-        get => Effect.Sfx?.Volume ?? 1.0;
+        get => Effect.Sfx?.Volume ?? AudioDefaults.Volume;
         set
         {
             if (Effect.Sfx is null) return;
@@ -103,7 +103,7 @@ public class AnimationEffectsPopupViewModel : PropertyChangedUpdater
 
     public double SfxPitch
     {
-        get => Effect.Sfx?.Pitch ?? 1.0;
+        get => Effect.Sfx?.Pitch ?? AudioDefaults.Pitch;
         set
         {
             if (Effect.Sfx is null) return;

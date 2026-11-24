@@ -43,6 +43,8 @@ public class GameStateService : IGameStateService
 
     public HashSet<Guid> OwnedParty { get; } = [];
 
+    public Dictionary<Guid, List<GameEngine.Models.Battle.CarriedState>> CarriedStates { get; } = [];
+
     public Dictionary<string, bool> Switches { get; } = [];
 
     public Dictionary<string, string> Variables { get; } = [];

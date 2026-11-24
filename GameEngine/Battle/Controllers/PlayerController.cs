@@ -5,7 +5,7 @@ using GameEngine.Services.Input;
 namespace GameEngine.Battle.Controllers;
 
 /// <summary>
-/// The player driving the leader: an arte key going down uses that slot's arte. Walking is the arrow keys, which the
+/// The player driving the leader: an arte key going down uses that slot's arte, and an item key (Z X C V B) uses that slot's item. Walking is the arrow keys, which the
 /// input system already does for the player's body (and the battle lock stops while casting or down).
 /// </summary>
 public class PlayerController(IInputService inputService) : IFighterController
@@ -19,6 +19,9 @@ public class PlayerController(IInputService inputService) : IFighterController
         VirtualKey.Q, VirtualKey.W, VirtualKey.E, VirtualKey.R, VirtualKey.T, VirtualKey.Y,
         VirtualKey.A, VirtualKey.S, VirtualKey.D, VirtualKey.F, VirtualKey.G, VirtualKey.H
     ];
+
+    // the item keys, slot 0 first
+    public static readonly VirtualKey[] ItemKeys = [VirtualKey.Z, VirtualKey.X, VirtualKey.C, VirtualKey.V, VirtualKey.B];
 
     #endregion
 
@@ -39,6 +42,15 @@ public class PlayerController(IInputService inputService) : IFighterController
             var pressed = down && _held.Add(key);
             if (!down) _held.Remove(key);
             if (pressed && fighter.Slots.ElementAtOrDefault(i) is { } arte) battle.Use(fighter, arte);
+        }
+
+        for (var i = 0; i < ItemKeys.Length; i++)
+        {
+            var key = ItemKeys[i];
+            var down = inputService.IsDown(key);
+            var pressed = down && _held.Add(key);
+            if (!down) _held.Remove(key);
+            if (pressed) battle.UseItem(fighter, i);
         }
     }
 

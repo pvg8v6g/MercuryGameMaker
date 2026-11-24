@@ -23,7 +23,9 @@ public partial class MainGameViewModel(
     IGameStateService gameStateService,
     IStartService startService,
     IWindowService windowService,
-    BattleHud battleHud) : BaseViewModel
+    BattleHud battleHud,
+    VictoryScreen victoryScreen,
+    GameOverScreen gameOverScreen) : BaseViewModel
 {
     #region Properties
 
@@ -33,6 +35,10 @@ public partial class MainGameViewModel(
     public DebugOverlay DebugOverlay => mapScene.DebugOverlay;
 
     public BattleHud BattleHud => battleHud;
+
+    public VictoryScreen VictoryScreen => victoryScreen;
+
+    public GameOverScreen GameOverScreen => gameOverScreen;
 
     public double GameWidth => gameDataService.GameWidth;
 

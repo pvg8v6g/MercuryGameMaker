@@ -11,7 +11,7 @@ namespace GameEngine.Models.Battle;
 /// it was fired, so whatever it lands is worked out with the numbers of the fighter who fired it at that moment.
 /// It walks its page's movement routes one after another, and the battle runner removes it when it detonates.
 /// </summary>
-public class BattleProjectile(MapEntity body, Arte arte, AttackerSnapshot attacker, IReadOnlyList<EntityMovementAction> routes, ContactTarget contact, int depth)
+public class BattleProjectile(MapEntity body, Arte arte, AttackerSnapshot attacker, IReadOnlyList<EntityMovementAction> routes, ContactTarget contact, bool detonatesAtEnd, int depth)
 {
     #region Properties
 
@@ -29,6 +29,9 @@ public class BattleProjectile(MapEntity body, Arte arte, AttackerSnapshot attack
     public int RouteIndex { get; set; } = -1;
 
     public ContactTarget Contact => contact;
+
+    // a contact projectile that touched nobody still goes off with the full arte at its Detonate step
+    public bool DetonatesAtEnd => detonatesAtEnd;
 
     // how many artes deep it was fired: 0 from a cast, 1 from an arte a projectile activated, and so on
     public int Depth => depth;

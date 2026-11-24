@@ -83,7 +83,7 @@
                          SmallChange="0.1"
                          SpinButtonPlacementMode="Inline"
                          IsEnabled="{x:Bind ViewModel.Editor.SelectedMap.Bgm, Mode=OneWay, Converter={StaticResource NullToFalseConverter}, FallbackValue=False}"
-                         Value="{x:Bind ViewModel.Editor.SelectedMap.Bgm.Volume, Mode=TwoWay, FallbackValue=1}" />
+                         Value="{x:Bind ViewModel.Editor.SelectedMap.Bgm.Volume, Mode=TwoWay, FallbackValue=0.8}" />
               <NumberBox Grid.Column="1"
                          Header="Pitch"
                          Minimum="0"
@@ -115,7 +115,7 @@
                          SmallChange="0.1"
                          SpinButtonPlacementMode="Inline"
                          IsEnabled="{x:Bind ViewModel.Editor.SelectedMap.Bgs, Mode=OneWay, Converter={StaticResource NullToFalseConverter}, FallbackValue=False}"
-                         Value="{x:Bind ViewModel.Editor.SelectedMap.Bgs.Volume, Mode=TwoWay, FallbackValue=1}" />
+                         Value="{x:Bind ViewModel.Editor.SelectedMap.Bgs.Volume, Mode=TwoWay, FallbackValue=0.8}" />
               <NumberBox Grid.Column="1"
                          Header="Pitch"
                          Minimum="0"

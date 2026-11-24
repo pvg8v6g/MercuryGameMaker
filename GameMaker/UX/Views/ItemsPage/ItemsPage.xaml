@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:itemsPage="using:GameMaker.UX.ViewModels.ItemsPage"
+      xmlns:statesPage="using:GameMaker.UX.ViewModels.StatesPage"
       xmlns:engineListView="using:GameMaker.UX.Components.EngineListView"
       xmlns:enginePanel="using:GameMaker.UX.Components.EnginePanel"
       xmlns:engineIcon="using:GameMaker.UX.Components.EngineIcon"
@@ -146,14 +147,10 @@
                     ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
                     SelectedValue="{x:Bind ViewModel.SelectedEntity.CasterAnimation, Mode=TwoWay, FallbackValue={x:Null}}"
                     SelectedValuePath="Guid"
-                    MinHeight="48"
                     HorizontalAlignment="Stretch">
             <ComboBox.ItemTemplate>
               <DataTemplate x:DataType="animations:Animation">
-                <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
-                  <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
-                  <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
-                </StackPanel>
+                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
@@ -165,14 +162,10 @@
                     ItemsSource="{x:Bind ViewModel.GameDataService.Animations, Mode=OneWay}"
                     SelectedValue="{x:Bind ViewModel.SelectedEntity.TargetAnimation, Mode=TwoWay, FallbackValue={x:Null}}"
                     SelectedValuePath="Guid"
-                    MinHeight="48"
                     HorizontalAlignment="Stretch">
             <ComboBox.ItemTemplate>
               <DataTemplate x:DataType="animations:Animation">
-                <StackPanel Orientation="Horizontal" Spacing="10" MinHeight="36">
-                  <engineIcon:EngineIcon Icon="{x:Bind Icon, Mode=OneWay}" VerticalAlignment="Center" />
-                  <TextBlock Text="{x:Bind Name}" VerticalAlignment="Center" />
-                </StackPanel>
+                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
               </DataTemplate>
             </ComboBox.ItemTemplate>
           </ComboBox>
@@ -204,78 +197,134 @@
       </ScrollViewer>
     </enginePanel:EnginePanel>
 
-    <enginePanel:EnginePanel Grid.Column="2"
-                             Grid.Row="0"
-                             Grid.RowSpan="2"
-                             Title="Damage Properties"
-                             Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-      <Grid ColumnSpacing="20"
-            RowSpacing="10">
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+    <!-- the few damage boxes only take the height they need, and the attributes get the rest of the column -->
+    <Grid Grid.Column="2"
+          Grid.Row="0"
+          Grid.RowSpan="2"
+          RowSpacing="10">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
 
-        <engineTextBox:EngineTextBox Grid.Column="0"
-                                     Grid.Row="0"
-                                     Header="Life Damage"
-                                     InputType="Integer"
-                                     Text="{x:Bind ViewModel.SelectedEntity.HpDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="How much life damage does this item deal? Negative values heal." />
+      <enginePanel:EnginePanel Grid.Row="0"
+                               Title="Damage Properties"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <Grid ColumnSpacing="20"
+              RowSpacing="10">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
 
-        <engineTextBox:EngineTextBox Grid.Column="1"
-                                     Grid.Row="0"
-                                     Header="Life Percent"
-                                     InputType="Integer"
-                                     Text="{x:Bind ViewModel.SelectedEntity.HpPercent, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="What percentage of max life does this item affect? Negative values heal." />
+          <engineTextBox:EngineTextBox Grid.Column="0"
+                                       Grid.Row="0"
+                                       Header="Life Damage"
+                                       InputType="Integer"
+                                       BoxMinWidth="64"
+                                       Text="{x:Bind ViewModel.SelectedEntity.HpDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                       Tooltip="How much life damage does this item deal? Negative values heal." />
 
-        <engineTextBox:EngineTextBox Grid.Column="0"
-                                     Grid.Row="1"
-                                     Header="Mana Damage"
-                                     InputType="Integer"
-                                     Text="{x:Bind ViewModel.SelectedEntity.ManaDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="How much mana damage does this item deal? Negative values restore mana." />
+          <engineTextBox:EngineTextBox Grid.Column="1"
+                                       Grid.Row="0"
+                                       Header="Life Percent"
+                                       InputType="Integer"
+                                       BoxMinWidth="64"
+                                       Text="{x:Bind ViewModel.SelectedEntity.HpPercent, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                       Tooltip="What percentage of max life does this item affect? Negative values heal." />
 
-        <engineTextBox:EngineTextBox Grid.Column="1"
-                                     Grid.Row="1"
-                                     Header="Mana Percent"
-                                     InputType="Integer"
-                                     Text="{x:Bind ViewModel.SelectedEntity.ManaPercent, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="What percentage of max mana does this item affect? Negative values restore mana." />
+          <engineTextBox:EngineTextBox Grid.Column="0"
+                                       Grid.Row="1"
+                                       Header="Mana Damage"
+                                       InputType="Integer"
+                                       BoxMinWidth="64"
+                                       Text="{x:Bind ViewModel.SelectedEntity.ManaDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                       Tooltip="How much mana damage does this item deal? Negative values restore mana." />
 
-        <engineTextBox:EngineTextBox Grid.Column="0"
-                                     Grid.Row="2"
-                                     Header="Damage Variance %"
-                                     InputType="Integer"
-                                     Text="{x:Bind ViewModel.SelectedEntity.Variance, Mode=TwoWay, FallbackValue='10', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="This is a percent variance of the effect dealt." />
-      </Grid>
-    </enginePanel:EnginePanel>
+          <engineTextBox:EngineTextBox Grid.Column="1"
+                                       Grid.Row="1"
+                                       Header="Mana Percent"
+                                       InputType="Integer"
+                                       BoxMinWidth="64"
+                                       Text="{x:Bind ViewModel.SelectedEntity.ManaPercent, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                       Tooltip="What percentage of max mana does this item affect? Negative values restore mana." />
+
+          <engineTextBox:EngineTextBox Grid.Column="0"
+                                       Grid.Row="2"
+                                       Header="Variance %"
+                                       InputType="Integer"
+                                       BoxMinWidth="64"
+                                       Text="{x:Bind ViewModel.SelectedEntity.Variance, Mode=TwoWay, FallbackValue='10', UpdateSourceTrigger=PropertyChanged}"
+                                       Tooltip="This is a percent variance of the effect dealt." />
+        </Grid>
+      </enginePanel:EnginePanel>
+
+      <enginePanel:EnginePanel Grid.Row="1"
+                               Title="Attribute Changes"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+          <ItemsControl ItemsSource="{x:Bind ViewModel.AttributeChanges, Mode=OneWay}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Spacing="15" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="itemsPage:ConsumableAttributeViewModel">
+                <Grid ColumnSpacing="10">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="32" />
+                    <ColumnDefinition Width="100" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
+
+                  <engineIcon:EngineIcon Grid.Column="0"
+                                         Icon="{x:Bind Icon}"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center" />
+
+                  <TextBlock Grid.Column="1"
+                             Text="{x:Bind Name}"
+                             VerticalAlignment="Center"
+                             TextWrapping="NoWrap"
+                             TextTrimming="CharacterEllipsis" />
+
+                  <engineTextBox:EngineTextBox Grid.Column="2"
+                                               InputType="Integer"
+                                               Text="{x:Bind AttributeValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                               VerticalAlignment="Center" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
+      </enginePanel:EnginePanel>
+    </Grid>
 
     <enginePanel:EnginePanel Grid.Column="3"
                              Grid.Row="0"
                              Grid.RowSpan="2"
-                             Title="Attribute Changes"
+                             Title="Add States"
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <ItemsControl ItemsSource="{x:Bind ViewModel.AttributeChanges, Mode=OneWay}">
+        <ItemsControl ItemsSource="{x:Bind ViewModel.AddStates, Mode=OneWay}">
           <ItemsControl.ItemsPanel>
             <ItemsPanelTemplate>
               <StackPanel Spacing="15" />
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="itemsPage:ConsumableAttributeViewModel">
+            <DataTemplate x:DataType="statesPage:AddStateViewModel">
               <Grid ColumnSpacing="10">
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="32" />
-                  <ColumnDefinition Width="100" />
+                  <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
@@ -292,8 +341,16 @@
 
                 <engineTextBox:EngineTextBox Grid.Column="2"
                                              InputType="Integer"
-                                             Text="{x:Bind AttributeValue, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             BoxMinWidth="56"
+                                             Text="{x:Bind Chance, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Tooltip="The percent chance of the state going on."
+                                             Visibility="{x:Bind IsChecked, Mode=OneWay}"
                                              VerticalAlignment="Center" />
+
+                <CheckBox Grid.Column="3"
+                          IsChecked="{x:Bind IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                          behaviors:PointerCursorBehavior.CursorType="Hand"
+                          VerticalAlignment="Center" />
               </Grid>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
@@ -303,85 +360,50 @@
 
     <enginePanel:EnginePanel Grid.Column="4"
                              Grid.Row="0"
-                             Title="Add States"
-                             Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-      <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <ItemsControl ItemsSource="{x:Bind ViewModel.AddStates, Mode=OneWay}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <StackPanel Spacing="15" />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="itemsPage:ConsumableToggleViewModel">
-              <Grid ColumnSpacing="10">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="32" />
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-
-                <engineIcon:EngineIcon Grid.Column="0"
-                                       Icon="{x:Bind Icon}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
-
-                <TextBlock Grid.Column="1"
-                           Text="{x:Bind Name}"
-                           VerticalAlignment="Center"
-                           TextWrapping="NoWrap"
-                           TextTrimming="CharacterEllipsis" />
-
-                <CheckBox Grid.Column="2"
-                          IsChecked="{x:Bind IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                          behaviors:PointerCursorBehavior.CursorType="Hand"
-                          VerticalAlignment="Center" />
-              </Grid>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
-      </ScrollViewer>
-    </enginePanel:EnginePanel>
-
-    <enginePanel:EnginePanel Grid.Column="4"
-                             Grid.Row="1"
+                             Grid.RowSpan="2"
                              Title="Remove States"
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
-        <ItemsControl ItemsSource="{x:Bind ViewModel.RemoveStates, Mode=OneWay}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <StackPanel Spacing="15" />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="itemsPage:ConsumableToggleViewModel">
-              <Grid ColumnSpacing="10">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="32" />
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+        <StackPanel Spacing="15">
+          <CheckBox Content="Remove All Negative States"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.RemoveNegativeStates, Mode=TwoWay, FallbackValue=False}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="Removes every state that isn't Friendly (poisons, stuns, debuffs) and leaves the good ones. It never gets a fallen fighter up: tick Incapacitated below for that." />
+          <ItemsControl ItemsSource="{x:Bind ViewModel.RemoveStates, Mode=OneWay}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Spacing="15" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="itemsPage:ConsumableToggleViewModel">
+                <Grid ColumnSpacing="10">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="32" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
 
-                <engineIcon:EngineIcon Grid.Column="0"
-                                       Icon="{x:Bind Icon}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
+                  <engineIcon:EngineIcon Grid.Column="0"
+                                         Icon="{x:Bind Icon}"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center" />
 
-                <TextBlock Grid.Column="1"
-                           Text="{x:Bind Name}"
-                           VerticalAlignment="Center"
-                           TextWrapping="NoWrap"
-                           TextTrimming="CharacterEllipsis" />
+                  <TextBlock Grid.Column="1"
+                             Text="{x:Bind Name}"
+                             VerticalAlignment="Center"
+                             TextWrapping="NoWrap"
+                             TextTrimming="CharacterEllipsis" />
 
-                <CheckBox Grid.Column="2"
-                          IsChecked="{x:Bind IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                          behaviors:PointerCursorBehavior.CursorType="Hand"
-                          VerticalAlignment="Center" />
-              </Grid>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                  <CheckBox Grid.Column="2"
+                            IsChecked="{x:Bind IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            behaviors:PointerCursorBehavior.CursorType="Hand"
+                            VerticalAlignment="Center" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
       </ScrollViewer>
     </enginePanel:EnginePanel>
   </Grid>

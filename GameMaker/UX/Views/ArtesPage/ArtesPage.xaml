@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:artesPage="using:GameMaker.UX.ViewModels.ArtesPage"
+      xmlns:statesPage="using:GameMaker.UX.ViewModels.StatesPage"
       xmlns:engineListView="using:GameMaker.UX.Components.EngineListView"
       xmlns:enginePanel="using:GameMaker.UX.Components.EnginePanel"
       xmlns:engineIcon="using:GameMaker.UX.Components.EngineIcon"
@@ -479,9 +480,9 @@
         <engineTextBox:EngineTextBox Grid.Column="0"
                                      Grid.Row="0"
                                      Header="Life Damage"
-                                     InputType="Integer"
+                                     InputType="Double"
                                      Text="{x:Bind ViewModel.SelectedEntity.HpDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="How much life damage does this arte deal? Negative values heal." />
+                                     Tooltip="Times the user's Power: 1 is 1x Power, 0.7 is 70%. Negative values heal." />
 
         <engineTextBox:EngineTextBox Grid.Column="0"
                                      Grid.Row="1"
@@ -550,11 +551,12 @@
             </ItemsPanelTemplate>
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="artesPage:ArteToggleViewModel">
+            <DataTemplate x:DataType="statesPage:AddStateViewModel">
               <Grid ColumnSpacing="10">
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="32" />
                   <ColumnDefinition Width="*" />
+                  <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
@@ -569,7 +571,15 @@
                            TextWrapping="NoWrap"
                            TextTrimming="CharacterEllipsis" />
 
-                <CheckBox Grid.Column="2"
+                <engineTextBox:EngineTextBox Grid.Column="2"
+                                             InputType="Integer"
+                                             BoxMinWidth="56"
+                                             Text="{x:Bind Chance, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                             Tooltip="The percent chance of the state going on."
+                                             Visibility="{x:Bind IsChecked, Mode=OneWay}"
+                                             VerticalAlignment="Center" />
+
+                <CheckBox Grid.Column="3"
                           IsChecked="{x:Bind IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                           behaviors:PointerCursorBehavior.CursorType="Hand"
                           VerticalAlignment="Center" />
@@ -582,40 +592,46 @@
       <enginePanel:EnginePanel Grid.Row="1"
                                Title="Remove States"
                                Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-        <ItemsControl ItemsSource="{x:Bind ViewModel.RemoveStates, Mode=OneWay}">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <StackPanel Spacing="15" />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-          <ItemsControl.ItemTemplate>
-            <DataTemplate x:DataType="artesPage:ArteToggleViewModel">
-              <Grid ColumnSpacing="10">
-                <Grid.ColumnDefinitions>
-                  <ColumnDefinition Width="32" />
-                  <ColumnDefinition Width="*" />
-                  <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+        <StackPanel Spacing="15">
+          <CheckBox Content="Remove All Negative States"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.RemoveNegativeStates, Mode=TwoWay, FallbackValue=False}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="Removes every state that isn't Friendly (poisons, stuns, debuffs) and leaves the good ones. It never gets a fallen fighter up: tick Incapacitated below for that." />
+          <ItemsControl ItemsSource="{x:Bind ViewModel.RemoveStates, Mode=OneWay}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <StackPanel Spacing="15" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="artesPage:ArteToggleViewModel">
+                <Grid ColumnSpacing="10">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="32" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                  </Grid.ColumnDefinitions>
 
-                <engineIcon:EngineIcon Grid.Column="0"
-                                       Icon="{x:Bind Icon}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
+                  <engineIcon:EngineIcon Grid.Column="0"
+                                         Icon="{x:Bind Icon}"
+                                         HorizontalAlignment="Center"
+                                         VerticalAlignment="Center" />
 
-                <TextBlock Grid.Column="1"
-                           Text="{x:Bind Name}"
-                           VerticalAlignment="Center"
-                           TextWrapping="NoWrap"
-                           TextTrimming="CharacterEllipsis" />
+                  <TextBlock Grid.Column="1"
+                             Text="{x:Bind Name}"
+                             VerticalAlignment="Center"
+                             TextWrapping="NoWrap"
+                             TextTrimming="CharacterEllipsis" />
 
-                <CheckBox Grid.Column="2"
-                          IsChecked="{x:Bind IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                          behaviors:PointerCursorBehavior.CursorType="Hand"
-                          VerticalAlignment="Center" />
-              </Grid>
-            </DataTemplate>
-          </ItemsControl.ItemTemplate>
-        </ItemsControl>
+                  <CheckBox Grid.Column="2"
+                            IsChecked="{x:Bind IsChecked, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                            behaviors:PointerCursorBehavior.CursorType="Hand"
+                            VerticalAlignment="Center" />
+                </Grid>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
       </enginePanel:EnginePanel>
     </Grid>
 

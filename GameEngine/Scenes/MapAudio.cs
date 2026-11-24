@@ -25,10 +25,11 @@ public class MapAudio(IAudioService audioService)
 
     #region Methods
 
-    // the player is leaving for the next map, whatever that map doesn't share fades out
-    public void Leave(GameMap next, double seconds)
+    // the player is leaving for the next map, whatever that map doesn't share fades out. A battle map never plays its own
+    // BGM: its music is always the troop's (isBattle), and silence when the troop has none
+    public void Leave(GameMap next, double seconds, bool isBattle = false, AudioFile? troopMusic = null)
     {
-        if (!IsSame(_bgm, Track(next.Bgm)))
+        if (!IsSame(_bgm, Music(next, isBattle, troopMusic)))
         {
             audioService.FadeOutBgm(seconds);
             _bgm = null;
@@ -41,15 +42,22 @@ public class MapAudio(IAudioService audioService)
         }
     }
 
-    public async Task Play(GameMap map, double seconds)
+    public async Task Play(GameMap map, double seconds, bool isBattle = false, AudioFile? troopMusic = null)
     {
-        await Task.WhenAll(PlayBgm(Track(map.Bgm), seconds), PlayBgs(Track(map.Bgs), seconds));
+        await Task.WhenAll(PlayBgm(Music(map, isBattle, troopMusic), seconds), PlayBgs(Track(map.Bgs), seconds));
     }
 
     // a page playing music or background sound: it takes over from the map's until the next map that has its own
     public Task PlayBgm(AudioFile track) => PlayBgm(Track(track), 0.0);
 
     public Task PlayBgs(AudioFile track) => PlayBgs(Track(track), 0.0);
+
+    // only the music fades out (a battle's music when the victory sound is about to play), the background sound goes on
+    public void FadeOutBgm(double seconds)
+    {
+        audioService.FadeOutBgm(seconds);
+        _bgm = null;
+    }
 
     // a page fading out the music and background sound
     public void FadeOut(double seconds)
@@ -95,6 +103,9 @@ public class MapAudio(IAudioService audioService)
         await audioService.PlayBgs(track.Name!, 0.0, track.Pitch);
         audioService.FadeInBgs(seconds, track.Volume);
     }
+
+    // the music a map plays: its own BGM, or on a battle map only the troop's
+    private static AudioFile? Music(GameMap map, bool isBattle, AudioFile? troopMusic) => Track(isBattle ? troopMusic : map.Bgm);
 
     // a map with no file picked plays nothing
     private static AudioFile? Track(AudioFile? file) => string.IsNullOrEmpty(file?.Name) ? null : file;

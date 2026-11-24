@@ -9,6 +9,7 @@
   <TextBox Text="{x:Bind Text, Mode=OneWay}"
            Header="{x:Bind Header, Mode=OneWay}"
            PlaceholderText="{x:Bind PlaceholderText, Mode=OneWay}"
+           MinWidth="{x:Bind BoxMinWidth, Mode=OneWay}"
            MaxLength="{x:Bind MaxLength, Mode=OneWay}"
            InputScope="{x:Bind InputType, Converter={StaticResource InputTypeToInputScopeConverter}, Mode=OneWay}"
            AcceptsReturn="{x:Bind AcceptsReturn, Mode=OneWay}"

@@ -809,7 +809,7 @@ public class EntityEditorViewModel : BaseViewModel<Page>
 
     private async Task<ContentDialogResult> ShowBranchEditor(BranchAction branch)
     {
-        var viewModel = new BranchActionEditorViewModel(branch, _gameDataService);
+        var viewModel = new BranchActionEditorViewModel(branch, _gameDataService, _mapEntities);
         return await _navigationService.ShowBranchActionEditorPopup(viewModel);
     }
 

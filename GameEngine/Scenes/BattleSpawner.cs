@@ -81,6 +81,8 @@ public class BattleSpawner(IGameDataService gameDataService, IGameStateService g
             roster.Add(new BattleRosterEntry(body, party[i], false));
         }
 
+        // enemies grow with the party: each fights at the party's average level, never below its own Level
+        var partyLevel = party.Length == 0 ? 1 : (int) Math.Round(party.Average(x => x.Level));
         for (var i = 0; i < enemies.Length; i++)
         {
             var fighter = enemies[i].fighter!;
@@ -88,8 +90,10 @@ public class BattleSpawner(IGameDataService gameDataService, IGameStateService g
             var body = await playerSpawner.CreateFighter(fighter, x, y, Direction.Down, "Enemy");
             bodies.Add(body);
 
-            // every enemy fights as its own fresh copy, at full Life and Mana
+            // every enemy fights as its own fresh copy at its battle level, its discipline's growths giving its Life,
+            // Mana and attributes there just like an actor's (static stats stay put), at full Life and Mana
             var stats = jsonService.Copy(fighter) ?? fighter;
+            partyService.SetLevel(stats, Math.Max(stats.Level, partyLevel));
             stats.Life = stats.MaxLife;
             stats.Mana = stats.MaxMana;
             roster.Add(new BattleRosterEntry(body, stats, true));

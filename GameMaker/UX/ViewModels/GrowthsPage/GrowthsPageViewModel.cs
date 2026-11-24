@@ -48,7 +48,44 @@ public partial class GrowthsPageViewModel(IGameDataService gameDataService, IJso
 
             gameDataService.LevelCap = (int) value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(ExperiencePreview));
             UpdateAxes();
+        }
+    }
+
+    // the experience formula (Settings\GameSettings.data): total to reach a level is Base * (level - 1) ^ Exponent
+    public double ExperienceBase
+    {
+        get => gameDataService.ExperienceBase;
+        set
+        {
+            if (double.IsNaN(value) || (int) value == gameDataService.ExperienceBase) return;
+
+            gameDataService.ExperienceBase = (int) value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ExperiencePreview));
+        }
+    }
+
+    public double ExperienceExponent
+    {
+        get => gameDataService.ExperienceExponent;
+        set
+        {
+            if (double.IsNaN(value) || value == gameDataService.ExperienceExponent) return;
+
+            gameDataService.ExperienceExponent = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(ExperiencePreview));
+        }
+    }
+
+    public string ExperiencePreview
+    {
+        get
+        {
+            var cap = gameDataService.LevelCap;
+            return $"Level 2: {gameDataService.ExperienceForLevel(2):N0}   Level {cap / 2}: {gameDataService.ExperienceForLevel(cap / 2):N0}   Level {cap}: {gameDataService.ExperienceForLevel(cap):N0}";
         }
     }
 
@@ -87,6 +124,9 @@ public partial class GrowthsPageViewModel(IGameDataService gameDataService, IJso
     protected override Task LoadedAction()
     {
         OnPropertyChanged(nameof(LevelCap));
+        OnPropertyChanged(nameof(ExperienceBase));
+        OnPropertyChanged(nameof(ExperienceExponent));
+        OnPropertyChanged(nameof(ExperiencePreview));
         UpdateAxes();
         return Task.CompletedTask;
     }

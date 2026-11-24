@@ -13,8 +13,27 @@ public class DropEditorModel : PropertyChangedUpdater
         set
         {
             SetField(ref field, value);
+            UpdateFilteredItems();
+            OnPropertyChanged(nameof(PickedItem));
             OnPropertyChanged(nameof(CanSave));
         }
+    } = [];
+
+    // what the search box has typed: the item list shows only items whose name contains it
+    public string SearchText
+    {
+        get;
+        set
+        {
+            SetField(ref field, value);
+            UpdateFilteredItems();
+        }
+    } = string.Empty;
+
+    public Item[] FilteredItems
+    {
+        get;
+        private set => SetField(ref field, value);
     } = [];
 
     public Guid? SelectedItemGuid
@@ -23,7 +42,20 @@ public class DropEditorModel : PropertyChangedUpdater
         set
         {
             SetField(ref field, value);
+            OnPropertyChanged(nameof(PickedItem));
             OnPropertyChanged(nameof(CanSave));
+        }
+    }
+
+    // bound to the item list. Searching swaps the list's items, and the list then reports no selection: that null is
+    // ignored, so typing in the search box never loses the item already picked.
+    public Item? PickedItem
+    {
+        get => AllItems.FirstOrDefault(x => x.Guid == SelectedItemGuid);
+        set
+        {
+            if (value is null) return;
+            SelectedItemGuid = value.Guid;
         }
     }
 
@@ -48,4 +80,11 @@ public class DropEditorModel : PropertyChangedUpdater
     {
         if (CanSave) OnSave?.Invoke();
     });
+
+    private void UpdateFilteredItems()
+    {
+        FilteredItems = SearchText.IsNullOrEmpty()
+            ? AllItems
+            : AllItems.Where(x => (x.Name ?? string.Empty).Contains(SearchText, StringComparison.OrdinalIgnoreCase)).ToArray();
+    }
 }

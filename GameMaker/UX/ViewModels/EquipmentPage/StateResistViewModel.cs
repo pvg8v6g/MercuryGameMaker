@@ -1,11 +1,11 @@
 ﻿using GameLibrary.Models;
-using GameLibrary.Models.Items;
 using GameLibrary.Models.States;
 using MercuryLibrary.WinUI3Components;
 
 namespace GameMaker.UX.ViewModels.EquipmentPage;
 
-public class StateResistViewModel(State state, Equipment equipment) : PropertyChangedUpdater
+// one state's tick box in a Resist States list: equipment's, or another state's
+public class StateResistViewModel(State state, List<Guid> resistStates) : PropertyChangedUpdater
 {
     public string Name => state.Name;
 
@@ -13,17 +13,17 @@ public class StateResistViewModel(State state, Equipment equipment) : PropertyCh
 
     public bool IsResisted
     {
-        get => equipment.ResistStates.Contains(state.Guid);
+        get => resistStates.Contains(state.Guid);
         set
         {
             if (value)
             {
-                if (!equipment.ResistStates.Contains(state.Guid))
-                    equipment.ResistStates.Add(state.Guid);
+                if (!resistStates.Contains(state.Guid))
+                    resistStates.Add(state.Guid);
             }
             else
             {
-                equipment.ResistStates.Remove(state.Guid);
+                resistStates.Remove(state.Guid);
             }
             OnPropertyChanged(nameof(IsResisted));
         }

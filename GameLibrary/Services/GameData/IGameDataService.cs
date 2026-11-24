@@ -47,6 +47,13 @@ public interface IGameDataService
 
     int LevelCap { get; set; }
 
+    int ExperienceBase { get; set; }
+
+    double ExperienceExponent { get; set; }
+
+    // the total experience an actor needs to be this level
+    int ExperienceForLevel(int level);
+
     public Guid LifeAttributeGuid { get; }
 
     public Guid ManaAttributeGuid { get; }
