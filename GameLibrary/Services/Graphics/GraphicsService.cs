@@ -42,6 +42,13 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
         return Path.Combine(GetIconsFolder(), name);
     }
 
+    public string GetDropSheetPath(string? sheet)
+    {
+        var framed = GetIconSheetPath(sheet);
+        var bare = Path.Combine(GetIconsFolder(), "No Background", Path.GetFileName(framed));
+        return File.Exists(bare) ? bare : framed;
+    }
+
     public async Task<CroppedImage> GetIcon(GameIcon icon)
     {
         var path = GetIconSheetPath(icon.Sheet);
@@ -156,6 +163,12 @@ public class GraphicsService(ILocationService locationService) : IGraphicsServic
     public string GetAnimationImagesPath()
     {
         return Path.Combine(locationService.GameDirectory!, "Graphics", "Animations");
+    }
+
+    // the maps' ground pictures (Graphics\Maps\Ground\mapN.png)
+    public string GetMapGroundPath()
+    {
+        return Path.Combine(locationService.GameDirectory!, "Graphics", "Maps", "Ground");
     }
 
     public FileSelection[] GetAnimationImages()

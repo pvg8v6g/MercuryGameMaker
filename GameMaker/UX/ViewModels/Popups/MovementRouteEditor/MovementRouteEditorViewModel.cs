@@ -86,7 +86,8 @@ public class MovementRouteEditorViewModel(
                 new() { Text = "Move Toward", Command = AddMovementCommand, CommandParameter = "MoveToward" },
                 new() { Text = "Move Away", Command = AddMovementCommand, CommandParameter = "MoveAway" },
                 new() { Text = "Step Forward", Command = AddMovementCommand, CommandParameter = "StepForward" },
-                new() { Text = "Step Backward", Command = AddMovementCommand, CommandParameter = "StepAway" }
+                new() { Text = "Step Backward", Command = AddMovementCommand, CommandParameter = "StepAway" },
+                new() { Text = "Place Randomly", Command = AddMovementCommand, CommandParameter = "PlaceRandomly" }
             ]
         },
         new()
@@ -110,6 +111,7 @@ public class MovementRouteEditorViewModel(
                 new() { Text = "Set Blend Mode", Command = AddMovementCommand, CommandParameter = "Blend" },
                 new() { Text = "Set Character Image", Command = AddMovementCommand, CommandParameter = "CharacterImage" },
                 new() { Text = "Balloon Icon", Command = AddMovementCommand, CommandParameter = "Balloon" },
+                new() { Text = "Play Animation", Command = AddMovementCommand, CommandParameter = "Animation" },
                 new() { Text = "Stepping Animation", Command = AddMovementCommand, CommandParameter = "Stepping" },
                 new() { Text = "Direction Fix", Command = AddMovementCommand, CommandParameter = "DirectionFix" },
                 new() { Text = "Through", Command = AddMovementCommand, CommandParameter = "Through" }
@@ -217,7 +219,7 @@ public class MovementRouteEditorViewModel(
 
     private async Task<ContentDialogResult> ShowEditor(Movement movement)
     {
-        var viewModel = new MovementEditorViewModel(movement, gameDataService.Artes, mapEntities, gameDataService.BalloonIcons, gameDataService.Division);
+        var viewModel = new MovementEditorViewModel(movement, gameDataService.Artes, gameDataService.Animations, mapEntities, gameDataService.BalloonIcons, gameDataService.Division);
         return await navigationService.ShowMovementEditorPopup(viewModel);
     }
 
@@ -236,7 +238,8 @@ public class MovementRouteEditorViewModel(
         TurnMovement or
         BlendModeMovement or
         CharacterImageMovement or
-        ActivateArteMovement;
+        ActivateArteMovement or
+        AnimationMovement;
 
     private static Movement? CreateMovement(string key) => key switch
     {
@@ -260,6 +263,8 @@ public class MovementRouteEditorViewModel(
         "Wait" => new WaitMovement(),
         "Detonate" => new DetonateMovement(),
         "ActivateArte" => new ActivateArteMovement(),
+        "PlaceRandomly" => new PlaceRandomlyMovement(),
+        "Animation" => new AnimationMovement(),
         _ => null
     };
 

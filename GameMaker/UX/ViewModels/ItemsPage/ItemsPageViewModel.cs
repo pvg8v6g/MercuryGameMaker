@@ -5,6 +5,7 @@ using GameLibrary.Models.Items;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Json;
 using GameMaker.UX.Components.GridArea;
+using GameMaker.UX.ViewModels.StatesPage;
 
 namespace GameMaker.UX.ViewModels.ItemsPage;
 
@@ -42,7 +43,7 @@ public class ItemsPageViewModel(IGameDataService gameDataService, IJsonService j
 
     public ObservableCollection<ConsumableAttributeViewModel> AttributeChanges { get; } = [];
 
-    public ObservableCollection<ConsumableToggleViewModel> AddStates { get; } = [];
+    public ObservableCollection<AddStateViewModel> AddStates { get; } = [];
 
     public ObservableCollection<ConsumableToggleViewModel> RemoveStates { get; } = [];
 
@@ -76,8 +77,8 @@ public class ItemsPageViewModel(IGameDataService gameDataService, IJsonService j
 
         if (SelectedEntity is null) return;
 
-        AttributeChanges.Add(new ConsumableAttributeViewModel("Life", gameDataService.GameSettings.LifeIcon, gameDataService.LifeAttributeGuid, SelectedEntity));
-        AttributeChanges.Add(new ConsumableAttributeViewModel("Mana", gameDataService.GameSettings.ManaIcon, gameDataService.ManaAttributeGuid, SelectedEntity));
+        AttributeChanges.Add(new ConsumableAttributeViewModel(gameDataService.GameSettings.LifeName, gameDataService.GameSettings.LifeIcon, gameDataService.LifeAttributeGuid, SelectedEntity));
+        AttributeChanges.Add(new ConsumableAttributeViewModel(gameDataService.GameSettings.ManaName, gameDataService.GameSettings.ManaIcon, gameDataService.ManaAttributeGuid, SelectedEntity));
 
         foreach (var attribute in gameDataService.Attributes)
         {
@@ -86,7 +87,7 @@ public class ItemsPageViewModel(IGameDataService gameDataService, IJsonService j
 
         foreach (var state in gameDataService.States)
         {
-            AddStates.Add(new ConsumableToggleViewModel(state.Name, state.Icon, SelectedEntity.AddStates, state.Guid));
+            AddStates.Add(new AddStateViewModel(state, SelectedEntity.AddStates, SelectedEntity.StateChances));
             RemoveStates.Add(new ConsumableToggleViewModel(state.Name, state.Icon, SelectedEntity.RemoveStates, state.Guid));
         }
 

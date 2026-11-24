@@ -1,3 +1,4 @@
+using GameLibrary.Models.Media;
 using GameLibrary.Models.Props;
 using System.Collections.ObjectModel;
 using GameLibrary.Models.Animations;
@@ -73,6 +74,20 @@ public partial class GameDataService : PropertyChangedUpdater, IGameDataService
         set => GameSettings.LevelCap = value;
     }
 
+    public int ExperienceBase
+    {
+        get => GameSettings.ExperienceBase;
+        set => GameSettings.ExperienceBase = value;
+    }
+
+    public double ExperienceExponent
+    {
+        get => GameSettings.ExperienceExponent;
+        set => GameSettings.ExperienceExponent = value;
+    }
+
+    public int ExperienceForLevel(int level) => GameSettings.ExperienceForLevel(level);
+
     public Guid LifeAttributeGuid => new("0581680B-6BCC-4668-AA4A-FA2BCE8160DA");
 
     public Guid ManaAttributeGuid => new("22F0A795-4295-45AB-9EEC-909164E58E91");
@@ -85,7 +100,18 @@ public partial class GameDataService : PropertyChangedUpdater, IGameDataService
 
     public GameStart GameStart { get; set; } = new();
 
-    public GameSettings GameSettings { get; set; } = new();
+    public GameSettings GameSettings
+    {
+        get;
+        set
+        {
+            field = value;
+
+            // a loaded game's own defaults replace the last game's, even when its file doesn't mention them
+            AudioDefaults.Volume = value.DefaultVolume;
+            AudioDefaults.Pitch = value.DefaultPitch;
+        }
+    } = new();
 
     public ObservableCollection<Fighter> Actors { get; } = [];
 

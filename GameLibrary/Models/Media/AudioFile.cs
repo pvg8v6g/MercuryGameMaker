@@ -22,13 +22,13 @@ public partial class AudioFile : PropertyChangedUpdater
     {
         get;
         set => SetField(ref field, value);
-    } = 1.0;
+    } = AudioDefaults.Volume;
 
     public double Pitch
     {
         get;
         set => SetField(ref field, value);
-    } = 1.0;
+    } = AudioDefaults.Pitch;
 
     #endregion
 }

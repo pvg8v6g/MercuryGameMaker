@@ -7,6 +7,7 @@ public enum HudPopupKind
     Damage,
     Critical,
     Heal,
+    CriticalHeal,
     Miss
 }
 
@@ -36,6 +37,8 @@ public partial class HudPopup(string text, double x, double y, HudPopupKind kind
     public bool IsCritical => kind == HudPopupKind.Critical;
 
     public bool IsHeal => kind == HudPopupKind.Heal;
+
+    public bool IsCriticalHeal => kind == HudPopupKind.CriticalHeal;
 
     public bool IsMiss => kind == HudPopupKind.Miss;
 

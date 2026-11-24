@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Windows.Foundation;
 using MercuryLibrary.WinUI3Components;
 using Microsoft.UI.Xaml.Media;
@@ -69,6 +70,9 @@ public partial class HudFighter(string name, bool isLeader) : PropertyChangedUpd
 
     public string ManaText => $"{Mana} / {MaxMana}";
 
+    // the states on it, in the order they went on
+    public ObservableCollection<HudState> States { get; } = [];
+
     // an enemy's bar: where it floats over the head, in scaled map pixels on the layer the camera moves
     public double BarX { get; private set; }
 
@@ -106,6 +110,27 @@ public partial class HudFighter(string name, bool isLeader) : PropertyChangedUpd
             OnPropertyChanged(nameof(MaxMana));
             OnPropertyChanged(nameof(ManaFraction));
             OnPropertyChanged(nameof(ManaText));
+        }
+    }
+
+    // the rows are only touched when a state goes on or off, the wipes move every frame. create makes a state's icon
+    public void SetStates(HudStateValue[] values, Func<Guid, HudState> create)
+    {
+        for (var i = States.Count - 1; i >= 0; i--)
+        {
+            if (values.All(x => x.Id != States[i].Id)) States.RemoveAt(i);
+        }
+
+        foreach (var value in values)
+        {
+            var row = States.FirstOrDefault(x => x.Id == value.Id);
+            if (row is null)
+            {
+                row = create(value.Id);
+                States.Add(row);
+            }
+
+            row.Set(value.Fraction, value.Stacks);
         }
     }
 

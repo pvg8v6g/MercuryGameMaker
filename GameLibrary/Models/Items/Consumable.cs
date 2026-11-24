@@ -74,7 +74,18 @@ public partial class Consumable : Item
 
     public List<Guid> AddStates { get; init; } = [];
 
+    // the percent chance each added state has of going on. A state that isn't listed always does (100)
+    public Dictionary<Guid, int> StateChances { get; init; } = new();
+
     public List<Guid> RemoveStates { get; init; } = [];
+
+    // removes every state that isn't Friendly (poisons, stuns, debuffs) and leaves the good ones. Never a fall:
+    // Incapacitated is only removed by ticking it in Remove States
+    public bool RemoveNegativeStates
+    {
+        get;
+        set => SetField(ref field, value);
+    }
 
     #endregion
 }

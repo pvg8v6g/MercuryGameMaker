@@ -20,8 +20,6 @@ public class EquipmentPageViewModel(IGameDataService gameDataService, IJsonServi
 
     protected override ObservableCollection<Equipment> EntityCollection => gameDataService.Equipment;
 
-    public RelayCommand ClearArteCommand => new(ClearArte);
-
     // All first, then a tick box per discipline
     public ObservableCollection<DisciplineToggleViewModel> DisciplineToggles { get; } = [];
 
@@ -40,12 +38,6 @@ public class EquipmentPageViewModel(IGameDataService gameDataService, IJsonServi
     #endregion
 
     #region Actions
-
-    private void ClearArte()
-    {
-        if (SelectedEntity is null) return;
-        SelectedEntity.Arte = null;
-    }
 
     protected override Task OnSelectedIndexChanged(int index)
     {
@@ -92,7 +84,7 @@ public class EquipmentPageViewModel(IGameDataService gameDataService, IJsonServi
 
         foreach (var state in GameDataService.States)
         {
-            StateResistanceStats.Add(new StateResistViewModel(state, SelectedEntity));
+            StateResistanceStats.Add(new StateResistViewModel(state, SelectedEntity.ResistStates));
         }
 
         OnPropertyChanged(nameof(AttributeStats));

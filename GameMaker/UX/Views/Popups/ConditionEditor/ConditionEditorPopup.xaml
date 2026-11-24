@@ -9,6 +9,7 @@
              xmlns:extensions="using:GameLibrary.MarkupExtensions"
              xmlns:popup="using:GameMaker.UX.Components.Popup"
              xmlns:engineTextBox="using:GameMaker.UX.Components.EngineTextBox"
+             xmlns:engineComboBox="using:GameMaker.UX.Components.EngineComboBox"
              x:Name="Root"
              mc:Ignorable="d">
   <popup:PopupShell Title="Edit Condition"
@@ -45,98 +46,58 @@
 
       <!-- Item -->
       <StackPanel x:Name="ItemPanel" x:Load="{x:Bind ViewModel.IsItem}" Spacing="10">
-        <Grid ColumnSpacing="5">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
-          <ComboBox Header="Owns Item"
-                    PlaceholderText="None"
-                    HorizontalAlignment="Stretch"
-                    ItemsSource="{x:Bind ViewModel.CarriedItems, Mode=OneWay}"
-                    SelectedValue="{x:Bind ViewModel.AsItem.OwnItem, Mode=TwoWay, FallbackValue={x:Null}}"
-                    SelectedValuePath="Guid">
-            <ComboBox.ItemTemplate>
-              <DataTemplate x:DataType="items:Item">
-                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
-          <Button Grid.Column="1"
-                  Content="Clear"
-                  VerticalAlignment="Bottom"
-                  Command="{x:Bind ViewModel.ClearOwnItemCommand}" />
-        </Grid>
-        <Grid ColumnSpacing="5">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
-          <ComboBox Header="Does Not Own Item"
-                    PlaceholderText="None"
-                    HorizontalAlignment="Stretch"
-                    ItemsSource="{x:Bind ViewModel.CarriedItems, Mode=OneWay}"
-                    SelectedValue="{x:Bind ViewModel.AsItem.DoNotOwnItem, Mode=TwoWay, FallbackValue={x:Null}}"
-                    SelectedValuePath="Guid">
-            <ComboBox.ItemTemplate>
-              <DataTemplate x:DataType="items:Item">
-                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
-          <Button Grid.Column="1"
-                  Content="Clear"
-                  VerticalAlignment="Bottom"
-                  Command="{x:Bind ViewModel.ClearDoNotOwnItemCommand}" />
-        </Grid>
+        <engineComboBox:EngineComboBox IsClearable="True" Header="Owns Item"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.CarriedItems, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.AsItem.OwnItem, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="items:Item">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </engineComboBox:EngineComboBox>
+        <engineComboBox:EngineComboBox IsClearable="True" Header="Does Not Own Item"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.CarriedItems, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.AsItem.DoNotOwnItem, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="items:Item">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </engineComboBox:EngineComboBox>
       </StackPanel>
 
       <!-- Actor -->
       <StackPanel x:Name="ActorPanel" x:Load="{x:Bind ViewModel.IsActor}" Spacing="10">
-        <Grid ColumnSpacing="5">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
-          <ComboBox Header="Actor In Party"
-                    PlaceholderText="None"
-                    HorizontalAlignment="Stretch"
-                    ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
-                    SelectedValue="{x:Bind ViewModel.AsActor.OwnActor, Mode=TwoWay, FallbackValue={x:Null}}"
-                    SelectedValuePath="Guid">
-            <ComboBox.ItemTemplate>
-              <DataTemplate x:DataType="fighter:Fighter">
-                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
-          <Button Grid.Column="1"
-                  Content="Clear"
-                  VerticalAlignment="Bottom"
-                  Command="{x:Bind ViewModel.ClearOwnActorCommand}" />
-        </Grid>
-        <Grid ColumnSpacing="5">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="Auto" />
-          </Grid.ColumnDefinitions>
-          <ComboBox Header="Actor Not In Party"
-                    PlaceholderText="None"
-                    HorizontalAlignment="Stretch"
-                    ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
-                    SelectedValue="{x:Bind ViewModel.AsActor.DoNotOwnActor, Mode=TwoWay, FallbackValue={x:Null}}"
-                    SelectedValuePath="Guid">
-            <ComboBox.ItemTemplate>
-              <DataTemplate x:DataType="fighter:Fighter">
-                <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
-              </DataTemplate>
-            </ComboBox.ItemTemplate>
-          </ComboBox>
-          <Button Grid.Column="1"
-                  Content="Clear"
-                  VerticalAlignment="Bottom"
-                  Command="{x:Bind ViewModel.ClearDoNotOwnActorCommand}" />
-        </Grid>
+        <engineComboBox:EngineComboBox IsClearable="True" Header="Actor In Party"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.AsActor.OwnActor, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </engineComboBox:EngineComboBox>
+        <engineComboBox:EngineComboBox IsClearable="True" Header="Actor Not In Party"
+                  PlaceholderText="None"
+                  HorizontalAlignment="Stretch"
+                  ItemsSource="{x:Bind ViewModel.Actors, Mode=OneWay}"
+                  SelectedValue="{x:Bind ViewModel.AsActor.DoNotOwnActor, Mode=TwoWay, FallbackValue={x:Null}}"
+                  SelectedValuePath="Guid">
+          <ComboBox.ItemTemplate>
+            <DataTemplate x:DataType="fighter:Fighter">
+              <TextBlock Text="{x:Bind Name, Mode=OneWay}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </engineComboBox:EngineComboBox>
       </StackPanel>
 
       <!-- Level -->

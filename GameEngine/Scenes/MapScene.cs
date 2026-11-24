@@ -12,6 +12,7 @@ using GameEngine.Systems;
 using GameLibrary.Enumerations;
 using GameLibrary.Models;
 using GameLibrary.Models.GameMaps;
+using GameLibrary.Models.Media;
 using GameLibrary.Models.Areas;
 using GameLibrary.Models.Modules;
 using GameLibrary.Services.GameData;
@@ -50,6 +51,8 @@ public class MapScene(
     BattleSpawner battleSpawner,
     ScreenLayers screenLayers,
     BattleRunner battleRunner,
+    PartyStates partyStates,
+    BattleDrops battleDrops,
     Renderer renderer)
 {
     #region Constants
@@ -140,6 +143,9 @@ public class MapScene(
         var preload = mapImages.Concat(environments.SelectMany(x => x.Frames)).Select(x => x.Picture.ImagePath);
         if (balloonSystem.SheetPath is { } balloons) preload = preload.Append(balloons);
         preload = preload.Concat(animationSystem.SheetPaths(entities));
+
+        // a battle map also gets the sheets its enemies' drops are drawn from
+        if (gameStateService.Battle is not null) preload = preload.Concat(battleDrops.SheetPaths());
         renderer.Preload(preload);
         mapImages.AddRange(LoadHeatHazes(map));
 
@@ -147,7 +153,13 @@ public class MapScene(
         {
             gameStateService.ActiveMap = map;
             gameStateService.Player = player;
-            if (endedBattle is not null) gameStateService.Battle = null;
+            if (endedBattle is not null)
+            {
+                gameStateService.Battle = null;
+
+                // a lost fight set to Retry starts again once the map has faded in, the page that began it is still waiting
+                if (endedBattle.Retry) gameStateService.BattleRequest = endedBattle.Request;
+            }
             gameStateService.MapEntities.Clear();
             gameStateService.MapEntities.AddRange(entities);
             gameStateService.MapAreas.Clear();
@@ -171,7 +183,13 @@ public class MapScene(
         }
 
         // not waited for, the map never holds up on a track loading
-        _ = mapAudio.Play(map, FadeSeconds);
+        _ = mapAudio.Play(map, FadeSeconds, IsBattleMap(map), gameStateService.Battle?.Request.Troop.Bgm);
+    }
+
+    // the map is the battle map of the fight being started, whose music is the troop's and never its own
+    private bool IsBattleMap(GameMap map)
+    {
+        return gameStateService.Battle is { IsEnding: false } battle && battle.Request.BattleMap.Guid == map.Guid;
     }
 
     // every walking speed on the entity's pages, so whichever page is active walks at it
@@ -461,6 +479,9 @@ public class MapScene(
         {
             pageRunner.Update();
             battleRunner.Update();
+
+            // the party's states keep their clock on the story map (a fight keeps it for the fighters in it)
+            if (gameStateService.Battle is null) partyStates.Tick();
         }
         UpdateCamera(map);
         mapWeather.Update(Camera);
@@ -470,7 +491,7 @@ public class MapScene(
             foreach (var environment in _environments) environment.Update();
         }
 
-        renderer.Render(_mapImages.Concat(_environments.SelectMany(x => x.Current)).Concat(CharacterSprites()).Concat(mapWeather.Sprites()).Concat(animationSystem.Sprites(gameStateService.MapEntities)).Concat(BalloonSprites()), Camera);
+        renderer.Render(_mapImages.Concat(_environments.SelectMany(x => x.Current)).Concat(CharacterSprites()).Concat(mapWeather.Sprites()).Concat(animationSystem.Sprites(gameStateService.MapEntities)).Concat(battleDrops.Sprites).Concat(BalloonSprites()), Camera);
         debugOverlay.Update(map, Camera);
         if (paused) return;
 
@@ -559,7 +580,7 @@ public class MapScene(
         _battleWaitingForFade = true;
         _phase = TransferPhase.FadingOut;
         _fadeTimer = 0;
-        mapAudio.Leave(request.BattleMap, FadeSeconds);
+        mapAudio.Leave(request.BattleMap, FadeSeconds, true, request.Troop.Bgm);
     }
 
     // the battle map with the party on its spawn points and the troop's enemies on theirs. A battle that fails to load

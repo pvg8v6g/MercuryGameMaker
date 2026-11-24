@@ -23,6 +23,9 @@ public interface IBattleActions
     // uses it now if it's ready
     void Use(BattleFighter fighter, Arte arte);
 
+    // uses what's in the fighter's item slot (0 to 4) now, if the party's item cooldown is over and the fighter is free to
+    void UseItem(BattleFighter fighter, int slot);
+
     // whether the arte, used facing that way from where the fighter stands, would catch the target
     bool WouldHit(BattleFighter fighter, Arte arte, BattleFighter target, Direction facing);
 

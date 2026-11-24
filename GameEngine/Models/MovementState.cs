@@ -24,6 +24,9 @@ public class MovementState
 
     public bool IsMoving => DistanceX > 0 || DistanceY > 0;
 
+    // battle only: what the fighter's states do to its walking speed (1 is normal, 0.6 is Chilled's slow)
+    public double SpeedFactor { get; set; } = 1.0;
+
     // walked this update, a step can finish in the same update it moves so IsMoving alone would look idle
     public bool Stepped { get; set; }
 

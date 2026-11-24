@@ -2,11 +2,14 @@
 
 public partial class MovementModule : Module
 {
+    // the normal walking speed (the player's on the story maps), what every new walker and Set Speed step starts at
+    public const int DefaultSpeed = 8;
+
     public int Speed
     {
         get;
         set => SetField(ref field, value);
-    } = 8;
+    } = DefaultSpeed;
 
     public bool Dashing
     {

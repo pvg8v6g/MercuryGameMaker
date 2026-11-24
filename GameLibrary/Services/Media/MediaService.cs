@@ -66,6 +66,7 @@ public class MediaService(ILocationService locationService) : IMediaService
         var path = cache switch
         {
             Cache.Media => GetBgmPath(),
+            Cache.Me => GetMePath(),
             Cache.Sfx => GetSfxPath(),
             Cache.Footsteps => GetFootstepsPath(),
             _ => throw new ArgumentOutOfRangeException(nameof(cache), cache, null)

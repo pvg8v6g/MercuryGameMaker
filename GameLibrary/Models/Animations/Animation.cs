@@ -6,6 +6,13 @@ public partial class Animation : BaseModel
 {
     #region Properties
 
+    // drawn behind every character and prop, over the ground, so busy battles aren't buried under effects
+    public bool PlaysBehind
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     public ObservableCollection<AnimationEffect> Effects
     {
         get;
@@ -33,13 +40,29 @@ public partial class Animation : BaseModel
         set => SetField(ref field, value);
     } = [];
 
-    // the last frame anything shows on: a cell, a tint, or a shockwave or heat still going
+    // lightning drawn from code, each starting on its frame
+    public ObservableCollection<AnimationLightning> Lightnings
+    {
+        get;
+        set => SetField(ref field, value);
+    } = [];
+
+    // sounds played on their frame without a cell, so an animation can be only sounds
+    public ObservableCollection<AnimationSound> Sounds
+    {
+        get;
+        set => SetField(ref field, value);
+    } = [];
+
+    // the last frame anything happens on: a cell, a tint, a sound, or a shockwave, heat or lightning still going
     public int LastFrame()
     {
         return Effects.Select(x => x.Frame)
             .Concat(TargetTints.Select(x => x.Frame))
+            .Concat(Sounds.Select(x => x.Frame))
             .Concat(Shockwaves.Select(x => x.LastFrame))
             .Concat(HeatHazes.Select(x => x.LastFrame))
+            .Concat(Lightnings.Select(x => x.LastFrame))
             .DefaultIfEmpty(0)
             .Max();
     }

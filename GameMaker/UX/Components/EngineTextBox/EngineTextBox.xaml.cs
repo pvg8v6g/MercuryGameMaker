@@ -39,6 +39,16 @@ public sealed partial class EngineTextBox
         set => SetValue(PlaceholderTextProperty, value);
     }
 
+    // the app's text box style makes every box at least 200 wide; a narrow box (a column of small numbers) sets this lower
+    public static readonly DependencyProperty BoxMinWidthProperty = DependencyProperty.Register(
+        nameof(BoxMinWidth), typeof(double), typeof(EngineTextBox), new PropertyMetadata(200.0));
+
+    public double BoxMinWidth
+    {
+        get => (double) GetValue(BoxMinWidthProperty);
+        set => SetValue(BoxMinWidthProperty, value);
+    }
+
     public static readonly DependencyProperty MaxLengthProperty = DependencyProperty.Register(
         nameof(MaxLength), typeof(int), typeof(EngineTextBox), new PropertyMetadata(0));
 

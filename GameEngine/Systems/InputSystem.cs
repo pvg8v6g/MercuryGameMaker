@@ -16,8 +16,8 @@ public class InputSystem(IInputService inputService, IGameStateService gameState
         // a running page the player started (or an autorun) holds the player still
         if (gameStateService.IsPlayerBusy || !entity.HasModule<InputModule>() || inputService.Direction is not { } direction) return;
 
-        // casting, or down in battle: the fighter stays where it is
-        if (entity.State<BattleLockState>().Locked) return;
+        // casting, down or stunned in battle: the fighter stays where it is
+        if (entity.State<BattleLockState>().CannotMove) return;
         movementSystem.Move(entity, direction);
     }
 }

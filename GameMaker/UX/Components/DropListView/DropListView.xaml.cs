@@ -90,19 +90,24 @@ public sealed partial class DropListView
         if (DropsSource is null) return;
 
         Editor.AllItems = AllItems ?? [];
+        Editor.SearchText = string.Empty;
         Editor.SelectedItemGuid = null;
         Editor.PercentText = string.Empty;
         Editor.OnSave = () =>
         {
             if (DropsSource is null || !Editor.SelectedItemGuid.HasValue) return;
 
-            DropsSource.Add(new DropModel
+            var drop = new DropModel
             {
                 DropId = Editor.SelectedItemGuid.Value,
                 DropPercent = int.TryParse(Editor.PercentText, out var percent) ? percent : 0
-            });
+            };
 
+            // close the flyout first and add the row after this layout pass: changing the list while the flyout is
+            // closing over it could land mid-layout and crash ("Child collection must not be modified during measure")
             EditorFlyout.Hide();
+            var source = DropsSource;
+            DispatcherQueue.TryEnqueue(() => source.Add(drop));
         };
 
         EditorFlyout.ShowAt(ListView);
@@ -114,6 +119,7 @@ public sealed partial class DropListView
 
         var drop = row.Drop;
         Editor.AllItems = AllItems ?? [];
+        Editor.SearchText = string.Empty;
         Editor.SelectedItemGuid = drop.DropId == Guid.Empty ? null : drop.DropId;
         Editor.PercentText = drop.DropPercent.ToString();
         Editor.OnSave = () =>
@@ -123,8 +129,8 @@ public sealed partial class DropListView
             drop.DropId = Editor.SelectedItemGuid.Value;
             drop.DropPercent = int.TryParse(Editor.PercentText, out var percent) ? percent : 0;
 
-            RebuildRows();
             EditorFlyout.Hide();
+            DispatcherQueue.TryEnqueue(() => ReplaceRow(drop));
         };
 
         EditorFlyout.ShowAt(ListView);
@@ -136,9 +142,39 @@ public sealed partial class DropListView
         DropsSource.Remove(row.Drop);
     }
 
+    // only the rows that changed, so the list never rebuilds every row while it's on screen
     private void OnDropsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        RebuildRows();
+        switch (e.Action)
+        {
+            case NotifyCollectionChangedAction.Add when e.NewItems is not null:
+                var at = e.NewStartingIndex < 0 ? Rows.Count : e.NewStartingIndex;
+                foreach (DropModel drop in e.NewItems) Rows.Insert(Math.Min(at++, Rows.Count), Row(drop));
+                break;
+            case NotifyCollectionChangedAction.Remove when e.OldItems is not null:
+                foreach (DropModel drop in e.OldItems)
+                {
+                    var row = Rows.FirstOrDefault(x => x.Drop == drop);
+                    if (row is not null) Rows.Remove(row);
+                }
+
+                break;
+            default:
+                RebuildRows();
+                break;
+        }
+    }
+
+    // the row for a drop that was edited, made again so its icon, name and chance update
+    private void ReplaceRow(DropModel drop)
+    {
+        var index = Rows.ToList().FindIndex(x => x.Drop == drop);
+        if (index >= 0) Rows[index] = Row(drop);
+    }
+
+    private DropRowModel Row(DropModel drop)
+    {
+        return new DropRowModel(drop, (AllItems ?? []).FirstOrDefault(x => x.Guid == drop.DropId));
     }
 
     private void RebuildRows()
@@ -147,12 +183,7 @@ public sealed partial class DropListView
 
         if (DropsSource is null) return;
 
-        var allItems = AllItems ?? [];
-        foreach (var drop in DropsSource)
-        {
-            var item = allItems.FirstOrDefault(x => x.Guid == drop.DropId);
-            Rows.Add(new DropRowModel(drop, item));
-        }
+        foreach (var drop in DropsSource) Rows.Add(Row(drop));
     }
 
     #endregion

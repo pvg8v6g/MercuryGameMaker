@@ -17,9 +17,11 @@ namespace GameEngine.Systems;
 /// <summary>
 /// Plays animations (made on the Animations page) on entities. An animation is a list of cells per frame: each cell
 /// is one square of an animation sheet (5 across) placed around the middle of the entity, with its own scale, turn,
-/// colour, opacity and blend, and a sound on the frame it starts. One frame is one update, the way the Animations page
+/// colour, opacity and blend, and a sound on the frame it starts. Sounds can also stand on their own, with no cell, so
+/// an animation can be only sounds. One frame is one update, the way the Animations page
 /// plays them. Many animations can play on one entity at once, each goes away after its last frame.
 /// Runs after the character images so the animation sits on the character where it was drawn this update.
+/// An animation can play behind: on its target's level under every character and prop, over the ground.
 /// </summary>
 public class AnimationSystem(IGameDataService gameDataService, IGraphicsService graphicsService, IAudioService audioService) : IEntitySystem
 {
@@ -30,6 +32,12 @@ public class AnimationSystem(IGameDataService gameDataService, IGraphicsService 
 
     // shockwaves and heat bend the map and everyone on it, the animation's own cells stay sharp over them
     private const int DistortionZ = AnimationZ - 1;
+
+    // an animation that plays behind sits on its target's level, sorted ahead of every character and prop standing
+    // there (they sort by where they meet the ground), so it covers only the ground. Its shockwaves and heat go first,
+    // so they bend the ground and its own cells stay sharp over them
+    private const double BehindCellSortY = -1_000_000_000;
+    private const double BehindDistortionSortY = -2_000_000_000;
 
     // an animation sheet is this many cells across, the cells are square
     private const int SheetColumns = 5;
@@ -80,7 +88,7 @@ public class AnimationSystem(IGameDataService gameDataService, IGraphicsService 
     // one animation for each way its user faces
     public void Play(MapEntity entity, Guid? animationId, ArteAnimationPlacement? placement = null)
     {
-        // the last frame with a cell, a tint, or a shockwave or heat still going
+        // the last frame with a cell, a tint, a sound, or a shockwave or heat still going
         if (Find(animationId) is not { } animation || animation.LastFrame() is var lastFrame && lastFrame < 1) return;
 
         var playing = new PlayingAnimation(animation, lastFrame) { Placement = placement };
@@ -114,6 +122,7 @@ public class AnimationSystem(IGameDataService gameDataService, IGraphicsService 
         }
 
         var (centerX, centerY) = Center(entity);
+        var behind = Behind(entity);
         foreach (var playing in state.Playing.ToArray())
         {
             if (playing.Waiting) continue;
@@ -126,8 +135,10 @@ public class AnimationSystem(IGameDataService gameDataService, IGraphicsService 
             }
 
             TintTarget(entity, playing);
+            PlaySounds(playing);
             ShowFrame(playing, centerX, centerY);
             ShowDistortions(playing, centerX, centerY);
+            if (playing.Animation.PlaysBehind) PutBehind(playing, behind);
         }
     }
 
@@ -171,7 +182,16 @@ public class AnimationSystem(IGameDataService gameDataService, IGraphicsService 
         }
     }
 
-    // the shockwaves and heat going on this frame, around the middle of the target
+    // the animation's own sounds on this frame, the ones that aren't on a cell
+    private void PlaySounds(PlayingAnimation playing)
+    {
+        foreach (var sound in playing.Animation.Sounds.Where(x => x.Frame == playing.Frame))
+        {
+            if (!string.IsNullOrEmpty(sound.Name)) audioService.PlaySfx(sound.Name, sound.Volume, sound.Pitch);
+        }
+    }
+
+    // the shockwaves, heat and lightning going on this frame, around the middle of the target
     private void ShowDistortions(PlayingAnimation playing, double centerX, double centerY)
     {
         var scale = gameDataService.ScaleFactor;
@@ -199,6 +219,41 @@ public class AnimationSystem(IGameDataService gameDataService, IGraphicsService 
             sprite.Y = centerY + ((y - (heat.Height / 2.0)) * scale);
             playing.Showing.Add(sprite);
         }
+
+        // lightning is placed by its start, its end is how far from there; both turn with the animation
+        foreach (var lightning in playing.Animation.Lightnings.Where(x => frame >= x.Frame && frame <= x.LastFrame))
+        {
+            var sprite = playing.Distortion(lightning, () => new Lightning { Z = DistortionZ });
+            var bolt = (Lightning) sprite.Picture;
+            lightning.ApplyTo(bolt, frame - lightning.Frame, scale, playing.Seed);
+
+            var (startX, startY) = Placed(playing, lightning.StartX, lightning.StartY);
+            var (endX, endY) = Placed(playing, lightning.EndX, lightning.EndY);
+            sprite.X = centerX + (startX * scale);
+            sprite.Y = centerY + (startY * scale);
+            bolt.ToX = (float) ((endX - startX) * scale);
+            bolt.ToY = (float) ((endY - startY) * scale);
+            playing.Showing.Add(sprite);
+        }
+    }
+
+    // moves what's showing to the target's own level, ahead of everyone standing on it (see BehindCellSortY)
+    private static void PutBehind(PlayingAnimation playing, (int Z, int Tier) behind)
+    {
+        foreach (var sprite in playing.Showing)
+        {
+            sprite.Picture.Z = behind.Z;
+            sprite.Tier = behind.Tier;
+            sprite.SortY = sprite.Picture is Shockwave or HeatHaze or Lightning ? BehindDistortionSortY : BehindCellSortY;
+        }
+    }
+
+    // the level the target is drawn on: its character's layer and tier, or its position's for one with no picture
+    private static (int Z, int Tier) Behind(MapEntity entity)
+    {
+        if (entity.State<CharacterImageState>().Sprite is { } sprite) return (sprite.Picture.Z, sprite.Tier);
+
+        return ((int) (entity.GetModule<PositionModule>()?.SortZ ?? 0), SceneSprite.TopTier);
     }
 
     // a spot in the animation (unscaled pixels from the target's middle), mirrored, turned and moved by its placement

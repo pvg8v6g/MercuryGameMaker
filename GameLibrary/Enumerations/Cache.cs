@@ -7,5 +7,6 @@ public enum Cache
     Environment,
     Media,
     Sfx,
-    Footsteps
+    Footsteps,
+    Me
 }

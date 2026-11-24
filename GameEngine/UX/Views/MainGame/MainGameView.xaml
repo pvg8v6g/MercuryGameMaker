@@ -8,6 +8,8 @@
       xmlns:mercury="using:MercuryLibrary.CanvasComponents"
       xmlns:models="using:GameEngine.Models"
       xmlns:battleHud="using:GameEngine.UX.Views.BattleHud"
+      xmlns:victoryScreen="using:GameEngine.UX.Views.VictoryScreen"
+      xmlns:gameOverScreen="using:GameEngine.UX.Views.GameOverScreen"
       mc:Ignorable="d"
       d:DataContext="{d:DesignInstance mainGame:MainGameViewModel}"
       Background="Black"
@@ -77,6 +79,8 @@
 
     <!-- the screen layers: the battle HUD, then (later) the menus over it -->
     <battleHud:BattleHudView Hud="{x:Bind ViewModel.BattleHud}" />
+    <victoryScreen:VictoryScreenView Screen="{x:Bind ViewModel.VictoryScreen}" />
+    <gameOverScreen:GameOverScreenView Screen="{x:Bind ViewModel.GameOverScreen}" />
 
     <!-- a lightning flash, under the fade so a black screen stays black -->
     <Rectangle Fill="White"

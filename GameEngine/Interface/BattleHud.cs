@@ -5,9 +5,9 @@ using GameEngine.Models.Battle;
 using GameEngine.Scenes;
 using GameEngine.Services.GameState;
 using GameLibrary.Services.GameData;
-using GameLibrary.Services.Graphics;
-using GameLibrary.Services.Location;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 
 namespace GameEngine.Interface;
 
@@ -20,8 +20,7 @@ namespace GameEngine.Interface;
 public partial class BattleHud(
     IGameStateService gameStateService,
     IGameDataService gameDataService,
-    IGraphicsService graphicsService,
-    ILocationService locationService) : ScreenLayer
+    InterfaceImages images) : ScreenLayer
 {
     #region Constants
 
@@ -36,8 +35,14 @@ public partial class BattleHud(
     // the arte keys' labels, in slot order (the same keys the player controller reads)
     private static readonly string[] SlotLabels = ["1", "2", "3", "4", "5", "6", "Q", "W", "E", "R", "T", "Y", "A", "S", "D", "F", "G", "H"];
 
+    // the item keys' labels, in slot order (the same keys the player controller reads)
+    private static readonly string[] ItemLabels = ["Z", "X", "C", "V", "B"];
+
     // the cast bar over the leader's head, in scaled map pixels
     public const double CastBarWidth = 48;
+
+    // the bar over the leader's head while running away
+    public const double FleeBarWidth = 64;
 
     #endregion
 
@@ -48,6 +53,9 @@ public partial class BattleHud(
 
     // the rows for the battle that's shown, in the battle's fighter order, made on the ui thread
     private (BattleFighter fighter, HudFighter row)[] _rows = [];
+
+    // every state's icon: its sheet and the cell to show, made on the ui thread when a battle opens
+    private Dictionary<Guid, (ImageSource sheet, Rect cell)> _stateIcons = [];
 
     #endregion
 
@@ -80,6 +88,9 @@ public partial class BattleHud(
 
     public IEnumerable<HudArteSlot> SlotRow3 => Slots.Skip(12).Take(6);
 
+    // the party's item keys, each showing its item, how many are left, and the shared item cooldown
+    public ObservableCollection<HudArteSlot> ItemSlots { get; } = [.. ItemLabels.Select(x => new HudArteSlot(x))];
+
     // the numbers floating up over the fighters
     public ObservableCollection<HudPopup> Popups { get; } = [];
 
@@ -107,6 +118,38 @@ public partial class BattleHud(
         get;
         private set => SetField(ref field, value);
     }
+
+    // running away: how far along it is (0 to 1), over the leader's head
+    public bool IsFleeing
+    {
+        get;
+        private set => SetField(ref field, value);
+    }
+
+    public double FleeFraction
+    {
+        get;
+        private set => SetField(ref field, value);
+    }
+
+    public double FleeX
+    {
+        get;
+        private set => SetField(ref field, value);
+    }
+
+    public double FleeY
+    {
+        get;
+        private set => SetField(ref field, value);
+    }
+
+    // TEST: what the state test keys last did (BattleStateTester), empty until one is pressed
+    public string TestText
+    {
+        get;
+        private set => SetField(ref field, value);
+    } = string.Empty;
 
     // moves the layer of enemy bars with the map, the same whole pixels the renderer moves the pictures by
     public double OffsetX
@@ -140,18 +183,22 @@ public partial class BattleHud(
 
         // read on the game loop, shown on the ui thread
         var scale = gameDataService.ScaleFactor;
-        var values = battle.Fighters.Select(x => (x.Stats.Life, x.Stats.MaxLife, x.Stats.Mana, x.Stats.MaxMana, Bar: BarSpot(x.Body, scale))).ToArray();
+        var values = battle.Fighters.Select(x => (x.Stats.Life, x.Stats.MaxLife, x.Stats.Mana, x.Stats.MaxMana, Bar: BarSpot(x.Body, scale), States: StateValues(x))).ToArray();
         var offsetX = -Math.Round(camera.X);
         var offsetY = -Math.Round(camera.Y);
         var leader = battle.Fighters.FirstOrDefault(x => x.IsLeader);
         var slots = SlotValues(leader);
+        var items = ItemValues(battle);
         var cast = leader is { Casting: not null, CastTotal: > 0 } caster
             ? ((double?) (1.0 - (caster.CastLeft / (double) caster.CastTotal)), BarSpot(caster.Body, scale))
             : (null, default);
+        var flee = leader is not null && battle.FleeFraction > 0 ? ((double?) battle.FleeFraction, BarSpot(leader.Body, scale)) : (null, default);
         _dispatcherQueue.TryEnqueue(() =>
         {
             Show(battle, values, offsetX, offsetY);
             ShowSlots(slots, cast.Item1, cast.Item2);
+            ShowItems(items);
+            ShowFlee(flee.Item1, flee.Item2);
             StepPopups();
         });
     }
@@ -162,6 +209,9 @@ public partial class BattleHud(
         _dispatcherQueue.TryEnqueue(() => Popups.Add(new HudPopup(text, at.X, at.Y, kind)));
     }
 
+    // TEST: the state test keys' line, called from the game loop
+    public void ShowTest(string text) => _dispatcherQueue.TryEnqueue(() => TestText = text);
+
     #endregion
 
     #region Private Methods
@@ -170,9 +220,12 @@ public partial class BattleHud(
     private async Task Open(ActiveBattle battle)
     {
         var faces = new List<(string path, Rect cell)?>();
-        foreach (var fighter in battle.Fighters) faces.Add(fighter.IsEnemy ? null : await FaceCell(fighter));
+        foreach (var fighter in battle.Fighters) faces.Add(fighter.IsEnemy ? null : await images.FaceCell(fighter.Stats.FaceName, fighter.Stats.FaceIndex));
 
         var leaderSlots = battle.Fighters.FirstOrDefault(x => x.IsLeader)?.Slots ?? [];
+        var itemIcons = new List<(string name, (string path, Rect cell)? icon)?>();
+        foreach (var item in battle.ItemSlots) itemIcons.Add(item is null ? null : (item.Name, await images.IconCell(item.Icon)));
+
         var icons = new List<(string name, string cost, (string path, Rect cell)? icon)?>();
         for (var i = 0; i < Slots.Count; i++)
         {
@@ -182,12 +235,22 @@ public partial class BattleHud(
                 continue;
             }
 
-            icons.Add((arte.Name, arte.Cost > 0 ? arte.Cost.ToString() : string.Empty, await IconCell(arte.Icon)));
+            icons.Add((arte.Name, arte.Cost > 0 ? arte.Cost.ToString() : string.Empty, await images.IconCell(arte.Icon)));
+        }
+
+        var stateCells = new List<(Guid id, string path, Rect cell)>();
+        foreach (var state in gameDataService.States.Where(x => !x.Hidden).ToArray())
+        {
+            if (await images.IconCell(state.Icon) is { } icon) stateCells.Add((state.Guid, icon.path, icon.cell));
         }
 
         _dispatcherQueue.TryEnqueue(() =>
         {
             if (_shown != battle) return;
+
+            // the states share a picture per sheet
+            var sheets = stateCells.Select(x => x.path).Distinct().ToDictionary(x => x, x => new BitmapImage(new Uri(x)));
+            _stateIcons = stateCells.ToDictionary(x => x.id, x => ((ImageSource) sheets[x.path], x.cell));
 
             Party.Clear();
             Enemies.Clear();
@@ -226,6 +289,15 @@ public partial class BattleHud(
                 slot.IconRect = icons[i]?.icon?.cell ?? default;
             }
 
+            for (var i = 0; i < ItemSlots.Count; i++)
+            {
+                var slot = ItemSlots[i];
+                slot.HasArte = itemIcons[i] is not null;
+                slot.Name = itemIcons[i]?.name ?? string.Empty;
+                slot.Icon = itemIcons[i]?.icon is { } icon ? new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(icon.path)) : null;
+                slot.IconRect = itemIcons[i]?.icon?.cell ?? default;
+            }
+
             IsOpen = true;
         });
     }
@@ -234,15 +306,18 @@ public partial class BattleHud(
     {
         _rows = [];
         Popups.Clear();
+        TestText = string.Empty;
         IsCasting = false;
+        IsFleeing = false;
         foreach (var slot in Slots) slot.HasArte = false;
+        foreach (var slot in ItemSlots) slot.HasArte = false;
         Party.Clear();
         Enemies.Clear();
         Boss = null;
         IsOpen = false;
     }
 
-    private void Show(ActiveBattle battle, (int life, int maxLife, int mana, int maxMana, Point bar)[] values, double offsetX, double offsetY)
+    private void Show(ActiveBattle battle, (int life, int maxLife, int mana, int maxMana, Point bar, HudStateValue[] states)[] values, double offsetX, double offsetY)
     {
         if (_shown != battle || _rows.Length != values.Length) return;
 
@@ -250,10 +325,34 @@ public partial class BattleHud(
         OffsetY = offsetY;
         for (var i = 0; i < values.Length; i++)
         {
-            var (life, maxLife, mana, maxMana, bar) = values[i];
+            var (life, maxLife, mana, maxMana, bar, states) = values[i];
             _rows[i].row.Set(life, maxLife, mana, maxMana);
             _rows[i].row.MoveBar(bar.X, bar.Y);
+            _rows[i].row.SetStates(states, CreateState);
         }
+    }
+
+    // the states a fighter shows, read on the game loop. Hidden ones never do
+    private static HudStateValue[] StateValues(BattleFighter fighter)
+    {
+        return
+        [
+            .. fighter.States.Where(x => !x.State.Hidden).Select(x =>
+            {
+                var total = BattleState.Frames(x.State);
+                return new HudStateValue(x.State.Guid, total > 0 ? Math.Clamp(x.Left / (double) total, 0, 1) : 0, x.Stacks);
+            })
+        ];
+    }
+
+    private HudState CreateState(Guid id)
+    {
+        var state = new HudState(id) { HasArte = true };
+        if (!_stateIcons.TryGetValue(id, out var icon)) return state;
+
+        state.Icon = icon.sheet;
+        state.IconRect = icon.cell;
+        return state;
     }
 
     // each slot: how much of its cooldown is left (0 ready), short of Mana, being cast
@@ -273,6 +372,24 @@ public partial class BattleHud(
         return values;
     }
 
+    // each item key: whether it holds an item, how many are left in the bag, and how much of the shared cooldown is left
+    private (bool has, int count, double fraction)[] ItemValues(ActiveBattle battle)
+    {
+        var fraction = battle.ItemCooldownTotal > 0 ? battle.ItemCooldown / (double) battle.ItemCooldownTotal : 0;
+        return [.. battle.ItemSlots.Select(x => x is null ? (false, 0, 0.0) : (true, gameStateService.Items.GetValueOrDefault(x.Guid), fraction))];
+    }
+
+    private void ShowItems((bool has, int count, double fraction)[] values)
+    {
+        for (var i = 0; i < ItemSlots.Count && i < values.Length; i++)
+        {
+            var slot = ItemSlots[i];
+            slot.HasArte = values[i].has;
+            slot.CostText = values[i].has ? values[i].count.ToString() : string.Empty;
+            slot.Set(values[i].fraction, false, false);
+        }
+    }
+
     private void ShowSlots((double fraction, bool noMana, bool casting)[] values, double? cast, Point castAt)
     {
         for (var i = 0; i < Slots.Count && i < values.Length; i++) Slots[i].Set(values[i].fraction, values[i].noMana, values[i].casting);
@@ -285,6 +402,16 @@ public partial class BattleHud(
         CastY = castAt.Y - 8;
     }
 
+    private void ShowFlee(double? fraction, Point at)
+    {
+        IsFleeing = fraction is not null;
+        if (fraction is not { } value) return;
+
+        FleeFraction = value;
+        FleeX = at.X + (EnemyBarWidth / 2.0) - (FleeBarWidth / 2.0);
+        FleeY = at.Y - 20;
+    }
+
     private void StepPopups()
     {
         foreach (var popup in Popups.ToArray())
@@ -294,45 +421,12 @@ public partial class BattleHud(
         }
     }
 
-    // an arte's icon cell on its icon sheet, none when it has no icon
-    private async Task<(string path, Rect cell)?> IconCell(GameLibrary.Models.GameIcon icon)
-    {
-        if (icon.IsNone) return null;
-
-        var path = graphicsService.GetIconSheetPath(icon.Sheet);
-        if (!File.Exists(path)) return null;
-
-        var size = graphicsService.IconSize;
-        var (width, _) = await graphicsService.GetImageDimensions(path);
-        var columns = Math.Max(1, (int) (width / size));
-        return (path, new Rect((icon.Index % columns) * size, (icon.Index / columns) * size, size, size));
-    }
-
     // just over the head: centred on the sprite, a little above its top
     private static Point BarSpot(MapEntity body, double scale)
     {
         if (body.State<CharacterImageState>().Sprite is not { } sprite) return default;
 
         return new Point(sprite.X + (sprite.Width * scale / 2.0) - (EnemyBarWidth / 2.0), sprite.Y - EnemyBarGap);
-    }
-
-    // the actor's face cell on its sheet in Graphics\Faces, none when it has no face
-    private async Task<(string path, Rect cell)?> FaceCell(BattleFighter fighter)
-    {
-        if (string.IsNullOrEmpty(fighter.Stats.FaceName) || locationService.GraphicsDirectory is not { } graphics) return null;
-
-        var path = Path.Combine(graphics, "Faces", fighter.Stats.FaceName);
-        if (!File.Exists(path)) return null;
-
-        // face sheets are 4 across with any number of rows, so the cells are square (the editor's chooser cuts them
-        // the same way)
-        var (width, _) = await graphicsService.GetImageDimensions(path);
-        var (cellWidth, cellHeight) = await graphicsService.GetSegmentation(path);
-        var columns = Math.Max(1, (int) Math.Round(width / cellWidth));
-        var index = fighter.Stats.FaceIndex ?? 0;
-        var column = index % columns;
-        var row = index / columns;
-        return (path, new Rect(column * cellWidth, row * cellHeight, cellWidth, cellHeight));
     }
 
     #endregion

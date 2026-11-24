@@ -12,6 +12,74 @@
       <Canvas />
     </ItemsPanelTemplate>
 
+    <ItemsPanelTemplate x:Key="StateRowPanel">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" />
+    </ItemsPanelTemplate>
+
+    <ItemsPanelTemplate x:Key="PartyStatesPanel">
+      <VariableSizedWrapGrid Orientation="Horizontal" ItemWidth="24" ItemHeight="24" MaximumRowsOrColumns="9" />
+    </ItemsPanelTemplate>
+
+    <!-- a state: its icon, how many stacks, and the arte keys' clock wipe over how much of its time is left -->
+    <DataTemplate x:Key="StateTemplate" x:DataType="interface:HudState">
+      <Viewbox Width="22" Height="22" Margin="1">
+        <Grid Width="40" Height="40" Background="{StaticResource InterfacePanelBrush}">
+          <Grid.Clip>
+            <RectangleGeometry Rect="0,0,40,40" />
+          </Grid.Clip>
+          <Viewbox Stretch="Uniform">
+            <Canvas Width="{x:Bind IconWidth, Mode=OneWay}" Height="{x:Bind IconHeight, Mode=OneWay}">
+              <Canvas.Clip>
+                <RectangleGeometry Rect="{x:Bind IconClip, Mode=OneWay}" />
+              </Canvas.Clip>
+              <Image Source="{x:Bind Icon, Mode=OneWay}"
+                     Stretch="None"
+                     Canvas.Left="{x:Bind IconLeft, Mode=OneWay}"
+                     Canvas.Top="{x:Bind IconTop, Mode=OneWay}" />
+            </Canvas>
+          </Viewbox>
+          <Path Data="{x:Bind Wipe, Mode=OneWay}" Fill="#B4000000" />
+          <TextBlock Text="{x:Bind CostText, Mode=OneWay}"
+                     FontSize="20"
+                     FontWeight="Bold"
+                     Foreground="White"
+                     Margin="0,0,3,0"
+                     HorizontalAlignment="Right"
+                     VerticalAlignment="Bottom" />
+        </Grid>
+      </Viewbox>
+    </DataTemplate>
+
+    <!-- the same over an enemy, smaller: its icon, how many stacks, and the arte keys' clock wipe over how much of its time is left -->
+    <DataTemplate x:Key="EnemyStateTemplate" x:DataType="interface:HudState">
+      <Viewbox Width="16" Height="16" Margin="1">
+        <Grid Width="40" Height="40" Background="{StaticResource InterfacePanelBrush}">
+          <Grid.Clip>
+            <RectangleGeometry Rect="0,0,40,40" />
+          </Grid.Clip>
+          <Viewbox Stretch="Uniform">
+            <Canvas Width="{x:Bind IconWidth, Mode=OneWay}" Height="{x:Bind IconHeight, Mode=OneWay}">
+              <Canvas.Clip>
+                <RectangleGeometry Rect="{x:Bind IconClip, Mode=OneWay}" />
+              </Canvas.Clip>
+              <Image Source="{x:Bind Icon, Mode=OneWay}"
+                     Stretch="None"
+                     Canvas.Left="{x:Bind IconLeft, Mode=OneWay}"
+                     Canvas.Top="{x:Bind IconTop, Mode=OneWay}" />
+            </Canvas>
+          </Viewbox>
+          <Path Data="{x:Bind Wipe, Mode=OneWay}" Fill="#B4000000" />
+          <TextBlock Text="{x:Bind CostText, Mode=OneWay}"
+                     FontSize="20"
+                     FontWeight="Bold"
+                     Foreground="White"
+                     Margin="0,0,3,0"
+                     HorizontalAlignment="Right"
+                     VerticalAlignment="Bottom" />
+        </Grid>
+      </Viewbox>
+    </DataTemplate>
+
     <!-- a bar that fills from the left by a fraction (0 to 1) -->
     <DataTemplate x:Key="EnemyBarTemplate" x:DataType="interface:HudFighter">
       <Canvas Visibility="{x:Bind ShowsBar, Mode=OneWay}">
@@ -26,12 +94,30 @@
             </Rectangle.RenderTransform>
           </Rectangle>
         </Grid>
+
+        <!-- its states in a row centred over the bar (the bar is 40 wide and the row 200) -->
+        <Grid Canvas.Left="{x:Bind BarX, Mode=OneWay}"
+              Canvas.Top="{x:Bind BarY, Mode=OneWay}"
+              Width="200">
+          <Grid.RenderTransform>
+            <TranslateTransform X="-80" Y="-20" />
+          </Grid.RenderTransform>
+          <ItemsControl ItemsPanel="{StaticResource StateRowPanel}"
+                        ItemTemplate="{StaticResource EnemyStateTemplate}"
+                        ItemsSource="{x:Bind States}"
+                        HorizontalAlignment="Center" />
+        </Grid>
       </Canvas>
     </DataTemplate>
 
-    <!-- a party member: face, name, Life and Mana. The one the player controls has a brighter edge -->
+    <!-- a party member: face, name, Life and Mana, with their states above. The one the player controls has a brighter edge -->
     <DataTemplate x:Key="PartyPanelTemplate" x:DataType="interface:HudFighter">
-      <Grid Width="230" Margin="4,0">
+      <StackPanel Width="230" Margin="4,0" VerticalAlignment="Bottom">
+      <ItemsControl ItemsPanel="{StaticResource PartyStatesPanel}"
+                    ItemTemplate="{StaticResource StateTemplate}"
+                    ItemsSource="{x:Bind States}"
+                    Margin="4,0,4,2" />
+      <Grid>
       <Border Style="{StaticResource InterfacePanelStyle}">
         <Grid ColumnSpacing="8">
           <Grid.ColumnDefinitions>
@@ -82,6 +168,7 @@
               CornerRadius="6"
               Visibility="{x:Bind IsLeader}" />
       </Grid>
+      </StackPanel>
     </DataTemplate>
     <!-- an arte key: its icon (greyed while it cools down), the clock wipe over it, its key and its Mana cost.
          Red when there isn't enough Mana, a bright edge while it's being cast -->
@@ -134,7 +221,7 @@
       <StackPanel Orientation="Horizontal" />
     </ItemsPanelTemplate>
 
-    <!-- a number floating up over a fighter: white damage, gold crits, green heals, grey misses -->
+    <!-- a number floating up over a fighter: white damage, red crits, green heals, blue crit heals, grey misses -->
     <DataTemplate x:Key="PopupTemplate" x:DataType="interface:HudPopup">
       <Canvas>
         <Grid Canvas.Left="{x:Bind X}"
@@ -144,9 +231,11 @@
           <TextBlock Text="{x:Bind Text}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"
                      Foreground="White" Visibility="{x:Bind IsDamage}" />
           <TextBlock Text="{x:Bind Text}" FontSize="26" FontWeight="ExtraBold" HorizontalAlignment="Center"
-                     Foreground="#FFF2C94C" Visibility="{x:Bind IsCritical}" />
+                     Foreground="#FFE5484D" Visibility="{x:Bind IsCritical}" />
           <TextBlock Text="{x:Bind Text}" FontSize="20" FontWeight="Bold" HorizontalAlignment="Center"
                      Foreground="{StaticResource InterfaceLifeBrush}" Visibility="{x:Bind IsHeal}" />
+          <TextBlock Text="{x:Bind Text}" FontSize="26" FontWeight="ExtraBold" HorizontalAlignment="Center"
+                     Foreground="#FF4FA3FF" Visibility="{x:Bind IsCriticalHeal}" />
           <TextBlock Text="{x:Bind Text}" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center"
                      Foreground="{StaticResource InterfaceSubtleTextBrush}" Visibility="{x:Bind IsMiss}" />
         </Grid>
@@ -178,6 +267,20 @@
         </Rectangle>
       </Grid>
 
+      <!-- running away: the bar fills while the key is held, over the leader's head -->
+      <Grid Canvas.Left="{x:Bind Hud.FleeX, Mode=OneWay}"
+            Canvas.Top="{x:Bind Hud.FleeY, Mode=OneWay}"
+            Width="64"
+            Height="8"
+            Visibility="{x:Bind Hud.IsFleeing, Mode=OneWay}">
+        <Rectangle Fill="{StaticResource InterfaceBarBackBrush}" Stroke="Black" StrokeThickness="1" />
+        <Rectangle Fill="{StaticResource InterfaceBossLifeBrush}" Margin="1" RenderTransformOrigin="0,0.5">
+          <Rectangle.RenderTransform>
+            <ScaleTransform ScaleX="{x:Bind Hud.FleeFraction, Mode=OneWay}" />
+          </Rectangle.RenderTransform>
+        </Rectangle>
+      </Grid>
+
       <ItemsControl ItemsPanel="{StaticResource CanvasPanel}"
                     ItemTemplate="{StaticResource PopupTemplate}"
                     ItemsSource="{x:Bind Hud.Popups}" />
@@ -202,8 +305,19 @@
             </Rectangle.RenderTransform>
           </Rectangle>
         </Grid>
+        <ItemsControl ItemsPanel="{StaticResource StateRowPanel}"
+                      ItemTemplate="{StaticResource StateTemplate}"
+                      ItemsSource="{x:Bind Hud.Boss.States, Mode=OneWay, FallbackValue={x:Null}}"
+                      HorizontalAlignment="Center" />
       </StackPanel>
     </Border>
+
+    <!-- TEST: what the state test keys last did -->
+    <TextBlock Text="{x:Bind Hud.TestText, Mode=OneWay, FallbackValue=''}"
+               Style="{StaticResource InterfaceNameStyle}"
+               HorizontalAlignment="Left"
+               VerticalAlignment="Top"
+               Margin="16" />
 
     <!-- along the bottom: the party on the left (the leader first), the leader's arte keys on the right in the same
          rows as the keyboard -->
@@ -228,6 +342,7 @@
         <ItemsControl ItemsPanel="{StaticResource SlotRowPanel}" ItemTemplate="{StaticResource ArteSlotTemplate}" ItemsSource="{x:Bind Hud.SlotRow1}" />
         <ItemsControl ItemsPanel="{StaticResource SlotRowPanel}" ItemTemplate="{StaticResource ArteSlotTemplate}" ItemsSource="{x:Bind Hud.SlotRow2}" Margin="10,0,0,0" />
         <ItemsControl ItemsPanel="{StaticResource SlotRowPanel}" ItemTemplate="{StaticResource ArteSlotTemplate}" ItemsSource="{x:Bind Hud.SlotRow3}" Margin="20,0,0,0" />
+        <ItemsControl ItemsPanel="{StaticResource SlotRowPanel}" ItemTemplate="{StaticResource ArteSlotTemplate}" ItemsSource="{x:Bind Hud.ItemSlots}" Margin="30,6,0,0" />
       </StackPanel>
     </Grid>
   </Grid>

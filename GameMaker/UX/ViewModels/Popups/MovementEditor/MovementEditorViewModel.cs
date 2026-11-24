@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using GameLibrary.Enumerations;
 using GameLibrary.Models;
+using GameLibrary.Models.Animations;
 using GameLibrary.Models.Artes;
 using GameLibrary.Models.Balloons;
 using GameLibrary.Models.Movements;
@@ -23,11 +24,12 @@ public class MovementEditorViewModel : PropertyChangedUpdater
 
     // the map's entities are who a step can move, the balloons come from the Balloon Icons settings,
     // stepsPerTile (the game's Division) turns a move step's walking steps into tiles
-    public MovementEditorViewModel(Movement movement, ObservableCollection<Arte> artes, IEnumerable<Entity> mapEntities, IEnumerable<BalloonIcon> balloons, int stepsPerTile)
+    public MovementEditorViewModel(Movement movement, ObservableCollection<Arte> artes, ObservableCollection<Animation> animations, IEnumerable<Entity> mapEntities, IEnumerable<BalloonIcon> balloons, int stepsPerTile)
     {
         Movement = movement;
         _stepsPerTile = Math.Max(1, stepsPerTile);
         Artes = artes;
+        Animations = animations;
         _targets = TargetChoice.List(mapEntities);
         _balloons = NamedChoice.List("None", balloons.AsEnumerable().OrderBy(x => x.Id));
 
@@ -45,6 +47,8 @@ public class MovementEditorViewModel : PropertyChangedUpdater
     public Movement Movement { get; }
 
     public ObservableCollection<Arte> Artes { get; }
+
+    public ObservableCollection<Animation> Animations { get; }
 
     // waits, sounds and switches don't move anyone, they get no entity to pick
     public bool ShowsTarget => Movement.HasEntityTarget;
@@ -81,6 +85,20 @@ public class MovementEditorViewModel : PropertyChangedUpdater
     public bool ShowsBalloon => Movement is BalloonMovement;
 
     public bool ShowsArte => Movement is ActivateArteMovement;
+
+    public bool ShowsAnimation => Movement is AnimationMovement;
+
+    public Animation? SelectedAnimation
+    {
+        get => Movement is AnimationMovement animation ? Animations.FirstOrDefault(x => x.Guid == animation.AnimationId) : null;
+        set
+        {
+            if (value is null || value == SelectedAnimation || Movement is not AnimationMovement animation) return;
+            animation.AnimationId = value.Guid;
+            animation.AnimationName = value.Name;
+            OnPropertyChanged();
+        }
+    }
 
     public bool ShowsOtherEntity => Movement is MoveTowardMovement { TargetType: MovementTarget.Entity } or MoveAwayMovement { TargetType: MovementTarget.Entity };
 

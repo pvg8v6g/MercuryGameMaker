@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Windows.Input;
+using Windows.ApplicationModel.DataTransfer;
 using GameLibrary.Behaviors;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -29,6 +30,33 @@ public sealed partial class EngineListView
     {
         get => (int) GetValue(SelectedIndexProperty);
         set => SetValue(SelectedIndexProperty, value);
+    }
+
+    public static readonly DependencyProperty CanReorderProperty = DependencyProperty.Register(
+        nameof(CanReorder), typeof(bool), typeof(EngineListView), new PropertyMetadata(false));
+
+    /// <summary>
+    /// When true, rows can be dragged into a new order. The ListView moves them in the bound collection itself, so the
+    /// ItemsSource must be an ObservableCollection.
+    /// </summary>
+    public bool CanReorder
+    {
+        get => (bool) GetValue(CanReorderProperty);
+        set => SetValue(CanReorderProperty, value);
+    }
+
+    public static readonly DependencyProperty ReorderedCommandProperty = DependencyProperty.Register(
+        nameof(ReorderedCommand), typeof(ICommand), typeof(EngineListView), new PropertyMetadata(null));
+
+    /// <summary>
+    /// Runs after a row has been dragged to a new place, with the dragged item as its parameter. The row is already at its
+    /// new index in the bound collection, so a list built from a tree (branches and their rows) can work out where the
+    /// item now belongs and rebuild itself.
+    /// </summary>
+    public ICommand? ReorderedCommand
+    {
+        get => (ICommand?) GetValue(ReorderedCommandProperty);
+        set => SetValue(ReorderedCommandProperty, value);
     }
 
     public static readonly DependencyProperty ItemTemplateProperty = DependencyProperty.Register(
@@ -233,6 +261,19 @@ public sealed partial class EngineListView
         // were never wired up. Setting via SetValue here guarantees the callback fires.
         ListViewBehaviors.SetSelectOnRightClick(ListView, true);
         ListViewBehaviors.SetManageContextFlyoutSelection(ListView, true);
+        ListView.DragItemsCompleted += OnDragItemsCompleted;
+    }
+
+    // the list has finished moving the row, the command runs once the drop is fully done so it can rebuild the list
+    private void OnDragItemsCompleted(ListViewBase sender, DragItemsCompletedEventArgs e)
+    {
+        if (ReorderedCommand is null || e.DropResult != DataPackageOperation.Move || e.Items.Count != 1) return;
+
+        var item = e.Items[0];
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (ReorderedCommand?.CanExecute(item) == true) ReorderedCommand.Execute(item);
+        });
     }
 
     private void OnListViewDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)

@@ -28,6 +28,8 @@ public partial class MovementEditorTemplateSelector : DataTemplateSelector
 
     public DataTemplate? Balloon { get; set; }
 
+    public DataTemplate? Animation { get; set; }
+
     public DataTemplate? TurnTarget { get; set; }
 
     public DataTemplate? Empty { get; set; }
@@ -47,6 +49,7 @@ public partial class MovementEditorTemplateSelector : DataTemplateSelector
             CharacterImageMovement => CharacterImage,
             ActivateArteMovement => ActivateArte,
             BalloonMovement => Balloon,
+            AnimationMovement => Animation,
             TurnTowardEntityMovement or TurnAwayEntityMovement => TurnTarget,
             _ => Empty
         };

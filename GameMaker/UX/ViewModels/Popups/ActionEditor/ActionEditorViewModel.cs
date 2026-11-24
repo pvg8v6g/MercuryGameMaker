@@ -414,6 +414,21 @@ public class ActionEditorViewModel(PageAction action, IGameDataService gameDataS
         }
     }
 
+    // a self switch belongs to this entity or another entity on the map (the player has none), saved as its id on the map
+    public TargetChoice[] SwitchTargets => field ??= [EntityTargets[0], .. EntityTargets[2..]];
+
+    public TargetChoice? SelfSwitchTarget
+    {
+        get => AsFlow is { } flow ? SwitchTargets.FirstOrDefault(x => x.MapId is not null && x.MapId == flow.SelfSwitchEntity) ?? SwitchTargets[0] : null;
+        set
+        {
+            if (value is null || value == SelfSwitchTarget || AsFlow is not { } flow) return;
+
+            flow.SelfSwitchEntity = value.MapId;
+            OnPropertyChanged();
+        }
+    }
+
     // scroll map: a tile (the X and Y), the player or an entity on the map
     public TargetChoice[] ScrollTargets => field ??= [new TargetChoice(null, false, "Tile"), .. EntityTargets[1..]];
 
@@ -536,17 +551,6 @@ public class ActionEditorViewModel(PageAction action, IGameDataService gameDataS
         if (AsShowChoices is null || SelectedChoice is null) return;
         AsShowChoices.Choices.Remove(SelectedChoice);
         SelectedChoice = null;
-    });
-
-    #endregion
-
-    #region Relays
-
-    public RelayCommand ClearItemCommand => new(() =>
-    {
-        if (AsChangeItem is null) return;
-        AsChangeItem.ItemId = null;
-        AsChangeItem.ItemName = null;
     });
 
     #endregion

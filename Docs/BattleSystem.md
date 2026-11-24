@@ -52,6 +52,30 @@ When a projectile only exists to activate other artes, the arte it belongs to ha
 
 An activated arte that has projectiles of its own would fire them from that point, which allows chains like a bomb that bursts into fragments. Whether chains are allowed, and how deep, is still open.
 
+### Place Randomly, random waits and Play Animation (user, 2026-11-22)
+
+**Example: Meteor Shower.** The cast finishes and fires the arte's projectiles (10-12 copies of one invisible
+projectile). Each projectile's route is:
+
+1. **Place Randomly:** its feet go on a random open tile of the field.
+2. **Wait, Random:** a random time between Wait Time and Max Wait Time, so the meteors don't all land at once.
+3. **Play Animation, Wait For Completion:** the meteor falls from the sky. The animation is drawn so that it ends on
+   impact.
+4. **Detonate:** the arte lands on that tile the moment the animation ends.
+
+The three new steps:
+
+- **Place Randomly** (`PlaceRandomlyMovement`) moves the entity, feet first, to a random tile in the area it stands
+  in. That area is every tile reachable from its own tile without crossing a collision area on its level, so in a
+  battle it's the field inside the walls. Entities placed this way don't share a tile while free tiles are left. It
+  works on story maps too. A contact projectile's sweep starts fresh after the jump.
+- **Wait** has a **Random** option with a **Max Wait Time**. The length is picked once each time the step runs.
+- **Play Animation** (`AnimationMovement`) plays an animation on the entity. **Wait For Completion** (on by default)
+  holds the route until the animation has finished.
+- The placeholder AI casts an arte with randomly placed projectiles whenever any target is in scope.
+- An arte always fires every projectile it has, so the count is fixed by how many copies are on the arte. A random
+  count (10-12) would need a new arte setting.
+
 ### Where an arte's hitboxes go (user, 2026-11-21)
 
 - The anchor tile in the arte hitbox picker is **the tile the user stands on**, and every hitbox is drawn from it.
@@ -115,6 +139,8 @@ A move route alone can't express "stop when you touch something", so the project
 - Every projectile route still ends in Detonate, so the missing-Detonate warning applies to contact projectiles too.
 
 So an arrow is: contact = Enemies, route = one Step Forward of 60 walking steps (5 tiles) then Detonate, and an arte with a one-tile hitbox and the arrow's damage.
+
+**Detonate at Route End (user, 2026-11-23).** A projectile setting next to Detonate on Contact: a contact projectile that reaches its Detonate step without touching anyone goes off with its **full arte** there instead of just being removed, so it detonates by slamming into an enemy **or** where it lands (Acid Spit's glob splats on the ground). Walls still only remove it. A detonation's animation only plays on the fighters it hits, so a projectile that should splat on empty ground plays its splat as a route step (Play Animation, Wait For Completion) just before Detonate. A Play Animation step that waits holds the route until **every** animation on the projectile has finished, so a projectile's own flying animation must last no longer than its flight.
 
 ## The battle style (user, 2026-11-20)
 
@@ -307,6 +333,10 @@ themselves), and every step reads those finished numbers.
    - 150% Fire and 50% Light: +50 and -50, so the hit lands at **100%**.
    - -50% Fire and 100% Light: -150 and 0, so the hit lands at **-50%**: it heals the target by half.
    - This is not RPG Maker's rule, which keeps only the highest rate.
+7b. **From behind (user, 2026-11-23):** a hit on an opponent from behind does a bit more damage (x1.25,
+   `HitCalculator.BehindMultiplier`). It counts when the hit came from the back side of the target's tile: the
+   user's tile for an arte that detonates at the user, or the projectile's tile for a projectile. A state's tick
+   never counts, and neither does healing or a friendly.
 8. **Critical:** roll it, and a crit triples the result.
 9. **Variance:** the ± percentage, applied last.
 10. **Round:** to a whole number. **A hit that comes out at 0 does no damage.** It isn't rounded up to 1.
@@ -445,6 +475,17 @@ option (Rusk's Rage up to 5, for example).
   the new one does nothing.
 - **Stacks share one timer (user, 2026-11-20):** adding a stack restarts it, and when it runs out, all the stacks end
   together.
+
+**New state abilities and UI options will be needed as the artes get built (user, 2026-11-23).** Writing each new arte
+will show what states need to do, and the engine and the States page will grow new abilities and editor options to match.
+That is expected, not a gap: when an arte needs a state to do something it can't yet, add the ability and its editor
+option then.
+
+**State options built so far (2026-11-23):** Duration (`Ticks`, counted in Tick Intervals: 5 ticks at an interval of 60 is 5 seconds, so a state with nothing to tick and an interval of 60 is plain seconds; 0 is permanent; user, 2026-11-23), Stackable and Max Stacks, Remains After
+Battle, Ends When Source Falls, Stun-Lock (bosses resist it, and a fighter holding one can do nothing: no walking, turning or artes, and a cast is broken) with Can Still Use Artes (off by default) to let it use artes where it stands, Hidden (no HUD icon), Friendly (a good state, off by default; artes and items with Remove All Negative States clear every state that isn't Friendly, except Incapacitated; user, 2026-11-23), attribute changes (flat, per stack) and attribute percents (applied after the flat ones, per stack, so -20% Defense scales with level; user, 2026-11-23), Move Speed (percent walking speed in battle, several multiply; Chilled is 60%),
+element changes (a rate like equipment's, 100% is no change, per stack), Resist States (states that can't be put on the holder while it has this one, e.g. Venom Ward keeps Poisoned off; user, 2026-11-23), and a Tick Arte and/or Tick Animation with a Tick Interval (the animation plays on the holder every tick) (the arte is activated on the
+holder, owned by whoever applied the state, no cost, cast or cooldown; it lands on the holder whatever its scope says, never misses, and can still crit; user, 2026-11-23). Equipment's Resist
+States and Resist All States are checked when a state is added.
 
 The States page is a placeholder for now. **States can and should do whatever the game needs**, and options get added
 to the States page as they come up (stat changes, resistances, healing or damage over time, and so on). A missing
@@ -621,17 +662,85 @@ Options the player sets for each AI-controlled party member in the menu:
 
 ## Open questions
 
-- Can a projectile detonate early by hitting something (an enemy, a wall), or only on its Detonate step?
-- When a projectile activates another arte, is that arte's `Cost` ignored? It should be, since the user already paid for the arte that fired it.
-- Does an activated arte's own `CastTime` apply? It probably shouldn't, since it isn't being cast.
-- Concentration: does a hit on the user after the projectiles are fired do anything? The cast is already finished, so probably not.
+- ~~Can a projectile detonate early by hitting something?~~ Answered by Detonate on Contact (2026-11-19).
+- ~~Is an activated arte's `Cost`, `CastTime` and cooldown ignored?~~ Answered (user, 2026-11-23): yes. An arte activated
+  from a projectile has no cost, no cast time and no cooldown.
+- Concentration: does a hit on the user after the projectiles are fired do anything? The cast is already finished, so
+  probably not. (Nothing in step 5 links them.)
+- ~~Chains~~ Answered (user, 2026-11-23): an arte whose projectile activates another arte that fires projectiles of its
+  own is a chain. The cap of 4 (`ArteChains.MaxDepth`) stays. Hitting it must never be silent: the Artes page shows a
+  yellow warning over the Projectiles list when an arte's chain goes deeper than 4 (`ArtesPageViewModel.ShowsChainWarning`,
+  using `ArteChains.IsCutOff`), and the battle writes a debug line when it cuts a chain off.
+- ~~When the user falls, do their projectiles keep flying?~~ Answered (user, 2026-11-23): **no, they all disappear.**
+  Killing a boss while it has a meteor storm in the air must never kill the party during the victory screen. Built:
+  `BattleRunner.Fall` removes every projectile whose attacker is the fallen fighter. (This covers every projectile the fallen fighter fired, including ones fired by arte activations.)
+- Should a projectile without contact detonation be stopped by walls? Undecided (user, 2026-11-23). Battle maps differ:
+  an indoor map has real walls, an outdoor grass map has none, yet both have collision around the field. So walls can't
+  be a global rule; it stays a per-projectile choice (its own Collide setting).
+- ~~How do enemies get inspected so their Life bars show?~~ Answered (user, 2026-11-23), see "Inspecting enemies" below.
+- ~~A random number of projectiles (like 10-12 meteors)?~~ Not needed (user, 2026-11-23): copy and paste projectiles in
+  the arte's projectile list.
+
+## TODO (user, 2026-11-24)
+
+Parked on purpose, nothing here blocks the next step.
+
+- **Game Over, later.** `GameOverSequence` just returns the party to the story map. The title screen, the last save and
+  fading the music out on the Game Over screen come when the game has them. Don't work on it before then.
+- **Fleeing needs player instructions.** Hold Shift to run is hard-coded and nothing on screen says so. It goes into
+  the game's instructions or help text when that exists (no HUD hint). The party's per-member flee options and a way
+  for a page to tell the party ran wait too.
+- **Dropped:** the fallback to the framed icon when a No Background cell is empty (user, 2026-11-24), and a separate
+  "Beneficial" state flag: a state's **Friendly** checkbox already is that.
+
+## Enemy levels and arte learning (user, 2026-11-23)
+
+- **Enemies get harder as the party levels.** Each enemy fights at the party's average level (the fighters in the
+  battle, rounded), never below the Level set on the Enemies page, which works as its minimum.
+- **Enemies grow like actors.** An enemy with a Discipline gets its Life, Mana and attributes from that discipline's
+  growths at its battle level, exactly as an actor does (`PartyService.SetLevel`). Static Stats keeps the numbers typed on
+  the Enemies page. The slimes share the **Slime** discipline (enemy growths, not a party class).
+- **Enemies learn artes by level.** An enemy's conditional artes with a Level condition are known once its battle level
+  reaches it (an actor's too, against its own level). In battle only Level conditions are checked; any other condition
+  keeps an arte unknown. List the strongest first: the placeholder AI uses the first ready arte that would land, so the
+  basic attack goes last.
+- **The placeholder AI heals.** A ready healing arte (negative damage) goes first when an ally, or the user itself, is
+  below 70% Life and inside its reach.
+- **The slimes (2026-11-23, `Reference\install_slimes.py` in the game folder).** Every slime knows Slime Tackle (Lv 1).
+  Each colour learns a spit down a 3-tile line at Lv 8, a burst all around it that adds its state at Lv 20 (a cast), and
+  a pool 5 tiles across at Lv 35 (a longer cast): Green Earth and Poisoned, Blue Water and Soaked (Lightning +30%,
+  Fire -20%), Red Fire and Burning (a Fire tick), Yellow Lightning and Stunned, Purple Dark and Hexed (Dark +30%). Pink is
+  the healer: Sweet Spit, then Jelly Mend (heals around it) and Royal Jelly (heals a wide area and cures every ailment).
+  Each colour resists its own element (half damage, Red a quarter) and is weak to one other (x1.5, Green x1.25).
+
+## Inspecting enemies (user, 2026-11-23)
+
+What the player knows about a normal enemy is earned, not given:
+
+- **Scan:** a Scan arte or item reveals an enemy on the spot, the first time you meet that type.
+- **Encounters:** defeating a set number of that enemy type reveals it for good. A normal enemy doesn't get a full
+  bestiary entry or a Life bar until the player has either fought enough of them or used a scan on it.
+- **Bosses** are always revealed.
+- Revealed enemies fill in their bestiary entry (`InspectedEnemies` in the game state) and show their small Life bar in
+  battle. This replaces the TEMP `BattleHud.ShowAllEnemyBars` once built.
+- **Number of defeats (decided 2026-11-23):** a field on each enemy, so a rat can ask for 3 and a dragon for 10.
+- **What a scan gives (decided 2026-11-23):** the Life bar and the basics only, not the whole entry.
+- **How the bestiary fills in (decided 2026-11-23):** piece by piece as the defeat count climbs (name, then stats, then
+  weaknesses, then drops), so every fight teaches something. Exactly which piece unlocks at which count is still to be
+  worked out when this is built.
+- **Bestiary pictures (user, 2026-11-23):** the images in the game's `Graphics\Enemies` folder are the bestiary
+  pictures, one per enemy type (for example `Slime_Green.png`). In battle and on the maps, enemies use their walk sheet
+  from `Graphics\Characters` (the enemy's `CharacterName`), not these pictures.
 
 ## Engine status
 
 - `Arte.Projectiles` exists and is edited on the Artes page.
-- `DetonateMovement` and `ActivateArteMovement` (with its `ArteId`) exist in move routes, but `MovementRouteSystem` skips both for now.
-- The projectile setting is built: `Entity.DetonateOnContact` (`ContactTarget`: None, Enemies, Allies, Anyone), picked in the projectile editor's header. The engine doesn't use it yet.
-- The projectile editor's missing-Detonate warning is built (`EntityEditorViewModel.ShowsDetonateWarning`). The in-battle safety net is part of the battle system, so it isn't built yet.
+- `DetonateMovement` and `ActivateArteMovement` (with its `ArteId`) run in battle (step 5). On the story maps
+  `MovementRouteSystem` still skips both.
+- `Entity.DetonateOnContact` (`ContactTarget`: None, Enemies, Allies, Anyone), picked in the projectile editor's
+  header, is used in battle (step 5).
+- The projectile editor's missing-Detonate warning is built (`EntityEditorViewModel.ShowsDetonateWarning`), and so is
+  the in-battle safety net (step 5).
 
 ## Battle HUD and screen layers (user, 2026-11-21)
 
@@ -657,7 +766,7 @@ Options the player sets for each AI-controlled party member in the menu:
   spot with the saved speed put back. Not yet: transitions, troop music, fighters doing anything.
 - **Step 2a, fighters and the HUD (2026-11-21).** `BattleFighter` for everyone in the fight (the party's own actors, so
   Life and Mana carry over; a fresh full copy of each enemy; Team, Original Team, Threat 0). `ScreenLayer` and
-  `ScreenLayers`, with `BattleHud` as the first layer. Attributes from equipment aren't added up yet (growths only).
+  `ScreenLayers`, with `BattleHud` as the first layer. Attributes from equipment are added up by `BattleAttributes.Value`.
 - **Step 3a, using artes (2026-11-21).** `BattleRunner`: the leader's arte keys (1-6, Q-Y, A-H; slot 0 is the weapon's
   arte, then the actor's artes), Mana paid on use, the cast locks the caster (`BattleLockState`) and can't be
   cancelled, then the arte detonates at the user: its hitboxes from the user's feet tile, turned to the way they face.
@@ -665,7 +774,7 @@ Options the player sets for each AI-controlled party member in the menu:
   `AttackerSnapshot`. Damage numbers, Threat, falling (enemies fade out, the party dims), victory and defeat (both just
   end the battle for now; no game over yet). The HUD shows the leader's arte keys with a clock-wipe cooldown, red when
   short of Mana, and a cast bar. Artes have a **Cooldown** field (60 = 1 second, 0 for
-  none) on the Artes page next to Cast Time; projectiles land at the user until step 5; equipment element resistances aren't counted yet.
+  none) on the Artes page next to Cast Time; projectiles land at the user until step 5. Equipment element resistances are counted by `BattleAttributes.ElementRate` (own rate plus each piece's change from 100%; states add theirs later).
 - **Step 4, controllers and a placeholder AI (2026-11-21).** `IFighterController` decides what a fighter does through
   `IBattleActions` (the battle runner), so the rules are the same for the player and the AI. `PlayerController` drives
   the leader (the arte keys; the arrow keys already walk the player). `PlaceholderAiController` drives everyone else,
@@ -675,3 +784,205 @@ Options the player sets for each AI-controlled party member in the menu:
 - **Debug: Show Arte Hitboxes (2026-11-21).** A test option in the editor's Test menu (`ShowArteHitboxes` in
   config.json). When an arte lands, its hitboxes flash in bright yellow for 20 updates (1/3 second) where they landed,
   whether they hit anyone or not (`DebugOverlay.FlashArteHitboxes`, called from `BattleRunner.Detonate`).
+- **Step 5, projectiles (2026-11-22).** When the cast finishes, an arte with projectiles fires all of them and does
+  nothing else (`BattleRunner.Release` → `Fire`), and one without detonates at the user as before.
+  - **Firing:** each projectile is a fresh copy of the arte's projectile, put on the battle map with its feet on the
+    user's feet tile, facing the way the user faces, on the user's level. It carries an `AttackerSnapshot` of the user
+    taken at that moment (`BattleProjectile`).
+  - **Routes:** it walks the top-level movement routes of its page, in order, driven by the battle runner. The page's
+    actions are taken off the copy so the page runner never restarts them. Routes inside branches aren't used.
+  - **Detonate step:** `MovementRouteSystem` notes it on the projectile's `ProjectileState` and ends the route. The
+    battle runner then lands the arte at the projectile (its hitboxes from the projectile's feet tile, turned the way
+    it faces), owned by the user, and removes it. Landing never fires projectiles.
+  - **Activate Arte step:** the named arte lands at the projectile, owned by the user (no Cost, no cast, no cooldown),
+    and the projectile keeps going. An activated arte with projectiles of its own fires them from there, up to 4 deep.
+  - **Contact:** checked once an update after everyone has moved, against the fighters' feet hitboxes. The check
+    covers everything between last update and this one, so a fast projectile can't skip anyone. It never goes off on
+    the fighter who fired it, and it ignores anyone who's down. On contact it goes off at once with the full arte.
+  - **Walls:** a contact projectile on a collision area of its level goes away empty.
+  - **Safety net:** a projectile whose routes run out without a Detonate step goes off where it stopped. A contact
+    projectile that never touched anyone only goes away, like at its Detonate step.
+  - **Pictures:** projectile pictures are measured when the battle begins, so they show and stand on their tile from
+    the first shot.
+  - **Battle end:** the end of the battle removes any projectiles still flying.
+  - **Placeholder AI:** an arte with projectiles counts as "would hit" when the target is in a tile-wide line, the way
+    the fighter faces, as far as the projectile's Step Forward steps reach.
+- **Step 6, states (2026-11-23).** `BattleState` is a state on a fighter (its stacks, time left, next tick, and the
+  source with a snapshot of their numbers). `BattleStates` adds (resisted by equipment, bosses resisting stun-lock,
+  ignored when already on and not stackable, stacked otherwise), removes, wears down, ticks, and clears them. A hit
+  now goes: hit roll, remove states, add states, then damage (`HitCalculator.Resolve`'s `afterHit`), so an arte's own
+  states count toward its damage. Falling clears every state and puts Incapacitated on (`Fall`), a revive takes it
+  off, a fallen source ends the states that end with it, and a battle's end clears everything not marked to remain.
+  State attribute and element changes feed `BattleAttributes`. A Tick Arte lands on the holder, owned by the source.
+  The old placeholder fields HP/Mana Damage and Percent were removed from states (and Element Effect, because a state's damage element comes from its Tick Arte's Element Type, so weaknesses and resistances already apply to it). Not yet: state icons on the HUD (Hidden does nothing yet), states that remain after battle aren't saved onto actors,
+  Duration is in updates for now, and none of the control states (stun, slow, taunt, fear) do anything yet because
+  they need their own abilities.
+- **Step 7a, winning (2026-11-23).** The moment the last enemy falls the battle is officially won (`BattleRunner.Win`):
+  every state is cleared, every fallen party member on the field gets up with 1 Life, and the EXP of every enemy that
+  was in the fight is added to every owned party member's `Experience`, benched ones included. Party members who were
+  down at that moment get none. A "+N EXP" popup shows over each one on the field. Then the existing short pause runs
+  and the party goes back to the story map. **Not built yet:** money and item drops on the field with their
+  pickup (and the 5 second pause for them), and the victory screen.
+- **Step 7b, levelling up (2026-11-23).** `Experience` is a running total, and the total needed for a level is
+  `ExperienceBase * (level - 1) ^ ExperienceExponent` (defaults 20 and 2: level 2 takes 20, level 10 takes 1,620,
+  level 99 takes 192,080). Both numbers are game settings, set beside the Level Cap on the Growths page with a preview
+  of the totals. `PartyService.GainExperience` adds the EXP and raises the level once for every level the total now
+  reaches (up to the cap), so a big gain can give several. Each level-up goes through `SetLevel` (growths set the new
+  Life, Mana and attributes) and then recovers the actor's Life and Mana in full and clears every state on the fighter (states have no good/bad flag
+  yet, so buffs go too, as do ones marked Remains After Battle). A "Level N!" popup shows over the
+  fighter. The Actor Experience event command uses the same method, so it levels actors too.
+- **Step 7c, drops and pickups (2026-11-23).** When an enemy falls, its money (`MonetaryValue`) and every drop whose
+  percent roll comes up are laid down as pickups around where it fell (`BattleDrops`). A party member who is up and
+  walks over one takes it (within 0.6 of a tile of their feet): money goes to the party's money, an item into the bag,
+  and a popup shows over them. **Anything not picked up is lost.** After the last enemy falls the battle waits up to
+  5 seconds (`PickupDelay`, 300 updates) and ends the moment everything is taken; with nothing on the map it ends after
+  the usual short pause. Each pickup is drawn from the icon sheet's **No Background twin**
+  (`Graphics\Icons\No Background\<same sheet name>`, same cell), picked automatically from the item's icon or the
+  game's Money icon (Terms page); `IGraphicsService.GetDropSheetPath` falls back to the framed sheet only when a sheet
+  has no twin. A cell that is empty on the twin shows nothing, so add the bare version when adding an item icon.
+  The victory screen follows (step 7d).
+- **Step 7d, the victory screen (2026-11-23).** When the pickup time is over (everything taken, or the 5 seconds up,
+  and anything left is lost) the **victory screen** opens (`VictoryScreen`, a screen layer that pauses the game). It
+  lists each party member with their face, level (`Level 3 → 4` and a "LEVEL UP!" note when they went up) and the EXP
+  they got (a fallen member shows "Down: no EXP"), then the spoils: the money picked up and each item with its count.
+  Enter or Space closes it (after about 0.75 seconds, so a key held from the fight can't skip it), and the battle ends
+  then, returning to the story map. The rewards are gathered as they happen in `BattleRewards`. When it opens it plays
+  the game's **Victory SFX** (renamed from Victory ME in step 9), chosen on the editor's Terms page (a file from
+  `Media\SFX` with volume and pitch, saved as `VictorySfx` in `GameSettings.data`; none means silence). The face and icon cutting is shared with the battle HUD
+  through `InterfaceImages`.
+- **Step 8, defeat and game over (2026-11-24).** When every party member on the field is down and the enemies aren't,
+  the party has lost.
+  - **A win comes first.** If the last enemy and the last party member fall in the same update, the party won
+    (`BattleRunner.CheckForEnd`). Once the party is lost it **stays lost**: a lingering poison that kills the last enemy
+    afterwards can't turn it into a victory, so defeat never shows the Victory screen, gives no EXP and hands out no
+    spoils. Whatever the fallen enemies had dropped is lost at once (`Lose`), and nobody can pick anything up.
+  - **Can Lose.** A battle whose troop is marked **Can Lose** (Troops page) is never a game over. It lives only on the
+    troop (user, 2026-11-24), like Can Run: the Initiate Battle command has neither box any more. After the usual short pause (`EndDelay`) it just ends: the fallen get up with 1 Life and the
+    story carries on. This is the override for tutorials and scripted losses (the Shepherd fights, Osric and Garrick),
+    and it needs no game-wide setting. (The troop's Can Lose box already existed; the runner now reads it.)
+  - **Any other defeat** opens the **Game Over screen** (`GameOverScreen`, a screen layer like the Victory screen, view
+    `GameOverScreenView`) after the same pause. It pauses the game, dims the field darker than Victory does, plays the
+    game's **Defeat SFX** and closes on Enter or Space (also after about 0.75 seconds, so a held key can't skip it).
+    Both screens now share `PromptScreen` for that.
+  - **The game's choice (`GameSettings.Defeat`, `DefeatOutcome`)**, set on the Terms page in a new **Defeat** panel next
+    to Victory: **Game Over** (back to the title or the last save) or **Retry** (the same battle again). A third
+    choice, "continue the story anyway", was left out: Can Lose already does that per battle.
+  - **Defeat SFX (`GameSettings.DefeatSfx`)** is chosen exactly like Victory SFX: a file from `Media\SFX` with volume and
+    pitch, none means silence, with Play and Stop on the Terms page.
+  - **Retry.** When the screen closes, the battle ends and the party goes back to the story map, where
+    `BattleRunner.Remember` has kept what the fight began with: each party member's Life and Mana, the money and the
+    bag, all put back (so nothing picked up before the wipe can be farmed twice). `ActiveBattle.Retry` makes `MapScene`
+    ask for the same `BattleRequest` once the story map has faded in, so the fight starts again from the exact spot the
+    first one started. The page that began it never notices: it waits through both fights.
+  - **TEMP: Game Over has nowhere to go yet.** The engine has no title screen and no save and load, so after the
+    screen closes the party is simply back on the story map with 1 Life, as the old defeat did. That is
+    `GameOverSequence` (step 9), the one place to change when the title or the saves exist. The editor's Game Over page
+    command (`GameOverAction`) has no handler either, and should end up doing the same thing.
+  - **Not built:** scripted events that run when a battle is lost before it ends (see "Winning and losing"), and a way
+    for a page to ask whether a Can Lose battle was won or lost afterwards.
+- **Step 9, the end of a battle (user, 2026-11-24).**
+  - **The pause always runs out.** After the last enemy falls the battle waits its whole pause: `PickupDelay` (300
+    updates, 5 seconds) when anything dropped, the short `EndDelay` when nothing did. Picking up the last drop no longer
+    ends it early (this replaces "ends the moment everything is taken" in step 7c). The length is fixed when the last
+    enemy falls (`_endWait`).
+  - **Victory and Game Over use a sound effect, not an ME.** An ME in this engine loops until stopped, which makes it
+    music, not a jingle, so the two screen sounds are **SFX** files from `Media\SFX` (`VictorySfx`, `DefeatSfx`, chosen on
+    the Terms page, which now says SFX). `PlayMe` is unchanged. A game that saved a Victory ME needs to pick its sound
+    again. The `Cache.Me` list is no longer used by the Terms page.
+  - **The Victory screen closes itself when its sound effect finishes** (`PromptScreen.ClosesItself`, the sound is
+    `IAudioService.PlaySfxToEnd`, which finishes when the sound has played out or been stopped, or at once if it can't
+    play). Enter or Space still closes it early (after the 0.75 second guard) and stops the sound. With no Victory SFX
+    chosen it behaves as before and waits for a key, and its prompt says so. The Game Over screen still waits for a
+    key, because it tells the player what happens next. Closing either screen calls `StopSfx`.
+  - **Game Over has its own class.** `GameOverSequence.Play` is what runs when the Game Over screen is closed and the
+    setting is Game Over. Today it holds a TODO and the one call that returns the party to the story map. Everything
+    the real game over needs (title, last save, clearing state) is built there later.
+  - **Default volume and pitch are game settings (user, 2026-11-24).** `GameSettings.DefaultVolume` (0.8) and
+    `DefaultPitch` (1.0) are set in a new **Sound** panel on the Terms page. A new sound that nothing was set on starts
+    there: every `AudioFile`, animation sound, Play Media action and route step, and the Media Player page read
+    `AudioDefaults` (copied from the settings whenever they change or a game loads). Sounds already saved keep their own
+    numbers. The audio service no longer has default values of its own: every call passes its volume and pitch.
+  - **Battle music (user, 2026-11-24).** The troop's **Battle Music** (Troops page) plays on its battle map in place of
+    the map's own BGM, which is never played (`MapAudio.Play` and `Leave` take `isBattle` and the troop's track), fading
+    in with the battle like any map's music. A troop with none picked has silence, never the battle map's BGM (user,
+    2026-11-24). The story map's music starts again from the top when the party returns.
+  - **The music fades out for the victory (user, 2026-11-24).** The moment the last enemy falls (`BattleRunner.Win`), the
+    battle music fades out over 6 seconds (`MapAudio.FadeOutBgm`), a little longer than the 5 second pickup pause, so the Victory SFX
+    starts on silence. The game over screen doesn't fade it yet.
+- **Step 10, fleeing (2026-11-24).** The design in "Fleeing" is built (`BattleRunner.UpdateFlee`).
+  - **The key is Shift (hold).** Dashing is already off in battle, so Shift was free. It's hard-coded for now; key
+    remapping is its own job later.
+  - **Who can run:** a battle whose troop has **Can Run** ticked (Troops page). It lives only on the troop (user,
+    2026-11-24): the Initiate Battle command no longer has a Can Run box, so it can't disagree with the troop. Only while
+    the leader is on their feet: when the leader is down the player can only watch.
+  - **The bar** (`ActiveBattle.FleeFraction`, drawn over the leader's head in red) fills in 3 seconds (`FleeUpdates`,
+    180). Letting go empties it at once, with no cooldown on trying again.
+  - **While it's held the party doesn't fight.** Nobody on the party's side uses an arte or decides anything (`CanUse`
+    is false for them and their controllers don't run), a cast already under way still finishes, and the enemies carry
+    on as usual. The leader can still walk, since walking is the input system's.
+  - **A full bar can still fail** (`FleeFailChance`, 10%, a tuning value): "Couldn't escape!" pops up, the bar empties
+    and the fight carries on (hold again to retry).
+  - **A successful escape** pops up "Escaped!" and ends the battle (`End`): no EXP, no Victory screen, whatever lies on
+    the floor is lost, anything already picked up is kept, and the fallen get up with 1 Life. The story map's music
+    comes back with the map as it does after a win.
+  - **Not built:** a hint on screen about the key, the party's per-member flee battle options, and a way for a page to
+    tell the party ran.
+- **Step 11, items in battle (user, 2026-11-24).** The design in "Items in battle" is built (`BattleRunner.UseItem`).
+  - **Consumables have no arte** (a mistake in the earlier plan, corrected by the user): they carry their own effect
+    (scope, hitboxes, flat and percent Life and Mana, Variance, states, caster and target animation), so an item lands
+    through its own path (`LandItem` / `LandItemOn`), not the arte's `Detonate`.
+  - **Five item keys, Z X C V B**, in a row under the arte keys on the HUD (`ActiveBattle.ItemSlots`). Until the menu can
+    reassign them, they fill when the battle starts with the first five consumables in the bag that can be used in battle
+    (Use Anywhere or Battle Only), in the Items list's order. Only the leader's keys are read for now: the party's "may
+    use items" option comes with the real AI.
+  - **Using one costs the item and nothing else.** No Mana, no cast time, no lock. One item leaves the bag and the
+    party's **shared item cooldown** (`ActiveBattle.ItemCooldown`, 15 seconds, `ItemCooldownUpdates`) starts for every
+    item. A fighter that is down, running, casting or stunned can't use one, and neither can anyone once the fight is won
+    or lost.
+  - **The HUD:** each filled box shows the item's icon, how many are left (in the corner) and the same clock wipe as an
+    arte while the shared cooldown runs. Using the last of an item empties its box (the cooldown still applies).
+  - **How it lands.** Its hitboxes (they don't turn with the user) from the user's feet tile, on whoever its scope lets it
+    touch, the user included (Self touches only the user, Party everyone on the side). An item never misses, never
+    crits, and ignores Power, Defense and elements: Life (and Mana) change by the flat amount plus the percent of the
+    target's maximum, spread by Variance. **Negative restores, positive hurts** (a Firebomb is a positive 60).
+    States go first (remove, remove negative, then add), so a revive brings the fallen up before healing them (with 1
+    Life if nothing heals them). **Clear All States** also gets the fallen up (the Phoenix Feather).
+  - **Not built:** Attribute Changes (permanent stat boosts) are menu-only and skipped in battle, the menu to reassign
+    the keys (the HUD loads each box's icon when the battle begins, so reassigning will need to refresh it), the AI
+    using items, and a Mana popup that uses the Mana icon.
+- **Step 12, states outside battle (user, 2026-11-24).** A stim or salve used in the menu starts a state before the fight,
+  and the user wants the time it spent to be lost (option 4): states keep a real clock outside battle, and this is
+  also what "Remains After Battle" needed. (`PartyStates`, `CarriedState`, `IGameStateService.CarriedStates`.)
+  - **The clock runs on the story map.** Each party member's states wear down one tick per update while the game runs
+    (a menu or a message holds it). A state with a Tick Arte ticks too: with no battlefield, the arte's Life amount (its
+    multiplier times the Power of whoever applied the state, against the holder's Defense for damage, spread by Variance)
+    heals or hurts the holder, and a hurt never takes them below 1 Life. A reserve party member's clock keeps running
+    on the story map and stops during a fight they aren't in.
+  - **Into a fight:** every state a member carries goes in with what's left of its clock, stacks and ticking, whether
+    or not it remains after battle.
+  - **Out of a fight:** as before everything not marked Remains After Battle goes, and Incapacitated always does. What
+    stays is carried back out with its remaining time and keeps running on the story map. A **retry** puts the carried
+    states back as they were when the fight began, like Life and the bag.
+  - **Putting one on from outside** is `PartyStates.Add` (and `Remove`, `RemoveNegative`), which the menu's Use Item
+    will call. Resisting, stacking and the Incapacitated rule are the same as in battle (`BattleStates.Resists`). Who
+    applied it is the holder unless someone else is given.
+  - **Outside battle a state is only its clock and its tick.** Attribute changes, speed, stuns and animations only
+    mean something in a fight. A state applied by an enemy keeps the enemy's numbers, and its source becomes the holder
+    once the enemy is gone, and damage a fighter does to itself never builds Threat, so that costs nothing.
+  - **Not built:** the menu that calls `Add`, showing carried states anywhere, and the tick animation outside battle.
+- **Step 13, state icons and chances (user, 2026-11-24).**
+  - **Icons:** every state that isn't Hidden shows its icon on its holder: over a party member's panel, over an enemy's
+    Life bar, and under a boss's bar. The clock wipe is the arte keys' own and covers how much of its time is left; a
+    permanent state has none. Stacks show in the corner. (`HudState`, `HudFighter.SetStates`.)
+  - **Chance:** every state an arte or consumable adds has a percent chance of going on (`StateChances`, 100 when it
+    isn't listed), set beside its tick box. It's rolled for each target, after resistances (`BattleStates.Add`). The
+    menu's Use Item will need to roll it too, since `PartyStates.Add` doesn't.
+  - **Test keys** (`BattleStateTester`, TEST): F5 picks the next state (Shift+F5 the one before), F6 puts it on the
+    leader, F7 on every enemy, F8 takes every state off everyone. They skip the chance roll.
+- **Step 14, silence and no items (user, 2026-11-24).** Two new checkboxes on a state, the only finer stun flags wanted
+  (Can't Move and Can't Turn were turned down, and Stun-Lock with Can Still Use Artes stays as it is).
+  - **Silence:** the holder can't use artes (`BattleStates.BlocksArtes`, so the player, the AI and a cast in progress all
+    obey it). It can still walk, turn and use items, and bosses aren't immune (the stun-lock immunity is unchanged).
+  - **No Items:** the holder can't use items (`BattleStates.BlocksItems`), and can do everything else.
+  - **A plain stun still stops items too** (it stops everything), but a Stun-Lock state that lets the holder use artes (a
+    root) no longer stops items, which fixes the old side effect of Step 11.

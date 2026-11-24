@@ -47,9 +47,13 @@
     <enginePanel:EnginePanel Grid.Column="1"
                              Title="Animation Metadata"
                              Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-      <TextBox Header="Name"
-               Text="{x:Bind ViewModel.SelectedEntity.Name, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}"
-               VerticalAlignment="Bottom" />
+      <StackPanel Spacing="10">
+        <TextBox Header="Name"
+                 Text="{x:Bind ViewModel.SelectedEntity.Name, Mode=TwoWay, FallbackValue='', UpdateSourceTrigger=PropertyChanged}" />
+        <CheckBox Content="Play Behind Everyone"
+                  IsChecked="{x:Bind ViewModel.SelectedEntity.PlaysBehind, Mode=TwoWay, FallbackValue=False}"
+                  ToolTipService.ToolTip="Draws the animation behind every character and prop, over the ground, so busy battles aren't buried under effects. Its shockwaves and heat only bend the ground." />
+      </StackPanel>
     </enginePanel:EnginePanel>
     <enginePanel:EnginePanel x:Name="AnimationFramesPanel"
                              Grid.Column="2"
@@ -201,6 +205,145 @@
               </Flyout>
             </Button.Flyout>
           </Button>
+          <!-- a bolt of lightning drawn from code -->
+          <Button Content="Lightning"
+                  ToolTipService.ToolTip="Strike with a bolt of lightning drawn from code, starting on this frame. Every play is a different bolt.">
+            <Button.Flyout>
+              <Flyout Placement="Bottom">
+                <ScrollViewer MaxHeight="640"
+                              VerticalScrollBarVisibility="Auto">
+                  <StackPanel Width="340"
+                              Spacing="10">
+                    <CheckBox Content="Start Lightning On This Frame"
+                              IsChecked="{x:Bind ViewModel.StartsLightning, Mode=TwoWay}" />
+                    <StackPanel Spacing="10"
+                                Visibility="{x:Bind ViewModel.StartsLightning, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                      <TextBlock TextWrapping="Wrap"
+                                 Foreground="{StaticResource LightYellowBrush}"
+                                 Text="Start and End are pixels from the middle of the target. Start 0, -300 and End 0, 0 strike down from the sky onto it." />
+                      <Grid ColumnSpacing="10"
+                            RowSpacing="10">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="*" />
+                          <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                          <RowDefinition Height="Auto" />
+                          <RowDefinition Height="Auto" />
+                          <RowDefinition Height="Auto" />
+                          <RowDefinition Height="Auto" />
+                          <RowDefinition Height="Auto" />
+                          <RowDefinition Height="Auto" />
+                          <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <NumberBox Header="Start X"
+                                   SmallChange="4"
+                                   SpinButtonPlacementMode="Inline"
+                                   Value="{x:Bind ViewModel.FrameLightning.StartX, Mode=TwoWay, FallbackValue=0}"
+                                   ToolTipService.ToolTip="Where the bolt starts, across from the middle of the target, in pixels." />
+                        <NumberBox Grid.Column="1"
+                                   Header="Start Y"
+                                   SmallChange="4"
+                                   SpinButtonPlacementMode="Inline"
+                                   Value="{x:Bind ViewModel.FrameLightning.StartY, Mode=TwoWay, FallbackValue=0}"
+                                   ToolTipService.ToolTip="Where the bolt starts, up (negative) or down from the middle of the target, in pixels." />
+                        <NumberBox Grid.Row="1"
+                                   Header="End X"
+                                   SmallChange="4"
+                                   SpinButtonPlacementMode="Inline"
+                                   Value="{x:Bind ViewModel.FrameLightning.EndX, Mode=TwoWay, FallbackValue=0}"
+                                   ToolTipService.ToolTip="Where the bolt lands, across from the middle of the target, in pixels." />
+                        <NumberBox Grid.Row="1"
+                                   Grid.Column="1"
+                                   Header="End Y"
+                                   SmallChange="4"
+                                   SpinButtonPlacementMode="Inline"
+                                   Value="{x:Bind ViewModel.FrameLightning.EndY, Mode=TwoWay, FallbackValue=0}"
+                                   ToolTipService.ToolTip="Where the bolt lands, up (negative) or down from the middle of the target, in pixels." />
+                        <NumberBox Grid.Row="2"
+                                   Header="Thickness"
+                                   Minimum="1"
+                                   SmallChange="1"
+                                   SpinButtonPlacementMode="Inline"
+                                   Value="{x:Bind ViewModel.FrameLightning.Thickness, Mode=TwoWay, FallbackValue=1}"
+                                   ToolTipService.ToolTip="How wide the white-hot core is, in pixels." />
+                        <NumberBox Grid.Row="2"
+                                   Grid.Column="1"
+                                   Header="Glow"
+                                   Minimum="0"
+                                   SmallChange="1"
+                                   SpinButtonPlacementMode="Inline"
+                                   Value="{x:Bind ViewModel.FrameLightning.Glow, Mode=TwoWay, FallbackValue=0}"
+                                   ToolTipService.ToolTip="How far the coloured glow spreads from the core, in pixels." />
+                        <NumberBox Grid.Row="3"
+                                   Header="Jaggedness (%)"
+                                   Minimum="0"
+                                   Maximum="60"
+                                   SmallChange="2"
+                                   SpinButtonPlacementMode="Inline"
+                                   Value="{x:Bind ViewModel.FrameLightning.Jaggedness, Mode=TwoWay, FallbackValue=0}"
+                                   ToolTipService.ToolTip="How far it zigzags, as a percent of its length. 0 is a straight line, 20 is a natural bolt, 40 is wild." />
+                        <NumberBox Grid.Row="3"
+                                   Grid.Column="1"
+                                   Header="Branches (%)"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   SmallChange="5"
+                                   SpinButtonPlacementMode="Inline"
+                                   Value="{x:Bind ViewModel.FrameLightning.Branches, Mode=TwoWay, FallbackValue=0}"
+                                   ToolTipService.ToolTip="How often it forks. 0 is never, 100 forks wherever it can." />
+                        <NumberBox Grid.Row="4"
+                                   Header="Crackle (frames)"
+                                   Minimum="1"
+                                   SmallChange="1"
+                                   SpinButtonPlacementMode="Inline"
+                                   Value="{x:Bind ViewModel.FrameLightning.Crackle, Mode=TwoWay, FallbackValue=1}"
+                                   ToolTipService.ToolTip="Frames between new shapes. 1 crackles hard, higher is calmer." />
+                        <NumberBox Grid.Row="4"
+                                   Grid.Column="1"
+                                   Header="Strikes"
+                                   Minimum="1"
+                                   SmallChange="1"
+                                   SpinButtonPlacementMode="Inline"
+                                   Value="{x:Bind ViewModel.FrameLightning.Strikes, Mode=TwoWay, FallbackValue=1}"
+                                   ToolTipService.ToolTip="How many times it strikes over its frames. Each strike flashes in, flickers and fades." />
+                        <NumberBox Grid.Row="5"
+                                   Header="Ground Flash"
+                                   Minimum="0"
+                                   SmallChange="5"
+                                   SpinButtonPlacementMode="Inline"
+                                   Value="{x:Bind ViewModel.FrameLightning.GroundFlash, Mode=TwoWay, FallbackValue=0}"
+                                   ToolTipService.ToolTip="The radius of the glow where it lands, in pixels. 0 is none." />
+                        <NumberBox Grid.Row="5"
+                                   Grid.Column="1"
+                                   Header="Screen Flash (%)"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   SmallChange="5"
+                                   SpinButtonPlacementMode="Inline"
+                                   Value="{x:Bind ViewModel.FrameLightning.ScreenFlash, Mode=TwoWay, FallbackValue=0}"
+                                   ToolTipService.ToolTip="How much the whole screen lights up as each strike lands. 0 is none." />
+                        <NumberBox Grid.Row="6"
+                                   Header="Frames"
+                                   Minimum="1"
+                                   SmallChange="1"
+                                   SpinButtonPlacementMode="Inline"
+                                   Value="{x:Bind ViewModel.FrameLightning.Frames, Mode=TwoWay, FallbackValue=1}"
+                                   ToolTipService.ToolTip="How many frames it lasts, every strike included (60 is a second)." />
+                      </Grid>
+                      <ColorPicker Color="{x:Bind ViewModel.LightningColor, Mode=TwoWay}"
+                                   IsAlphaEnabled="False"
+                                   IsMoreButtonVisible="True"
+                                   IsColorSliderVisible="True"
+                                   IsColorChannelTextInputVisible="True"
+                                   IsHexInputVisible="True"
+                                   ToolTipService.ToolTip="The colour of the glow. The core is always white-hot." />
+                    </StackPanel>
+                  </StackPanel>
+                </ScrollViewer>
+              </Flyout>
+            </Button.Flyout>
+          </Button>
           <!-- shimmering air around the target, a fire spell's heat -->
           <Button Content="Heat Haze"
                   ToolTipService.ToolTip="Make the air shimmer around the target, starting on this frame. It bends everything under the animation and fades in and out.">
@@ -290,6 +433,52 @@
               </Flyout>
             </Button.Flyout>
           </Button>
+          <!-- a sound the animation plays on this frame without a cell, so an animation can be only sounds -->
+          <Button Content="Sound"
+                  ToolTipService.ToolTip="Play a sound on this frame without needing a cell. An animation can be nothing but sounds.">
+            <Button.Flyout>
+              <Flyout Placement="Bottom">
+                <StackPanel Width="320"
+                            Spacing="10">
+                  <CheckBox Content="Play A Sound On This Frame"
+                            IsChecked="{x:Bind ViewModel.PlaysSound, Mode=TwoWay}" />
+                  <StackPanel Spacing="10"
+                              Visibility="{x:Bind ViewModel.PlaysSound, Mode=OneWay, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <ComboBox Header="Sound Effect"
+                              HorizontalAlignment="Stretch"
+                              ItemsSource="{x:Bind ViewModel.SfxFiles, Mode=OneWay}"
+                              SelectedItem="{x:Bind ViewModel.FrameSound.Name, Mode=TwoWay, FallbackValue={x:Null}}" />
+                    <Grid ColumnSpacing="10">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                      </Grid.ColumnDefinitions>
+                      <NumberBox Header="Volume"
+                                 Minimum="0"
+                                 SmallChange="0.1"
+                                 SpinButtonPlacementMode="Inline"
+                                 Value="{x:Bind ViewModel.FrameSound.Volume, Mode=TwoWay, FallbackValue=0.8}" />
+                      <NumberBox Grid.Column="1"
+                                 Header="Pitch"
+                                 Minimum="0"
+                                 SmallChange="0.1"
+                                 SpinButtonPlacementMode="Inline"
+                                 Value="{x:Bind ViewModel.FrameSound.Pitch, Mode=TwoWay, FallbackValue=1}" />
+                    </Grid>
+                    <Button Content="Preview Sound"
+                            HorizontalAlignment="Stretch"
+                            Command="{x:Bind ViewModel.PreviewFrameSoundCommand}" />
+                  </StackPanel>
+                </StackPanel>
+              </Flyout>
+            </Button.Flyout>
+          </Button>
+          <!-- a map picture behind the preview, so shockwaves and heat have something to bend -->
+          <ComboBox ItemsSource="{x:Bind ViewModel.BackdropFiles, Mode=OneWay}"
+                    SelectedItem="{x:Bind ViewModel.SelectedBackdrop, Mode=TwoWay}"
+                    PlaceholderText="Backdrop"
+                    MinWidth="140"
+                    ToolTipService.ToolTip="A map's ground picture behind the preview. Shockwaves and heat bend what's under them, so they only show over a picture." />
           <Button Command="{x:Bind ViewModel.PlayCommand}"
                   Content="{x:Bind ViewModel.PlayButtonText, Mode=OneWay}" />
         </StackPanel>

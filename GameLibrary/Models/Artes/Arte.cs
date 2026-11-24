@@ -135,7 +135,8 @@ public partial class Arte : BaseModel
         _ => (x, y)
     };
 
-    public int HpDamage
+    // times the user's Power (1 is 1x Power, 0.7 is 70%), negative heals
+    public double HpDamage
     {
         get;
         set => SetField(ref field, value);
@@ -155,7 +156,18 @@ public partial class Arte : BaseModel
 
     public List<Guid> AddStates { get; init; } = [];
 
+    // the percent chance each added state has of going on. A state that isn't listed always does (100)
+    public Dictionary<Guid, int> StateChances { get; init; } = new();
+
     public List<Guid> RemoveStates { get; init; } = [];
+
+    // removes every state that isn't Friendly (poisons, stuns, debuffs) and leaves the good ones. Never a fall:
+    // Incapacitated is only removed by ticking it in Remove States
+    public bool RemoveNegativeStates
+    {
+        get;
+        set => SetField(ref field, value);
+    }
 
     public List<Guid> Elements { get; init; } = [];
 

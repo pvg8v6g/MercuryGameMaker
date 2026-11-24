@@ -16,6 +16,10 @@ public interface IGraphicsService
 
     string GetIconSheetPath(string? sheet);
 
+    // the same sheet with every icon's square background taken off (Graphics\Icons\No Background, same name, cell for
+    // cell), for an icon lying on a map. The framed sheet when it has no bare twin
+    string GetDropSheetPath(string? sheet);
+
     string GetBalloonsPath();
 
     Task<CroppedImage> GetBalloonFrame(int row, int column);
@@ -28,6 +32,7 @@ public interface IGraphicsService
     int GetCharacterIndexFromDirection(string fileName, int index, Direction direction);
     Task<CroppedImage> GetCharacter(string fileName, int index, Direction direction);
     string GetAnimationImagesPath();
+    string GetMapGroundPath();
     FileSelection[] GetAnimationImages();
     Task<CroppedImage> GetAnimationImage(string fileName, int frame);
     Task<Rect> GetAnimationViewport(string fileName, int index);

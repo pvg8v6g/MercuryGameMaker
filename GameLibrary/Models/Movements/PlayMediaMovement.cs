@@ -1,3 +1,4 @@
+using GameLibrary.Models.Media;
 namespace GameLibrary.Models.Movements;
 
 public partial class PlayMediaMovement : Movement
@@ -18,13 +19,13 @@ public partial class PlayMediaMovement : Movement
     {
         get;
         set => SetField(ref field, value);
-    } = 1.0;
+    } = AudioDefaults.Volume;
 
     public double Pitch
     {
         get;
         set => SetField(ref field, value);
-    } = 1.0;
+    } = AudioDefaults.Pitch;
 
     // nothing on the map is affected, so there is no entity to pick
     public override bool HasEntityTarget => false;

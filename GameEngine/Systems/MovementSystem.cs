@@ -45,8 +45,9 @@ public class MovementSystem(
 
     #region Methods
 
-    // turns the entity and starts a step, unless it is already mid step
-    public void Move(MapEntity entity, Direction direction)
+    // turns the entity and starts a step, unless it is already mid step. Limit is the most the step may cover (scaled
+    // pixels), so a route walk ends exactly on its target whatever the speed instead of stepping past it
+    public void Move(MapEntity entity, Direction direction, double? limit = null)
     {
         if (entity.GetModule<PositionModule>() is not { } position || entity.GetModule<MovementModule>() is not { } movementModule) return;
 
@@ -63,7 +64,9 @@ public class MovementSystem(
 
         // nobody runs in battle, whatever the map or the entity allows
         var dashing = gameStateService.Battle is null && gameStateService.ActiveMap is not { DisableDash: true } && inputService.Shift && movementModule.Dashing;
-        var increment = (dashing ? 2.0 : 1.0) * movementModule.Speed;
+        // a fighter's states can slow it in battle (Chilled); outside battle nothing does
+        var slowed = gameStateService.Battle is null ? 1.0 : movement.SpeedFactor;
+        var increment = (dashing ? 2.0 : 1.0) * movementModule.Speed * slowed;
         var distance = gameDataService.StepSize * gameDataService.ScaleFactor;
 
         var (unitX, unitY) = direction switch
@@ -75,7 +78,9 @@ public class MovementSystem(
             _ => throw new ArgumentException($"Invalid direction: {direction}", nameof(direction))
         };
 
-        var reach = Reach(entity, position, direction, unitX, unitY, Math.Max(distance, increment), distance);
+        var farthest = Math.Max(distance, increment);
+        if (limit is { } most && most > 0) farthest = Math.Min(farthest, most);
+        var reach = Reach(entity, position, direction, unitX, unitY, farthest, distance);
         if (reach <= 0)
         {
             movement.MoveInterrupted = true;

@@ -45,14 +45,20 @@ public class AnimationsPageViewModel(
     // the first actor with a picture, standing facing down where the animation plays (the red square when there's none)
     private PictureBox? _actorSprite;
 
+    // a map's ground picture behind everything, so shockwaves and heat have something to bend (none = plain canvas)
+    private PictureBox? _backdropSprite;
+    private const string NoBackdrop = "None";
+    private const int BackdropZ = -2;
+
     // the frame's tint being edited, watched so the actor shows each change
     private AnimationTint? _watchedTint;
 
     // the frame's shockwave and heat being edited, watched so the preview shows each change
     private AnimationShockwave? _watchedShockwave;
     private AnimationHeatHaze? _watchedHeatHaze;
+    private AnimationLightning? _watchedLightning;
 
-    // shockwaves and heat are drawn over the actor and under the cells, like the game
+    // shockwaves, heat and lightning are drawn over the actor and under the cells, like the game
     private const int DistortionZ = -1;
 
     #endregion
@@ -84,9 +90,38 @@ public class AnimationsPageViewModel(
             SelectedCell = null;
             RefreshFrameTint();
             RefreshFrameDistortions();
+            RefreshFrameSound();
             _ = RebuildSprites();
         }
     } = 1;
+
+    // the files in the SFX folder, for the frame's sound
+    public string[] SfxFiles
+    {
+        get;
+        private set => SetField(ref field, value);
+    } = [];
+
+    // the animation plays a sound of its own on this frame, with no cell (an animation can be only sounds)
+    public bool PlaysSound
+    {
+        get => FrameSound is not null;
+        set
+        {
+            if (SelectedEntity is null || value == PlaysSound) return;
+
+            if (value) SelectedEntity.Sounds.Add(new AnimationSound { Frame = SelectedFrame });
+            else SelectedEntity.Sounds.Remove(FrameSound!);
+            RefreshFrameSound();
+        }
+    }
+
+    public AnimationSound? FrameSound => SelectedEntity?.Sounds.FirstOrDefault(x => x.Frame == SelectedFrame);
+
+    public RelayCommand PreviewFrameSoundCommand => new(() =>
+    {
+        if (FrameSound is { Name: { Length: > 0 } name } sound) audioService.PlaySfx(name, sound.Volume, sound.Pitch);
+    });
 
     // the animation tints its target on this frame (a poison animation turning the character green)
     public bool TintsTarget
@@ -138,7 +173,53 @@ public class AnimationsPageViewModel(
 
     public AnimationHeatHaze? FrameHeatHaze => SelectedEntity?.HeatHazes.FirstOrDefault(x => x.Frame == SelectedFrame);
 
+    // a bolt of lightning starts on this frame
+    public bool StartsLightning
+    {
+        get => FrameLightning is not null;
+        set
+        {
+            if (SelectedEntity is null || value == StartsLightning) return;
+
+            if (value) SelectedEntity.Lightnings.Add(new AnimationLightning { Frame = SelectedFrame });
+            else SelectedEntity.Lightnings.Remove(FrameLightning!);
+            RefreshFrameDistortions();
+            _ = RebuildSprites();
+        }
+    }
+
+    public AnimationLightning? FrameLightning => SelectedEntity?.Lightnings.FirstOrDefault(x => x.Frame == SelectedFrame);
+
+    // the lightning's colour for the colour picker (saved as #RRGGBB)
+    public Windows.UI.Color LightningColor
+    {
+        get => FrameLightning?.Color.ToColorOr(Colors.White) ?? Colors.White;
+        set
+        {
+            if (FrameLightning is not { } lightning || lightning.Color == value.ToHex()) return;
+
+            lightning.Color = value.ToHex();
+            OnPropertyChanged();
+        }
+    }
+
     public ObservableCollection<PictureBox> Sprites { get; } = [];
+
+    // the map ground pictures that can sit behind the preview, with None first
+    public IReadOnlyList<string> BackdropFiles
+    {
+        get;
+        private set => SetField(ref field, value);
+    } = [];
+
+    public string? SelectedBackdrop
+    {
+        get;
+        set
+        {
+            if (SetField(ref field, value)) _ = LoadBackdrop();
+        }
+    }
 
     public ObservableCollection<CellOutline> CellOutlines { get; } = [];
 
@@ -267,9 +348,11 @@ public class AnimationsPageViewModel(
     protected override async Task LoadedAction()
     {
         RefreshAnimationImageFiles();
+        SfxFiles = mediaService.GetMediaFiles(Cache.Sfx);
         await LoadActorSprite();
         UpdateAnchor();
-        await RebuildSprites();
+        RefreshBackdropFiles();
+        await LoadBackdrop();
     }
 
     protected override async Task OnSelectedIndexChanged(int index)
@@ -279,10 +362,17 @@ public class AnimationsPageViewModel(
         SelectedFrame = 1;
         RefreshFrameTint();
         RefreshFrameDistortions();
+        RefreshFrameSound();
         await RebuildSprites();
     }
 
     #endregion
+
+    private void RefreshFrameSound()
+    {
+        OnPropertyChanged(nameof(PlaysSound));
+        OnPropertyChanged(nameof(FrameSound));
+    }
 
     private void RefreshFrameTint()
     {
@@ -307,10 +397,17 @@ public class AnimationsPageViewModel(
         _watchedHeatHaze = FrameHeatHaze;
         if (_watchedHeatHaze is not null) _watchedHeatHaze.PropertyChanged += OnFrameDistortionChanged;
 
+        if (_watchedLightning is not null) _watchedLightning.PropertyChanged -= OnFrameDistortionChanged;
+        _watchedLightning = FrameLightning;
+        if (_watchedLightning is not null) _watchedLightning.PropertyChanged += OnFrameDistortionChanged;
+
         OnPropertyChanged(nameof(StartsShockwave));
         OnPropertyChanged(nameof(FrameShockwave));
         OnPropertyChanged(nameof(StartsHeatHaze));
         OnPropertyChanged(nameof(FrameHeatHaze));
+        OnPropertyChanged(nameof(StartsLightning));
+        OnPropertyChanged(nameof(FrameLightning));
+        OnPropertyChanged(nameof(LightningColor));
     }
 
     private void OnFrameDistortionChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e) => _ = RebuildSprites();
@@ -341,6 +438,21 @@ public class AnimationsPageViewModel(
             };
             heat.ApplyTo(haze, frame - heat.Frame, 1.0);
             yield return haze;
+        }
+
+        // the same bolt every time a frame is shown, so stepping through frames shows how it crackles
+        foreach (var lightning in animation.Lightnings.Where(x => frame >= x.Frame && frame <= x.LastFrame))
+        {
+            var bolt = new Lightning
+            {
+                Z = DistortionZ,
+                X = (int) (centerX + lightning.StartX),
+                Y = (int) (centerY + lightning.StartY),
+                ToX = (float) (lightning.EndX - lightning.StartX),
+                ToY = (float) (lightning.EndY - lightning.StartY)
+            };
+            lightning.ApplyTo(bolt, frame - lightning.Frame, 1.0, lightning.Frame);
+            yield return bolt;
         }
     }
 
@@ -383,7 +495,7 @@ public class AnimationsPageViewModel(
     {
         if (SelectedEntity is null) return;
 
-        // the last frame with a cell, a tint, or a shockwave or heat still going, the way the game plays it
+        // the last frame with a cell, a tint, a sound, or a shockwave or heat still going, the way the game plays it
         _lastFrame = SelectedEntity.LastFrame();
         if (_lastFrame < 1) return;
 
@@ -440,6 +552,12 @@ public class AnimationsPageViewModel(
             if (string.IsNullOrEmpty(sfx.Name)) continue;
             audioService.PlaySfx(sfx.Name, sfx.Volume, sfx.Pitch);
         }
+
+        // the animation's own sounds, the ones that aren't on a cell
+        foreach (var sound in SelectedEntity.Sounds.Where(x => x.Frame == frame))
+        {
+            if (!string.IsNullOrEmpty(sound.Name)) audioService.PlaySfx(sound.Name, sound.Volume, sound.Pitch);
+        }
     }
 
     #endregion
@@ -471,10 +589,49 @@ public class AnimationsPageViewModel(
         TintActor();
     }
 
+    // the map ground pictures (Graphics\Maps\Ground), the first one picked when nothing is chosen yet
+    private void RefreshBackdropFiles()
+    {
+        var folder = graphicsService.GetMapGroundPath();
+        var files = Directory.Exists(folder)
+            ? Directory.GetFiles(folder, "*.png").Select(Path.GetFileName).OfType<string>().Order(StringComparer.OrdinalIgnoreCase)
+            : Enumerable.Empty<string>();
+        BackdropFiles = [NoBackdrop, .. files];
+
+        if (SelectedBackdrop is null || !BackdropFiles.Contains(SelectedBackdrop))
+        {
+            SelectedBackdrop = BackdropFiles.Count > 1 ? BackdropFiles[1] : NoBackdrop;
+        }
+    }
+
+    private async Task LoadBackdrop()
+    {
+        _backdropSprite = null;
+        if (SelectedBackdrop is { } name && name != NoBackdrop)
+        {
+            var path = Path.Combine(graphicsService.GetMapGroundPath(), name);
+            if (File.Exists(path))
+            {
+                var (width, height) = await graphicsService.GetImageDimensions(path);
+                _backdropSprite = new PictureBox { ImagePath = path, Viewport = new Rect(0, 0, width, height), Z = BackdropZ };
+            }
+        }
+
+        UpdateAnchor();
+        await RebuildSprites();
+    }
+
     private void UpdateAnchor()
     {
         AnchorX = (int) ((CanvasWidth - AnchorWidth) / 2.0);
         AnchorY = (int) ((CanvasHeight - AnchorHeight) / 2.0);
+
+        // the backdrop's middle sits under the middle of the actor
+        if (_backdropSprite?.Viewport is { } backdrop)
+        {
+            _backdropSprite.X = (int) ((CanvasWidth - backdrop.Width) / 2.0);
+            _backdropSprite.Y = (int) ((CanvasHeight - backdrop.Height) / 2.0);
+        }
 
         // the actor's picture is the anchor, the square only shows without one
         if (_actorSprite is not null)
@@ -711,7 +868,7 @@ public class AnimationsPageViewModel(
         for (var i = Sprites.Count - 1; i >= 0; i--)
         {
             var sprite = Sprites[i];
-            if (ReferenceEquals(sprite, _actorSprite) || sprite.Viewport is not { } viewport) continue;
+            if (ReferenceEquals(sprite, _actorSprite) || ReferenceEquals(sprite, _backdropSprite) || sprite.Viewport is not { } viewport) continue;
 
             var width = viewport.Width * sprite.ScaleX;
             var height = viewport.Height * sprite.ScaleY;
@@ -735,7 +892,9 @@ public class AnimationsPageViewModel(
         if (SelectedEntity is null)
         {
             Sprites.Clear();
+            if (_backdropSprite is not null) Sprites.Add(_backdropSprite);
             if (_actorSprite is not null) Sprites.Add(_actorSprite);
+            UpdateCellOutlines();
             return;
         }
 
@@ -747,7 +906,9 @@ public class AnimationsPageViewModel(
         // Build the full sprite list first (all async work done) so the canvas
         // never renders a half-cleared collection mid-rebuild (prevents flicker)
         // the actor stands under every cell, shockwaves and heat bend it but not the cells
+        // the backdrop goes first: the canvas draws in list order and a distortion bends everything before it
         var rebuilt = new List<PictureBox>();
+        if (_backdropSprite is not null) rebuilt.Add(_backdropSprite);
         if (_actorSprite is not null) rebuilt.Add(_actorSprite);
         rebuilt.AddRange(FrameDistortions());
 
@@ -793,7 +954,7 @@ public class AnimationsPageViewModel(
 
         foreach (var sprite in Sprites)
         {
-            if (ReferenceEquals(sprite, _actorSprite) || sprite.Viewport is not { } viewport) continue;
+            if (ReferenceEquals(sprite, _actorSprite) || ReferenceEquals(sprite, _backdropSprite) || sprite.Viewport is not { } viewport) continue;
 
             var width = viewport.Width * sprite.ScaleX;
             var height = viewport.Height * sprite.ScaleY;

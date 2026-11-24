@@ -3,6 +3,7 @@ using GameLibrary.Commands;
 using GameLibrary.Models.States;
 using GameLibrary.Services.GameData;
 using GameLibrary.Services.Json;
+using GameMaker.UX.ViewModels.EquipmentPage;
 
 namespace GameMaker.UX.ViewModels.StatesPage;
 
@@ -12,7 +13,23 @@ public class StatesPageViewModel(IGameDataService gameDataService, IJsonService 
 
     public IGameDataService GameDataService => gameDataService;
 
-    public ObservableCollection<ElementEffectViewModel> ElementEffects { get; } = [];
+    public ObservableCollection<StateChangeViewModel> AttributeChanges { get; } = [];
+
+    public ObservableCollection<StateChangeViewModel> ElementChanges { get; } = [];
+
+    // the other states this one keeps off its holder
+    public ObservableCollection<StateResistViewModel> StateResists { get; } = [];
+
+    public Guid? SelectedTickArte
+    {
+        get => SelectedEntity?.TickArte;
+        set
+        {
+            if (SelectedEntity is null || SelectedEntity.TickArte == value) return;
+            SelectedEntity.TickArte = value;
+            OnPropertyChanged();
+        }
+    }
 
     public Guid? SelectedTickAnimation
     {
@@ -21,7 +38,7 @@ public class StatesPageViewModel(IGameDataService gameDataService, IJsonService 
             : SelectedEntity.TickAnimation;
         set
         {
-            if (SelectedEntity is null) return;
+            if (SelectedEntity is null || SelectedEntity.TickAnimation == (value ?? Guid.Empty)) return;
             SelectedEntity.TickAnimation = value ?? Guid.Empty;
             OnPropertyChanged();
         }
@@ -29,23 +46,15 @@ public class StatesPageViewModel(IGameDataService gameDataService, IJsonService 
 
     protected override ObservableCollection<State> EntityCollection => gameDataService.States;
 
-    public RelayCommand ClearTickAnimationCommand => new(ClearTickAnimation);
-
     #endregion
 
     #region Actions
-
-    private void ClearTickAnimation()
-    {
-        if (SelectedEntity is null) return;
-        SelectedEntity.TickAnimation = Guid.Empty;
-        OnPropertyChanged(nameof(SelectedTickAnimation));
-    }
 
     protected override Task OnSelectedIndexChanged(int index)
     {
         RefreshStats();
         OnPropertyChanged(nameof(SelectedTickAnimation));
+        OnPropertyChanged(nameof(SelectedTickArte));
         return Task.CompletedTask;
     }
 
@@ -55,16 +64,15 @@ public class StatesPageViewModel(IGameDataService gameDataService, IJsonService 
 
     private void RefreshStats()
     {
-        ElementEffects.Clear();
+        AttributeChanges.Clear();
+        ElementChanges.Clear();
+        StateResists.Clear();
 
         if (SelectedEntity is null) return;
 
-        foreach (var element in GameDataService.Elements)
-        {
-            ElementEffects.Add(new ElementEffectViewModel(element, SelectedEntity));
-        }
-
-        OnPropertyChanged(nameof(ElementEffects));
+        foreach (var attribute in GameDataService.Attributes) AttributeChanges.Add(new StateChangeViewModel(attribute, SelectedEntity, false));
+        foreach (var element in GameDataService.Elements) ElementChanges.Add(new StateChangeViewModel(element, SelectedEntity, true));
+        foreach (var state in GameDataService.States.Where(x => x != SelectedEntity)) StateResists.Add(new StateResistViewModel(state, SelectedEntity.ResistStates));
     }
 
     #endregion

@@ -1,4 +1,5 @@
-﻿namespace GameLibrary.Models.Actions;
+﻿using GameLibrary.Models.Media;
+namespace GameLibrary.Models.Actions;
 
 public partial class PlayMediaAction : PageAction
 {
@@ -18,13 +19,13 @@ public partial class PlayMediaAction : PageAction
     {
         get;
         set => SetField(ref field, value);
-    } = 1.0;
+    } = AudioDefaults.Volume;
 
     public double Pitch
     {
         get;
         set => SetField(ref field, value);
-    } = 1.0;
+    } = AudioDefaults.Pitch;
 
     public override string ToString()
     {

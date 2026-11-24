@@ -1,0 +1,32 @@
+<UserControl x:Class="GameEngine.UX.Views.GameOverScreen.GameOverScreenView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d"
+             IsHitTestVisible="False">
+
+  <!-- the game goes dark behind a panel in the middle, darker than the victory screen -->
+  <Grid Visibility="{x:Bind Screen.IsOpen, Mode=OneWay}" Background="#CC000000">
+    <Border Style="{StaticResource InterfacePanelStyle}"
+            Width="400"
+            Padding="22,26"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+      <StackPanel Spacing="14">
+        <TextBlock Text="Game Over"
+                   FontSize="34"
+                   FontWeight="Bold"
+                   Foreground="{StaticResource InterfaceBossLifeBrush}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Text="The whole party has fallen."
+                   Style="{StaticResource InterfaceNameStyle}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Text="{x:Bind Screen.PromptText, Mode=OneWay}"
+                   Style="{StaticResource InterfaceSmallTextStyle}"
+                   HorizontalAlignment="Center"
+                   Margin="0,8,0,0" />
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

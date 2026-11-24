@@ -1,0 +1,122 @@
+<UserControl x:Class="GameEngine.UX.Views.VictoryScreen.VictoryScreenView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:interface="using:GameEngine.Interface"
+             mc:Ignorable="d"
+             IsHitTestVisible="False">
+
+  <UserControl.Resources>
+    <!-- a party member: face, name and level, and the EXP they got (with a note when they levelled up) -->
+    <DataTemplate x:Key="MemberTemplate" x:DataType="interface:VictoryMember">
+      <Grid ColumnSpacing="12" Margin="0,4">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="48" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <!-- the face cell, cut out of its sheet and fitted into the box -->
+        <Viewbox Grid.Column="0" Width="48" Height="48" Stretch="Uniform">
+          <Canvas Width="{x:Bind Fighter.FaceWidth}" Height="{x:Bind Fighter.FaceHeight}">
+            <Canvas.Clip>
+              <RectangleGeometry Rect="{x:Bind Fighter.FaceClip}" />
+            </Canvas.Clip>
+            <Image Source="{x:Bind Fighter.Face}"
+                   Stretch="None"
+                   Canvas.Left="{x:Bind Fighter.FaceLeft}"
+                   Canvas.Top="{x:Bind Fighter.FaceTop}" />
+          </Canvas>
+        </Viewbox>
+
+        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+          <TextBlock Text="{x:Bind Name}" Style="{StaticResource InterfaceNameStyle}" TextTrimming="CharacterEllipsis" />
+          <TextBlock Text="{x:Bind LevelText}" Style="{StaticResource InterfaceSmallTextStyle}" />
+        </StackPanel>
+
+        <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+          <TextBlock Text="{x:Bind ExperienceText}"
+                     Foreground="{StaticResource InterfaceTextBrush}"
+                     FontWeight="SemiBold"
+                     HorizontalAlignment="Right" />
+          <TextBlock Text="LEVEL UP!"
+                     Foreground="{StaticResource InterfaceHighlightEdgeBrush}"
+                     FontSize="12"
+                     FontWeight="Bold"
+                     HorizontalAlignment="Right"
+                     Visibility="{x:Bind LeveledUp}" />
+        </StackPanel>
+      </Grid>
+    </DataTemplate>
+
+    <!-- one thing picked up: its icon, name and how many -->
+    <DataTemplate x:Key="ItemTemplate" x:DataType="interface:VictoryItem">
+      <Grid ColumnSpacing="10" Margin="0,2">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="28" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+
+        <Viewbox Grid.Column="0" Width="28" Height="28" Stretch="Uniform">
+          <Canvas Width="{x:Bind IconWidth}" Height="{x:Bind IconHeight}">
+            <Canvas.Clip>
+              <RectangleGeometry Rect="{x:Bind IconClip}" />
+            </Canvas.Clip>
+            <Image Source="{x:Bind Icon}"
+                   Stretch="None"
+                   Canvas.Left="{x:Bind IconLeft}"
+                   Canvas.Top="{x:Bind IconTop}" />
+          </Canvas>
+        </Viewbox>
+
+        <TextBlock Grid.Column="1"
+                   Text="{x:Bind Name}"
+                   Foreground="{StaticResource InterfaceTextBrush}"
+                   VerticalAlignment="Center"
+                   TextTrimming="CharacterEllipsis" />
+        <TextBlock Grid.Column="2"
+                   Text="{x:Bind CountText}"
+                   Foreground="{StaticResource InterfaceTextBrush}"
+                   FontWeight="SemiBold"
+                   VerticalAlignment="Center" />
+      </Grid>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <!-- the game dims behind a panel in the middle -->
+  <Grid Visibility="{x:Bind Screen.IsOpen, Mode=OneWay}" Background="#99000000">
+    <Border Style="{StaticResource InterfacePanelStyle}"
+            Width="480"
+            Padding="22,18"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center">
+      <StackPanel Spacing="12">
+        <TextBlock Text="Victory!"
+                   FontSize="30"
+                   FontWeight="Bold"
+                   Foreground="{StaticResource InterfaceHighlightEdgeBrush}"
+                   HorizontalAlignment="Center" />
+        <TextBlock Text="{x:Bind Screen.ExperienceText, Mode=OneWay}"
+                   Style="{StaticResource InterfaceNameStyle}"
+                   HorizontalAlignment="Center" />
+
+        <ItemsControl ItemTemplate="{StaticResource MemberTemplate}" ItemsSource="{x:Bind Screen.Members}" />
+
+        <Rectangle Height="1" Fill="{StaticResource InterfacePanelEdgeBrush}" Opacity="0.5" />
+
+        <TextBlock Text="Spoils" Style="{StaticResource InterfaceSmallTextStyle}" />
+        <ItemsControl ItemTemplate="{StaticResource ItemTemplate}" ItemsSource="{x:Bind Screen.Items}" />
+        <TextBlock Text="Nothing was picked up."
+                   Style="{StaticResource InterfaceSmallTextStyle}"
+                   Visibility="{x:Bind Screen.HasNoItems, Mode=OneWay}" />
+
+        <TextBlock Text="{x:Bind Screen.PromptText, Mode=OneWay}"
+                   Style="{StaticResource InterfaceSmallTextStyle}"
+                   HorizontalAlignment="Center"
+                   Margin="0,6,0,0" />
+      </StackPanel>
+    </Border>
+  </Grid>
+</UserControl>

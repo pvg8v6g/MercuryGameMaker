@@ -102,6 +102,31 @@ public class PartyService(IGameDataService gameDataService, IGameStateService ga
         actor.Mana = Math.Min(actor.Mana, actor.MaxMana);
     }
 
+    /// <summary>
+    /// Experience goes to an actor and it levels up for every level its total now reaches (up to the cap). Each level-up
+    /// recovers its Life and Mana in full. Returns how many levels it gained.
+    /// </summary>
+    public int GainExperience(Fighter actor, int amount)
+    {
+        actor.Experience = Math.Max(0, actor.Experience + amount);
+
+        var cap = Math.Max(MinLevel, gameDataService.LevelCap);
+        var gained = 0;
+        while (actor.Level < cap && actor.Experience >= gameDataService.ExperienceForLevel(actor.Level + 1))
+        {
+            SetLevel(actor, actor.Level + 1);
+            gained++;
+        }
+
+        if (gained > 0)
+        {
+            actor.Life = actor.MaxLife;
+            actor.Mana = actor.MaxMana;
+        }
+
+        return gained;
+    }
+
     // one of the party's items in or out, an item it has none of left is gone from the list
     public void ChangeItem(Guid id, int amount)
     {

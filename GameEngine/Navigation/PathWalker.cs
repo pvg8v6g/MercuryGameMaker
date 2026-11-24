@@ -94,7 +94,9 @@ public class PathWalker(MovementSystem movementSystem, NavigationService navigat
         var movementModule = entity.GetModule<MovementModule>();
         var fixedBefore = movementModule?.FixDirection ?? false;
         if (state.KeepFacing && movementModule is not null) movementModule.FixDirection = true;
-        movementSystem.Move(entity, state.Way);
+        // never past the target: a speed that doesn't fit the walk evenly takes a shorter last step
+        var remaining = Math.Abs(state.TargetX - position.X) + Math.Abs(state.TargetY - position.Y);
+        movementSystem.Move(entity, state.Way, remaining);
         if (movementModule is not null) movementModule.FixDirection = fixedBefore;
 
         return movement.MoveInterrupted && !movement.IsMoving ? WalkResult.Blocked : WalkResult.Busy;
