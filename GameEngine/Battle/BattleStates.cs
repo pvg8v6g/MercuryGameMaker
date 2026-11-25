@@ -40,6 +40,14 @@ public class BattleStates(IGameDataService gameDataService)
         return fighter.States.Any(x => x.State.NoItems) || fighter.States.Any(x => x.State.StunLock && !x.State.CanUseArtes);
     }
 
+    // whoever taunted the fighter, the newest taunt first. A taunter that fell doesn't count
+    public BattleFighter? TauntedBy(BattleFighter fighter) => fighter.States.LastOrDefault(x => x.State.Taunt && !x.Source.IsDown)?.Source;
+
+    public bool CantBeTargeted(BattleFighter fighter) => fighter.States.Any(x => x.State.CantBeTargeted);
+
+    // the arte puts a taunt on whoever it hits
+    public bool Taunts(GameLibrary.Models.Artes.Arte arte) => gameDataService.States.Any(x => x.Taunt && arte.AddStates.Contains(x.Guid));
+
     public bool Has(BattleFighter fighter, Guid state) => fighter.States.Any(x => x.State.Guid == state);
 
     /// <summary>

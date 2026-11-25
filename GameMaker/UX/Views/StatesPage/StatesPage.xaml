@@ -291,6 +291,14 @@
                     IsChecked="{x:Bind ViewModel.SelectedEntity.NoItems, Mode=TwoWay, FallbackValue=False}"
                     behaviors:PointerCursorBehavior.CursorType="Hand"
                     ToolTipService.ToolTip="The holder can't use items while it lasts. It can still walk, turn and use artes." />
+          <CheckBox Content="Taunt"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.Taunt, Mode=TwoWay, FallbackValue=False, UpdateSourceTrigger=PropertyChanged}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="An enemy holding it goes after whoever applied it. A party member holding it does far less damage to anyone else." />
+          <CheckBox Content="Can't Be Targeted"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.CantBeTargeted, Mode=TwoWay, FallbackValue=False, UpdateSourceTrigger=PropertyChanged}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="A cloak: the AI can't pick the holder as a target or aim at it. An area can still catch it." />
           <CheckBox Content="Hidden"
                     IsChecked="{x:Bind ViewModel.SelectedEntity.Hidden, Mode=TwoWay, FallbackValue=False}"
                     behaviors:PointerCursorBehavior.CursorType="Hand"

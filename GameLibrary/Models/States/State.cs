@@ -76,6 +76,20 @@ public partial class State : BaseModel
         set => SetField(ref field, value);
     }
 
+    // taunted by whoever applied it: an enemy goes after them, a party member does far less damage to anyone else
+    public bool Taunt
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    // cloaked: the AI can't pick the holder as a target or aim at it. An area can still catch it
+    public bool CantBeTargeted
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     // a good state (buffs, wards, regeneration). Anything that removes negative states leaves these alone. Off by default
     public bool Friendly
     {

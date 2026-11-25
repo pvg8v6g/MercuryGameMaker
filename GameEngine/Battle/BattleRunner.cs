@@ -45,7 +45,7 @@ public class BattleRunner(
     HitCalculator hitCalculator,
     MovementSystem movementSystem,
     PlayerController playerController,
-    PlaceholderAiController aiController,
+    AiController aiController,
     BattleHud battleHud,
     DebugOverlay debugOverlay,
     IJsonService jsonService,
@@ -75,6 +75,9 @@ public class BattleRunner(
 
     // the one cooldown every item in the party shares: 15 seconds. A tuning value
     private const int ItemCooldownUpdates = 900;
+
+    // what's left of a taunted party member's damage to anyone but the taunter. A tuning value
+    private const double TauntedDamage = 0.3;
 
     // how long the battle music takes to fade out once the last enemy has fallen
     private const double MusicFadeSeconds = 6.0;
@@ -187,9 +190,7 @@ public class BattleRunner(
     // party's shared item cooldown. No cast, no lock. Only a free fighter can use one: not down, running, casting or stunned
     public void UseItem(BattleFighter fighter, int slot)
     {
-        if (_battle is not { } battle || fighter.IsEnemy || _won || _lost) return;
-        if (battle.ItemSlots.ElementAtOrDefault(slot) is not { } item) return;
-        if (fighter.IsDown || _fleeProgress > 0 || fighter.Casting is not null || states.BlocksItems(fighter) || battle.ItemCooldown > 0) return;
+        if (_battle is not { } battle || !CanUseItem(fighter, slot) || battle.ItemSlots[slot] is not { } item) return;
 
         // an item that's already gone (spent, or sold from a page mid fight) empties its slot and does nothing
         if (gameStateService.Items.GetValueOrDefault(item.Guid) <= 0)
@@ -206,7 +207,22 @@ public class BattleRunner(
         LandItem(item, fighter);
     }
 
-    // an arte with projectiles is judged by a straight line as far as its projectiles step forward (placeholder AI)
+    public IReadOnlyList<Consumable?> ItemSlots => _battle?.ItemSlots ?? [];
+
+    public bool CanUseItem(BattleFighter fighter, int slot)
+    {
+        if (_battle is not { } battle || fighter.IsEnemy || _won || _lost || battle.ItemSlots.ElementAtOrDefault(slot) is null) return false;
+        return !fighter.IsDown && _fleeProgress <= 0 && fighter.Casting is null && !states.BlocksItems(fighter) && battle.ItemCooldown <= 0;
+    }
+
+    public bool ItemWouldHit(BattleFighter fighter, Consumable item, BattleFighter target)
+    {
+        var revives = item.ClearAllStates || item.RemoveStates.Contains(Incapacitated());
+        return InScope(item.EffectScope, fighter, fighter.Team, target, revives) && Touches(target, ItemBoxes(item, fighter), item.EffectScope);
+    }
+
+    // an arte with projectiles is judged by a straight line as far as its projectiles step forward. Both that and an area
+    // leave some give (the target can walk while it's on the way), so this is whether it's worth using, not a hit check
     public bool WouldHit(BattleFighter fighter, Arte arte, BattleFighter target, Direction facing)
     {
         var revives = arte.RemoveStates.Contains(Incapacitated());
@@ -216,7 +232,8 @@ public class BattleRunner(
         if (arte.Projectiles.Any(x => Routes(x).Any(route => route.Route.OfType<PlaceRandomlyMovement>().Any()))) return true;
         if (arte.Projectiles.Count > 0) return InFlightLine(fighter, arte, target, facing);
 
-        return Touches(target, [.. Hitboxes(fighter.Body, arte, facing)], arte.EffectScope);
+        Rect[] boxes = [.. Hitboxes(fighter.Body, arte, facing)];
+        return Touches(target, boxes, arte.EffectScope) && (arte.DirectionRotate || WellInside(fighter, target, boxes, arte.EffectScope));
     }
 
     public void Walk(BattleFighter fighter, Direction direction)
@@ -423,8 +440,30 @@ public class BattleRunner(
         return new Rect(feet.X, feet.Y, Tile, Tile);
     }
 
-    // the placeholder AI's guess for an arte with projectiles: a tile-wide line from the fighter's feet tile, the way it
-    // faces, as long as the farthest projectile steps forward in its routes (one tile at least)
+    // the AI's area rule: a tile in from the edge, so the target would still be caught a tile farther out. An area that only
+    // reaches one tile loses nothing
+    private bool WellInside(BattleFighter fighter, BattleFighter target, Rect[] boxes, EffectScope scope)
+    {
+        if (scope is EffectScope.Self or EffectScope.Party || boxes.Length == 0) return true;
+        if (hitboxSystem.Main(target.Body) is not { } body) return false;
+
+        var feet = FeetTile(fighter.Body);
+        var reach = boxes.Max(x => Math.Max(Math.Max(feet.X - x.Left, x.Right - (feet.X + Tile)), Math.Max(feet.Y - x.Top, x.Bottom - (feet.Y + Tile))));
+        if (reach <= Tile * 1.25) return true;
+
+        var me = Feet(fighter);
+        var them = Feet(target);
+        var (dx, dy) = (them.X - me.X, them.Y - me.Y);
+        var farthest = Math.Max(Math.Abs(dx), Math.Abs(dy));
+        if (farthest < 1) return true;
+
+        var (outX, outY) = (dx / farthest * Tile, dy / farthest * Tile);
+        return boxes.Any(box => body.Collide(box.X - outX, box.Y - outY, box.Width, box.Height));
+    }
+
+    // the AI's guess for an arte with projectiles: a tile-wide line from the fighter's feet tile, the way it
+    // faces, as long as the farthest projectile steps forward in its routes (one tile at least). A long flight is easy to
+    // walk out of, so a range of 6 tiles or more counts 2 less, 4 or 5 counts 1 less, and 3 or less loses nothing
     private bool InFlightLine(BattleFighter fighter, Arte arte, BattleFighter target, Direction facing)
     {
         if (hitboxSystem.Main(target.Body) is not { } body) return false;
@@ -433,7 +472,8 @@ public class BattleRunner(
             .Select(projectile => projectile.Pages.SelectMany(x => x.Actions).OfType<EntityMovementAction>().SelectMany(x => x.Route).OfType<StepForwardMovement>().Sum(x => x.Steps))
             .DefaultIfEmpty(0)
             .Max();
-        var reach = Math.Max(Tile, steps * gameDataService.StepSize * gameDataService.ScaleFactor);
+        var tiles = steps * gameDataService.StepSize * gameDataService.ScaleFactor / Tile;
+        var reach = Math.Max(1, tiles - (tiles >= 5.5 ? 2 : tiles >= 3.5 ? 1 : 0)) * Tile;
         var feet = FeetTile(fighter.Body);
         var line = facing switch
         {
@@ -541,9 +581,7 @@ public class BattleRunner(
         if (_battle is not { } battle) return;
 
         var attacker = attributes.Snapshot(user);
-        var scale = gameDataService.ScaleFactor;
-        var feet = FeetTile(user.Body);
-        var boxes = item.Hitboxes.Select(x => new Rect(feet.X + (x.OffsetX * scale), feet.Y + (x.OffsetY * scale), x.Width * scale, x.Height * scale)).ToArray();
+        var boxes = ItemBoxes(item, user);
         debugOverlay.FlashArteHitboxes(boxes.Select(x => (x.X, x.Y, x.Width, x.Height)));
 
         var revives = item.ClearAllStates || item.RemoveStates.Contains(Incapacitated());
@@ -553,6 +591,13 @@ public class BattleRunner(
             animationSystem.Play(target.Body, item.TargetAnimation);
             LandItemOn(item, attacker, target);
         }
+    }
+
+    private Rect[] ItemBoxes(Consumable item, BattleFighter user)
+    {
+        var scale = gameDataService.ScaleFactor;
+        var feet = FeetTile(user.Body);
+        return item.Hitboxes.Select(x => new Rect(feet.X + (x.OffsetX * scale), feet.Y + (x.OffsetY * scale), x.Width * scale, x.Height * scale)).ToArray();
     }
 
     // one item landing on one fighter: states first (a revive brings the fallen back before anything heals them), then Life
@@ -705,6 +750,9 @@ public class BattleRunner(
     // the cast is done: an arte with projectiles fires all of them and does nothing else, one without lands at the user
     private void Release(BattleFighter user, Arte arte)
     {
+        // the arte's own Threat, for tanks and Threat drops. Nobody goes below none
+        user.Threat = Math.Max(0, user.Threat + arte.Threat);
+
         var attacker = attributes.Snapshot(user);
         var facing = Facing(user);
         if (arte.Projectiles.Count > 0) Fire(arte, attacker, user.Body, facing, 0);
@@ -746,6 +794,12 @@ public class BattleRunner(
         {
             battleHud.Popup("Miss", Head(target), HudPopupKind.Miss);
             return;
+        }
+
+        // a taunted party member isn't forced to do anything, but hurts anyone else far less (a state's tick isn't aimed)
+        if (outcome.LifeChange > 0 && origin is not null && !attacker.Source.IsEnemy && states.TauntedBy(attacker.Source) is { } taunter && taunter != target)
+        {
+            outcome = outcome with { LifeChange = (int) Math.Round(outcome.LifeChange * TauntedDamage) };
         }
 
         var stats = target.Stats;

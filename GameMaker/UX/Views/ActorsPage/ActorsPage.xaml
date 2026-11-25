@@ -166,6 +166,38 @@
                     VerticalAlignment="Bottom">
             Undead
           </CheckBox>
+
+          <CheckBox Grid.Column="1"
+                    Grid.Row="3"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.Healer, Mode=TwoWay, FallbackValue='False', UpdateSourceTrigger=PropertyChanged}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="In battle the AI takes this actor to hurt allies before it fights. The starting value of the battle option."
+                    VerticalAlignment="Bottom">
+            Healer
+          </CheckBox>
+
+          <CheckBox Grid.Column="1"
+                    Grid.Row="4"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.FleeDanger, Mode=TwoWay, FallbackValue='False', UpdateSourceTrigger=PropertyChanged}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="Walks away from enemies that are casting and stays 3 to 4 tiles off until the cast is done. The starting value of the battle option."
+                    VerticalAlignment="Bottom">
+            Flee Casting Enemies
+          </CheckBox>
+
+          <StackPanel Grid.Column="1"
+                      Grid.Row="5"
+                      Orientation="Horizontal"
+                      Spacing="20">
+            <CheckBox Content="Can Use Items"
+                      IsChecked="{x:Bind ViewModel.SelectedEntity.CanUseItems, Mode=TwoWay, FallbackValue=False, UpdateSourceTrigger=PropertyChanged}"
+                      behaviors:PointerCursorBehavior.CursorType="Hand"
+                      ToolTipService.ToolTip="In battle the AI may use the items on the item keys for this actor. The starting value of the battle option." />
+            <CheckBox Content="Flanks"
+                      IsChecked="{x:Bind ViewModel.SelectedEntity.Flanks, Mode=TwoWay, FallbackValue=False, UpdateSourceTrigger=PropertyChanged}"
+                      behaviors:PointerCursorBehavior.CursorType="Hand"
+                      ToolTipService.ToolTip="Tries to get behind whoever it is after. Hits from behind do more damage." />
+          </StackPanel>
         </Grid>
       </StackPanel>
     </enginePanel:EnginePanel>

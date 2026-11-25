@@ -173,5 +173,33 @@ public partial class Arte : BaseModel
 
     public ObservableCollection<Entity> Projectiles { get; init; } = [];
 
+    // changes the user's Threat when it's used: positive for a tank's artes, negative for a Threat drop
+    public int Threat
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    // how many fighters the AI wants to catch with it. Never more than are still standing
+    public int TargetsWanted
+    {
+        get;
+        set => SetField(ref field, Math.Max(1, value));
+    } = 1;
+
+    // when in a fight the AI may use it
+    public ArteTiming AiTiming
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    // the AI only uses it in a temper (it costs a lot, or leaves the user open)
+    public bool Risky
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
     #endregion
 }

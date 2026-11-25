@@ -378,6 +378,21 @@ that to about 11-21. At level 50 (Power 280) against Defense 200 it's about 163.
   between actors at random every few seconds.
 - **While they have a target they chase it**, and once they're right next to it they **move around a little at
   random**, so nobody just stands still in your face.
+- **AI fighters walk in legs (user, 2026-11-24; now done by A* paths where turns cost extra, see Pick me if).** Choosing the longer axis again every 4 px step made them flicker
+  between two directions on any diagonal. Now a fighter keeps one way until it's lined up (within a quarter tile), then
+  turns once. It only thinks a leg over when its target has moved about a tile, and only turns then if the other way is
+  clearly longer. Blocked, it waits a moment and goes the other way or sidesteps a tile (`LegWalk`). Diagonal movement
+  was considered and not chosen. When the AI uses the A* paths, turns have to cost extra there too.
+- **Movement decisions (user, 2026-11-24):**
+  - **Equal speeds stay.** Nobody gets a faster walk to catch a runner.
+  - **Activating an arte means facing its target:** an AI fighter, actor or enemy, always turns to its target when it
+    uses an arte, be it a projectile, a swing or a wide area. An arte on itself doesn't turn it.
+  - **Getting behind a target is a per-fighter trait:** some fighters try to flank, others never do.
+  - **Retreating is turning around and walking away,** back exposed and all. There's no walking backwards.
+  - **Fighters stay solid** to each other, allies and enemies alike.
+  - **There is no dodging.** The AI never works out where an arte or projectile will hit to step out of it: avoiding a
+    plain swing would be far too strong, and only the player couldn't do it. Flee
+    casting enemies (Party battle options) isn't dodging: it only keeps a distance.
 
 ## Winning and losing (user, 2026-11-20)
 
@@ -657,8 +672,81 @@ option is never a reason to cut an idea.
 Options the player sets for each AI-controlled party member in the menu:
 
 - **May use items in battle** (see Items).
-- **Magic user:** tries to stay away from the middle of the fight. Enemy casters do this by default.
-- **Flee casting enemies:** moves away from enemies that are casting.
+- **Healer:** goes to hurt allies before it fights (user, 2026-11-25; replaces Magic user).
+- **Flee casting enemies:** when an enemy starts a cast, the fighter walks away from them and stays about 3-4 tiles off.
+  Bigger artes may still hit, smaller ones miss. Mostly wanted for your own casters (user, 2026-11-24).
+
+**AI decisions (user, 2026-11-24):**
+
+- **One AI for both sides.** Party members follow the same AI as enemies, only on the other side. The player can only
+  set these options for them, outside battle. There are no per-arte switches or tactics lists.
+- **"Pick me if" probably lives on the arte.** Its conditions are still to be defined with the user.
+- **Boss phases will exist,** but come later, when a boss is designed with phases in mind.
+
+## Pick me if and the AI loop (user, 2026-11-24)
+
+**Built 2026-11-25** (`AiController`, `PickMeIf`; the placeholder AI is gone). The user's answers and how they were built:
+
+- **The steps, always in this order:** choose target, choose arte, **turn toward the target**, activate. A cast keeps the
+  facing it started with. There's still a short pause after each arte.
+- **Choosing among the artes that pass** is random, weighted toward revives, heals, cures and early buffs.
+- **An attack doesn't have to hit the chosen target:** Threat decides where a fighter walks, and anyone standing in its way
+  gets swung at (otherwise three actors could pin an enemy in a corner while a fourth held the Threat, and it would die
+  without fighting back). If three are hugging the caster of a big area, destroy them all. The target comes first when
+  it's in reach. A projectile only goes at someone else when they're within 2 tiles.
+- **Give:** projectile range 1-3 loses nothing, 4-5 loses 1, 6 or more loses 2. Areas lose 1 tile, a 3x3 loses nothing.
+  The longest range arte comes up first by itself as the fighter walks in, so casters need no range option.
+- **Heals:** below 70% Life, or one ally below 35% whatever Targets Wanted says. A heal over time is started between 30%
+  and 85%, never on someone who'd fall before it helps. A healer keeps Mana back for its cheapest heal.
+- **Targets Wanted** (Artes page) is capped at how many are still standing. **AI Timing:** any time, opening (other side
+  above 70% of its combined Life), late (under 50%), low Life target (under 35%).
+- **Risky** artes take a **temper** ("spicy"): big hits, an ally falling, or now and then just a mood, for about 5 seconds.
+- **Healer** is a battle option for actors and a checkbox on the Enemies page: it goes to hurt allies before it fights.
+  Anyone without it still uses a heal properly when an ally in reach needs it.
+- **Magic user is gone** as an option: only Flee Casting Enemies.
+- **Threat field (Artes page)** changes the user's Threat when the arte goes off (never below 0). **Threat drops** (negative,
+  friendly scope) are used by whoever has the most Threat on its side, as long as someone else is standing. A tank (knows
+  an arte with positive Threat) only drops under 35% Life. A tank's own Threat buffs are used when others have more.
+- **Taunt (States page):** a taunted enemy targets the taunter (newest first, until they fall). A taunted party member does
+  30% damage to anyone else. The AI taunts someone who's going after an ally. **Can't Be Targeted (States page)** is the
+  cloak. The AI also switches at once when someone's Threat jumps well above its target's.
+- **Items:** a member with Can Use Items uses what's on the item keys, only when needed badly: a fallen ally, one ally under
+  35% Life or two under 50%, Mana under 20%, or a stun, silence or ticking ailment. Boosts and thrown items are the
+  player's.
+- **Walking (`BattleWalk`, replaced `LegWalk`):** a fighter claims one of the four sides of its target, or a corner when
+  those are taken, that no ally has. It walks there by A* around the others: turns cost 2 cells, going through someone
+  moving costs 6. Paths are kept at least half a second. **Flanks** (Actors and Enemies pages) wants the spot behind.
+
+**Pick me if.** An arte is available to a fighter only when all of this holds:
+
+- The fighter has enough Mana for it.
+- It makes sense to cast: no heal when the fighter and all allies are at or near full Life, and no revive unless a fallen
+  ally is in range.
+- The proper number of targets (friendly or hostile) is in the area it would hit:
+  - **area artes:** the area less 1 tile (4 tiles in every direction needs the target within 3),
+  - **other artes** (a sword swing): the target is inside the damage area,
+  - **projectiles:** within the distance they travel, with some give: a range of 8 or 9 wants the target within 6-7, but
+    a range of 3 just needs them within those 3.
+- **Most self help artes** (stat buffs, shields, reflection bubbles) need targets within about 4 tiles, so the buff isn't
+  spent walking across the field.
+- Some artes get special requirements based on what they do.
+- Some are better saved for later in the fight, or for an enemy at low Life.
+- The cost counts against the Mana pool: some artes are only used when feeling spicy and it won't be punished.
+- **Area buffs** are used when they make sense: the fighter targets a friendly to share it, or a bunch of friendlies happen
+  to be around it in the normal throes of battle.
+- **Target counts** matter for certain artes, and so does the size of the fight: in a 1v1 every arte is on the table, in a
+  3v3 or 4v4 a giant heal or a giant damage spell with a long cooldown may want two targets.
+
+**The AI loop:**
+
+1. Walk around a little at random so it doesn't just stand there (no diagonal jitter).
+2. Choose a target and **move toward it**. Healers (enemy or actor) target friendlies only when a heal is needed,
+   otherwise hostiles, so healers need damage artes too. They prioritize buffs and heals: heals only when necessary, buffs
+   usually near the start unless one is better saved for the middle or end. Any of them can be used again, considering
+   cooldown and cost. In theory every fighter has a melee range arte that keeps pushing it toward its target.
+3. Get the artes whose "pick me if" passes. If there are none, keep moving toward the target or choose another.
+4. **Activate immediately.** There's no target to go and find: an arte is only on the list when its friendly or hostile is
+   already close enough.
 
 ## Open questions
 

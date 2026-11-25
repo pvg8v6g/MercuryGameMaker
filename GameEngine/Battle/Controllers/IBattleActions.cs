@@ -2,6 +2,7 @@ using Windows.Foundation;
 using GameEngine.Models.Battle;
 using GameLibrary.Enumerations;
 using GameLibrary.Models.Artes;
+using GameLibrary.Models.Items;
 
 namespace GameEngine.Battle.Controllers;
 
@@ -25,6 +26,14 @@ public interface IBattleActions
 
     // uses what's in the fighter's item slot (0 to 4) now, if the party's item cooldown is over and the fighter is free to
     void UseItem(BattleFighter fighter, int slot);
+
+    // what the party's item keys hold, and whether the fighter could use one right now
+    IReadOnlyList<Consumable?> ItemSlots { get; }
+
+    bool CanUseItem(BattleFighter fighter, int slot);
+
+    // whether the item, used where the fighter stands, would land on the target
+    bool ItemWouldHit(BattleFighter fighter, Consumable item, BattleFighter target);
 
     // whether the arte, used facing that way from where the fighter stands, would catch the target
     bool WouldHit(BattleFighter fighter, Arte arte, BattleFighter target, Direction facing);

@@ -223,6 +223,21 @@ public partial class Fighter : BaseModel
         set => SetField(ref field, value);
     }
 
+    // a battle option for party members: goes to hurt allies before it fights
+    public bool Healer
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    // tries to get behind whoever it's after
+    public bool Flanks
+    {
+        get;
+        set => SetField(ref field, value);
+    }
+
+    // walks away from enemies that are casting
     public bool FleeDanger
     {
         get;

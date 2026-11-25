@@ -88,6 +88,7 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -148,6 +149,25 @@
                     VerticalAlignment="Bottom">
             Boss
           </CheckBox>
+
+          <StackPanel Grid.Column="0"
+                      Grid.Row="5"
+                      Grid.ColumnSpan="2"
+                      Orientation="Horizontal"
+                      Spacing="20">
+            <CheckBox Content="Healer"
+                      IsChecked="{x:Bind ViewModel.SelectedEntity.Healer, Mode=TwoWay, FallbackValue=False, UpdateSourceTrigger=PropertyChanged}"
+                      behaviors:PointerCursorBehavior.CursorType="Hand"
+                      ToolTipService.ToolTip="Goes to hurt allies before it fights. An enemy without this still uses a heal it knows when an ally in reach needs it." />
+            <CheckBox Content="Flee Casting Enemies"
+                      IsChecked="{x:Bind ViewModel.SelectedEntity.FleeDanger, Mode=TwoWay, FallbackValue=False, UpdateSourceTrigger=PropertyChanged}"
+                      behaviors:PointerCursorBehavior.CursorType="Hand"
+                      ToolTipService.ToolTip="Walks away from enemies that are casting and stays 3 to 4 tiles off until the cast is done." />
+            <CheckBox Content="Flanks"
+                      IsChecked="{x:Bind ViewModel.SelectedEntity.Flanks, Mode=TwoWay, FallbackValue=False, UpdateSourceTrigger=PropertyChanged}"
+                      behaviors:PointerCursorBehavior.CursorType="Hand"
+                      ToolTipService.ToolTip="Tries to get behind whoever it is after. Hits from behind do more damage." />
+          </StackPanel>
 
           <!-- the description stretches up to DescriptionMaxWidth, anchored left: a stretched box with a MaxWidth centres itself -->
           <Grid Grid.Column="0" Grid.Row="4" Grid.ColumnSpan="2">

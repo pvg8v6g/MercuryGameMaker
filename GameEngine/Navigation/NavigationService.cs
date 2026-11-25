@@ -53,13 +53,17 @@ public class NavigationService(IGameDataService gameDataService, IGameStateServi
     // called once an update, every update gets its own searches
     public void NewUpdate() => _searchesLeft = SearchesPerUpdate;
 
-    // the path to the goal, null when this update's searches are used up (ask again next update)
-    public NavPath? FindPath(MapEntity walker, NavGoal goal)
+    // the path to the goal, null when this update's searches are used up (ask again next update). A turn can cost extra (in
+    // cells), so the path is straight runs, starting with the way the walker was going. So can going through someone who's
+    // moving, so the path goes around them when that isn't much longer
+    public NavPath? FindPath(MapEntity walker, NavGoal goal, Direction? going = null, double turnCost = 0, double movingCost = 0)
     {
         if (_searchesLeft <= 0) return null;
         _searchesLeft--;
 
         if (Walker(walker) is not { } search) return NavPath.None;
+
+        var moving = movingCost > 0 ? Boxes(walker, x => x.State<MovementState>().IsMoving) : new Dictionary<int, MapHitbox[]>();
 
         var start = new Cell(0, 0, HitboxSystem.Level(search.Position));
         var open = new PriorityQueue<Cell, double>();
@@ -89,6 +93,9 @@ public class NavigationService(IGameDataService gameDataService, IGameStateServi
                 if (Step(search, cell, way) is not { } next || closed.Contains(next)) continue;
 
                 var cost = walked[cell] + 1;
+                var before = cameFrom.TryGetValue(cell, out var came) ? came.Way : going;
+                if (before is { } last && last != way) cost += turnCost;
+                if (moving.TryGetValue(next.Level, out var walkers) && Feet(search, next) is var there && walkers.Any(there.Collide)) cost += movingCost;
                 if (walked.TryGetValue(next, out var known) && known <= cost) continue;
 
                 walked[next] = cost;
@@ -121,15 +128,15 @@ public class NavigationService(IGameDataService gameDataService, IGameStateServi
         if (!HitboxSystem.Areas(hitboxModule, Direction.None).Any() || gameStateService.ActiveMap is not { } map) return null;
 
         var tile = gameDataService.GridSize * gameDataService.ScaleFactor;
-        return new Search(position, hitboxModule, map.Width * tile, map.Height * tile, Obstacles(walker, includeMoving));
+        return new Search(position, hitboxModule, map.Width * tile, map.Height * tile, Boxes(walker, x => includeMoving || !x.State<MovementState>().IsMoving));
     }
 
-    // the entities that block the walker, by level: everyone that collides and (unless asked) isn't on the move
-    private Dictionary<int, MapHitbox[]> Obstacles(MapEntity walker, bool includeMoving)
+    // the hitboxes of everyone else that collides and matches, by level
+    private Dictionary<int, MapHitbox[]> Boxes(MapEntity walker, Func<MapEntity, bool> include)
     {
         return gameStateService.MapEntities
             .Where(x => x != walker && !x.IsErased && x.GetModule<EntityHitboxModule>() is { Collide: true })
-            .Where(x => includeMoving || !x.State<MovementState>().IsMoving)
+            .Where(include)
             .Where(x => x.GetModule<PositionModule>() is not null)
             .GroupBy(x => HitboxSystem.Level(x.GetModule<PositionModule>()!))
             .ToDictionary(x => x.Key, x => x.SelectMany(hitboxSystem.PlacedOf).ToArray());

@@ -28,6 +28,20 @@ public class SpotGoal(double x, double y, double width, double height) : NavGoal
 }
 
 /// <summary>
+/// The middle of the feet on a point, give or take, in scaled map pixels.
+/// </summary>
+public class CenterGoal(double x, double y, double tolerance) : NavGoal
+{
+    public override bool Reached(MapHitbox feet, int level)
+    {
+        var center = Center(feet);
+        return Math.Abs(center.X - x) <= tolerance && Math.Abs(center.Y - y) <= tolerance;
+    }
+
+    public override double Remaining(MapHitbox feet) => Distance(Center(feet), (x, y));
+}
+
+/// <summary>
 /// Next to another entity: the feet are within reach of one of its hitboxes, on its level.
 /// The entity's hitboxes are taken when the search starts, a moving target is followed by searching again.
 /// </summary>

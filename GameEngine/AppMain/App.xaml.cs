@@ -166,7 +166,10 @@ public partial class App
         services.AddSingleton<PartyStates>();
         services.AddSingleton<HitCalculator>();
         services.AddSingleton<PlayerController>();
-        services.AddSingleton<PlaceholderAiController>();
+        services.AddSingleton<PickMeIf>();
+        services.AddSingleton<PickItem>();
+        services.AddSingleton<BattleWalk>();
+        services.AddSingleton<AiController>();
         services.AddSingleton<BattleDrops>();
         services.AddSingleton<GameOverSequence>();
         services.AddSingleton<BattleRunner>();
