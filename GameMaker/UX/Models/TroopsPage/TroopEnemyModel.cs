@@ -16,7 +16,20 @@ public partial class TroopEnemyModel(TroopEnemy troopEnemy, Fighter? enemy, int 
 
     public TroopEnemy TroopEnemy => troopEnemy;
 
-    public string Name => enemy?.Name ?? "(Missing Enemy)";
+    // which enemy this is: swapping it keeps the spawn mode and spot
+    public Fighter? Enemy
+    {
+        get;
+        set
+        {
+            if (value is null || value == field) return;
+            SetField(ref field, value);
+            troopEnemy.EnemyGuid = value.Guid;
+            OnPropertyChanged(nameof(Name));
+        }
+    } = enemy;
+
+    public string Name => Enemy?.Name ?? "(Missing Enemy)";
 
     public CroppedImage? Sprite
     {

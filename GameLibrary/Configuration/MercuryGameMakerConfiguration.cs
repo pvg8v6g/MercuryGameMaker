@@ -21,4 +21,7 @@ public class MercuryGameMakerConfiguration
     public bool ToolRailCollapsed { get; set; }
 
     public bool MapsPanelCollapsed { get; set; }
+
+    // the map the editor opens to
+    public Guid? LastMap { get; set; }
 }

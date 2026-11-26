@@ -132,7 +132,7 @@
                 <ColumnDefinition Width="Auto" />
               </Grid.ColumnDefinitions>
               <TextBlock Grid.Column="0"
-                         Text="{x:Bind Name}"
+                         Text="{x:Bind Name, Mode=OneWay}"
                          TextTrimming="CharacterEllipsis"
                          VerticalAlignment="Center" />
               <TextBlock Grid.Column="1"
@@ -180,6 +180,13 @@
                     ItemsSource="{x:Bind ViewModel.PlaceModes}"
                     SelectedItem="{x:Bind ViewModel.SelectedPlaceMode, Mode=TwoWay}"
                     ToolTipService.ToolTip="What a left-click in the arena places: the selected enemy (on a spot of its own), a random enemy spawn point, or a party spawn point. Click the tile the feet stand on. Right-click a spawn point to remove it." />
+          <ComboBox Header="Selected Enemy"
+                    MinWidth="200"
+                    ItemsSource="{x:Bind ViewModel.Enemies}"
+                    SelectedItem="{x:Bind ViewModel.SelectedEnemyFighter, Mode=TwoWay}"
+                    DisplayMemberPath="Name"
+                    IsEnabled="{x:Bind ViewModel.HasSelectedTroopEnemy, Mode=OneWay}"
+                    ToolTipService.ToolTip="Which enemy the selected troop enemy is. Changing it keeps its spawn (Fixed or Random) and its spot in the arena." />
           <ComboBox Header="Selected Enemy Spawn"
                     MinWidth="160"
                     ItemsSource="{extensions:EnumValues EnumType=enums:SpawnMode}"

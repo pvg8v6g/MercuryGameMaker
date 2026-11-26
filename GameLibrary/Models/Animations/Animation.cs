@@ -47,7 +47,7 @@ public partial class Animation : BaseModel
         set => SetField(ref field, value);
     } = [];
 
-    // sounds played on their frame without a cell, so an animation can be only sounds
+    // sounds played on their frame, an animation can be only sounds
     public ObservableCollection<AnimationSound> Sounds
     {
         get;

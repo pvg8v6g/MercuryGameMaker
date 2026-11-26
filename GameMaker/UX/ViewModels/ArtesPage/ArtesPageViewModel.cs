@@ -185,6 +185,15 @@ public class ArtesPageViewModel(
         RefreshHitboxes();
     });
 
+    // removes the hitboxes of every direction, including ones the direction picker isn't showing
+    public RelayCommand ClearHitboxesCommand => new(() =>
+    {
+        if (SelectedEntity is not { } arte) return;
+
+        foreach (var direction in HitboxDirections) arte.HitboxesFor(direction).Clear();
+        RefreshHitboxes();
+    });
+
     #endregion
 
     #region Projectile relays

@@ -27,6 +27,18 @@
                          Modifiers="Control"
                          behaviors:KeyboardAcceleratorBehavior.Command="{x:Bind ViewModel.DuplicateCellCommand}" />
   </Page.KeyboardAccelerators>
+  <Page.Resources>
+    <!-- a button on the tool rail: a picture over a small label, like the map editor's -->
+    <Style x:Key="AnimationToolButtonStyle"
+           TargetType="Button"
+           BasedOn="{StaticResource DefaultButtonStyle}">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Padding" Value="6" />
+      <Setter Property="MinWidth" Value="64" />
+      <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+  </Page.Resources>
   <Grid ColumnSpacing="10" Padding="5">
     <Grid.RowDefinitions>
       <RowDefinition Height="*" />
@@ -83,24 +95,46 @@
                                                Grid.Row="1"
                                                ItemsSource="{x:Bind ViewModel.AnimationImageFiles, Mode=OneWay}"
                                                SelectedIndex="{x:Bind ViewModel.SelectedAnimationImageFilesIndex, Mode=TwoWay}" />
-        <StackPanel Grid.Column="1"
-                    Grid.Row="0"
-                    Orientation="Horizontal"
-                    HorizontalAlignment="Left"
-                    VerticalAlignment="Bottom"
-                    Spacing="15">
-          <Button Command="{x:Bind ViewModel.FrameEffectsCommand}"
-                  IsEnabled="{x:Bind ViewModel.IsCellSelected, Mode=OneWay}">
-            Frame Effects
+        <!-- the tool rail: one button per thing a frame can have, each opens its options beside the rail -->
+        <StackPanel Grid.Column="2"
+                    Grid.Row="1"
+                    Spacing="6">
+          <Button Style="{StaticResource AnimationToolButtonStyle}"
+                  behaviors:PointerCursorBehavior.CursorType="Hand"
+                  Command="{x:Bind ViewModel.FrameEffectsCommand}"
+                  IsEnabled="{x:Bind ViewModel.IsCellSelected, Mode=OneWay}"
+                  ToolTipService.ToolTip="Frame Effects: the picked cell's look on this frame. Pick a cell first.">
+            <StackPanel Spacing="2">
+              <SymbolIcon Symbol="Edit" />
+              <TextBlock Text="Effects"
+                         FontSize="10"
+                         HorizontalAlignment="Center" />
+            </StackPanel>
           </Button>
-          <Button Command="{x:Bind ViewModel.FrameSpanningCommand}">
-            Frame Spanning
+          <Button Style="{StaticResource AnimationToolButtonStyle}"
+                  behaviors:PointerCursorBehavior.CursorType="Hand"
+                  Command="{x:Bind ViewModel.FrameSpanningCommand}"
+                  ToolTipService.ToolTip="Frame Spanning: apply values to cells across a range of frames, or delete those cells.">
+            <StackPanel Spacing="2">
+              <SymbolIcon Symbol="SlideShow" />
+              <TextBlock Text="Spanning"
+                         FontSize="10"
+                         HorizontalAlignment="Center" />
+            </StackPanel>
           </Button>
           <!-- the target's tint on this frame, the color fades in over the fade frames -->
-          <Button Content="Target Tint"
+          <Button Style="{StaticResource AnimationToolButtonStyle}"
+                  behaviors:PointerCursorBehavior.CursorType="Hand"
                   ToolTipService.ToolTip="Tint the character the animation plays on, starting on this frame. A tint still on when the animation ends fades out.">
+            <StackPanel Spacing="2">
+              <FontIcon Glyph="&#xE790;"
+                        FontSize="20" />
+              <TextBlock Text="Tint"
+                         FontSize="10"
+                         HorizontalAlignment="Center" />
+            </StackPanel>
             <Button.Flyout>
-              <Flyout Placement="Bottom">
+              <Flyout Placement="Left">
                 <StackPanel Width="320"
                             Spacing="10">
                   <CheckBox Content="Tint The Target On This Frame"
@@ -122,10 +156,18 @@
             </Button.Flyout>
           </Button>
           <!-- a ring sent out from the target that bends the map and everyone on it as it spreads and fades -->
-          <Button Content="Shockwave"
+          <Button Style="{StaticResource AnimationToolButtonStyle}"
+                  behaviors:PointerCursorBehavior.CursorType="Hand"
                   ToolTipService.ToolTip="Send a shockwave out from the target, starting on this frame. It bends everything under the animation as it spreads out and fades.">
+            <StackPanel Spacing="2">
+              <FontIcon Glyph="&#xE93E;"
+                        FontSize="20" />
+              <TextBlock Text="Shockwave"
+                         FontSize="10"
+                         HorizontalAlignment="Center" />
+            </StackPanel>
             <Button.Flyout>
-              <Flyout Placement="Bottom">
+              <Flyout Placement="Left">
                 <StackPanel Width="320"
                             Spacing="10">
                   <CheckBox Content="Start A Shockwave On This Frame"
@@ -206,10 +248,18 @@
             </Button.Flyout>
           </Button>
           <!-- a bolt of lightning drawn from code -->
-          <Button Content="Lightning"
+          <Button Style="{StaticResource AnimationToolButtonStyle}"
+                  behaviors:PointerCursorBehavior.CursorType="Hand"
                   ToolTipService.ToolTip="Strike with a bolt of lightning drawn from code, starting on this frame. Every play is a different bolt.">
+            <StackPanel Spacing="2">
+              <FontIcon Glyph="&#xE945;"
+                        FontSize="20" />
+              <TextBlock Text="Lightning"
+                         FontSize="10"
+                         HorizontalAlignment="Center" />
+            </StackPanel>
             <Button.Flyout>
-              <Flyout Placement="Bottom">
+              <Flyout Placement="Left">
                 <ScrollViewer MaxHeight="640"
                               VerticalScrollBarVisibility="Auto">
                   <StackPanel Width="340"
@@ -345,10 +395,18 @@
             </Button.Flyout>
           </Button>
           <!-- shimmering air around the target, a fire spell's heat -->
-          <Button Content="Heat Haze"
+          <Button Style="{StaticResource AnimationToolButtonStyle}"
+                  behaviors:PointerCursorBehavior.CursorType="Hand"
                   ToolTipService.ToolTip="Make the air shimmer around the target, starting on this frame. It bends everything under the animation and fades in and out.">
+            <StackPanel Spacing="2">
+              <FontIcon Glyph="&#xECAD;"
+                        FontSize="20" />
+              <TextBlock Text="Heat Haze"
+                         FontSize="10"
+                         HorizontalAlignment="Center" />
+            </StackPanel>
             <Button.Flyout>
-              <Flyout Placement="Bottom">
+              <Flyout Placement="Left">
                 <StackPanel Width="320"
                             Spacing="10">
                   <CheckBox Content="Start Heat Haze On This Frame"
@@ -433,11 +491,18 @@
               </Flyout>
             </Button.Flyout>
           </Button>
-          <!-- a sound the animation plays on this frame without a cell, so an animation can be only sounds -->
-          <Button Content="Sound"
-                  ToolTipService.ToolTip="Play a sound on this frame without needing a cell. An animation can be nothing but sounds.">
+          <!-- a sound the animation plays on this frame, an animation can be only sounds -->
+          <Button Style="{StaticResource AnimationToolButtonStyle}"
+                  behaviors:PointerCursorBehavior.CursorType="Hand"
+                  ToolTipService.ToolTip="Play a sound on this frame. An animation can be nothing but sounds.">
+            <StackPanel Spacing="2">
+              <SymbolIcon Symbol="Volume" />
+              <TextBlock Text="Sound"
+                         FontSize="10"
+                         HorizontalAlignment="Center" />
+            </StackPanel>
             <Button.Flyout>
-              <Flyout Placement="Bottom">
+              <Flyout Placement="Left">
                 <StackPanel Width="320"
                             Spacing="10">
                   <CheckBox Content="Play A Sound On This Frame"
@@ -447,7 +512,7 @@
                     <ComboBox Header="Sound Effect"
                               HorizontalAlignment="Stretch"
                               ItemsSource="{x:Bind ViewModel.SfxFiles, Mode=OneWay}"
-                              SelectedItem="{x:Bind ViewModel.FrameSound.Name, Mode=TwoWay, FallbackValue={x:Null}}" />
+                              SelectedItem="{x:Bind ViewModel.FrameSoundName, Mode=TwoWay}" />
                     <Grid ColumnSpacing="10">
                       <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -473,19 +538,30 @@
               </Flyout>
             </Button.Flyout>
           </Button>
+        </StackPanel>
+        <StackPanel Grid.Column="1"
+                    Grid.Row="0"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Bottom"
+                    Spacing="15">
           <!-- a map picture behind the preview, so shockwaves and heat have something to bend -->
           <ComboBox ItemsSource="{x:Bind ViewModel.BackdropFiles, Mode=OneWay}"
                     SelectedItem="{x:Bind ViewModel.SelectedBackdrop, Mode=TwoWay}"
                     PlaceholderText="Backdrop"
                     MinWidth="140"
                     ToolTipService.ToolTip="A map's ground picture behind the preview. Shockwaves and heat bend what's under them, so they only show over a picture." />
-          <Button Command="{x:Bind ViewModel.PlayCommand}"
-                  Content="{x:Bind ViewModel.PlayButtonText, Mode=OneWay}" />
+          <Button Padding="8,4"
+                  VerticalAlignment="Center"
+                  behaviors:PointerCursorBehavior.CursorType="Hand"
+                  Command="{x:Bind ViewModel.PlayCommand}"
+                  ToolTipService.ToolTip="Play or stop the animation (Space)">
+            <SymbolIcon Symbol="{x:Bind ViewModel.PlaySymbol, Mode=OneWay}" />
+          </Button>
         </StackPanel>
         <mercury:GameCanvasView Grid.Column="1"
                                 Grid.Row="1"
                                 ImageDpi="96"
-                                Grid.ColumnSpan="2"
                                 UpdateRate="16.66666667"
                                 ClearColor="{StaticResource MediumGreyColor}"
                                 AnchorColor="{StaticResource RedColor}"
@@ -501,7 +577,6 @@
                                 behaviors:PointerCommandBehavior.PointerReleasedCommand="{x:Bind ViewModel.CanvasPointerReleasedCommand}" />
         <ItemsControl Grid.Column="1"
                       Grid.Row="1"
-                      Grid.ColumnSpan="2"
                       IsHitTestVisible="False"
                       ItemsSource="{x:Bind ViewModel.CellOutlines, Mode=OneWay}">
           <ItemsControl.ItemsPanel>
@@ -511,21 +586,36 @@
           </ItemsControl.ItemsPanel>
           <ItemsControl.ItemTemplate>
             <DataTemplate>
-              <Rectangle Width="{Binding Width}"
-                         Height="{Binding Height}"
-                         Stroke="{StaticResource LightBlueBrush}"
-                         StrokeThickness="2">
-                <Rectangle.RenderTransform>
+              <Grid Width="{Binding Width}"
+                    Height="{Binding Height}">
+                <Grid.RenderTransform>
                   <TranslateTransform X="{Binding X}"
                                       Y="{Binding Y}" />
-                </Rectangle.RenderTransform>
-              </Rectangle>
+                </Grid.RenderTransform>
+                <Rectangle Stroke="{StaticResource LightBlueBrush}"
+                           StrokeThickness="2" />
+                <!-- the cell's id -->
+                <Border HorizontalAlignment="Right"
+                        VerticalAlignment="Top"
+                        MinWidth="22"
+                        Margin="2"
+                        Padding="4,1"
+                        CornerRadius="3"
+                        Background="#AA000000">
+                  <Border.RenderTransform>
+                    <TranslateTransform X="{Binding LabelX}" />
+                  </Border.RenderTransform>
+                  <TextBlock Text="{Binding Label}"
+                             Foreground="White"
+                             FontSize="12"
+                             HorizontalAlignment="Center" />
+                </Border>
+              </Grid>
             </DataTemplate>
           </ItemsControl.ItemTemplate>
         </ItemsControl>
         <Border Grid.Column="1"
                 Grid.Row="1"
-                Grid.ColumnSpan="2"
                 HorizontalAlignment="Right"
                 VerticalAlignment="Top"
                 Margin="8"

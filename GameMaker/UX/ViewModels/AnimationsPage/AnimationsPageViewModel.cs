@@ -50,6 +50,9 @@ public class AnimationsPageViewModel(
     private const string NoBackdrop = "None";
     private const int BackdropZ = -2;
 
+    // the room a cell's id takes in its outline's corner
+    private const double LabelWidth = 24;
+
     // the frame's tint being edited, watched so the actor shows each change
     private AnimationTint? _watchedTint;
 
@@ -102,7 +105,7 @@ public class AnimationsPageViewModel(
         private set => SetField(ref field, value);
     } = [];
 
-    // the animation plays a sound of its own on this frame, with no cell (an animation can be only sounds)
+    // the animation plays a sound on this frame (an animation can be only sounds)
     public bool PlaysSound
     {
         get => FrameSound is not null;
@@ -117,6 +120,19 @@ public class AnimationsPageViewModel(
     }
 
     public AnimationSound? FrameSound => SelectedEntity?.Sounds.FirstOrDefault(x => x.Frame == SelectedFrame);
+
+    // the combo box picks nothing while its list of files reloads (every visit to the page), which must not clear the sound
+    public string? FrameSoundName
+    {
+        get => FrameSound?.Name;
+        set
+        {
+            if (value is null || FrameSound is not { } sound || sound.Name == value) return;
+
+            sound.Name = value;
+            OnPropertyChanged();
+        }
+    }
 
     public RelayCommand PreviewFrameSoundCommand => new(() =>
     {
@@ -335,11 +351,11 @@ public class AnimationsPageViewModel(
         set
         {
             if (!SetField(ref field, value)) return;
-            OnPropertyChanged(nameof(PlayButtonText));
+            OnPropertyChanged(nameof(PlaySymbol));
         }
     }
 
-    public string PlayButtonText => IsPlaying ? "Stop" : "Play";
+    public Symbol PlaySymbol => IsPlaying ? Symbol.Stop : Symbol.Play;
 
     #endregion
 
@@ -349,6 +365,7 @@ public class AnimationsPageViewModel(
     {
         RefreshAnimationImageFiles();
         SfxFiles = mediaService.GetMediaFiles(Cache.Sfx);
+        RefreshFrameSound();
         await LoadActorSprite();
         UpdateAnchor();
         RefreshBackdropFiles();
@@ -372,6 +389,7 @@ public class AnimationsPageViewModel(
     {
         OnPropertyChanged(nameof(PlaysSound));
         OnPropertyChanged(nameof(FrameSound));
+        OnPropertyChanged(nameof(FrameSoundName));
     }
 
     private void RefreshFrameTint()
@@ -545,15 +563,6 @@ public class AnimationsPageViewModel(
     {
         if (SelectedEntity is null) return;
 
-        foreach (var sfx in SelectedEntity.Effects
-                     .Where(x => x.Frame == frame && x.Sfx is not null)
-                     .Select(x => x.Sfx!))
-        {
-            if (string.IsNullOrEmpty(sfx.Name)) continue;
-            audioService.PlaySfx(sfx.Name, sfx.Volume, sfx.Pitch);
-        }
-
-        // the animation's own sounds, the ones that aren't on a cell
         foreach (var sound in SelectedEntity.Sounds.Where(x => x.Frame == frame))
         {
             if (!string.IsNullOrEmpty(sound.Name)) audioService.PlaySfx(sound.Name, sound.Volume, sound.Pitch);
@@ -682,7 +691,7 @@ public class AnimationsPageViewModel(
     {
         if (SelectedCell is null) return;
 
-        var popupViewModel = new AnimationEffectsPopupViewModel(SelectedCell, graphicsService, mediaService, audioService);
+        var popupViewModel = new AnimationEffectsPopupViewModel(SelectedCell, graphicsService);
         await navigationService.ShowAnimationEffectsPopup(popupViewModel);
         await RebuildSprites();
     }
@@ -804,8 +813,7 @@ public class AnimationsPageViewModel(
                 Contrast = x.Contrast,
                 Saturation = x.Saturation,
                 Brightness = x.Brightness,
-                BlendMode = x.BlendMode,
-                Sfx = x.Sfx
+                BlendMode = x.BlendMode
             })
             .ToList();
 
@@ -960,7 +968,12 @@ public class AnimationsPageViewModel(
             var height = viewport.Height * sprite.ScaleY;
             var centerX = sprite.X + viewport.Width / 2.0;
             var centerY = sprite.Y + viewport.Height / 2.0;
-            CellOutlines.Add(new CellOutline(centerX - width / 2.0, centerY - height / 2.0, width, height));
+            var x = centerX - width / 2.0;
+            var y = centerY - height / 2.0;
+
+            // cells on top of each other put their ids side by side
+            var taken = CellOutlines.Count(o => Math.Abs(o.X + o.Width - x - width) < LabelWidth && Math.Abs(o.Y - y) < LabelWidth);
+            CellOutlines.Add(new CellOutline(x, y, width, height, sprite.Z.ToString(), -taken * LabelWidth));
         }
     }
 

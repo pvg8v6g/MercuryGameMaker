@@ -73,8 +73,23 @@ public partial class TroopsPageViewModel(
             OnPropertyChanged(nameof(SelectedTroopEnemy));
             OnPropertyChanged(nameof(HasSelectedTroopEnemy));
             OnPropertyChanged(nameof(SelectedEnemySpawn));
+            OnPropertyChanged(nameof(SelectedEnemyFighter));
         }
     } = -1;
+
+    // swaps which enemy the selected troop enemy is, keeping its spawn mode and spot. The combo box picks nothing when
+    // the selection changes, which must not clear the enemy
+    public Fighter? SelectedEnemyFighter
+    {
+        get => SelectedTroopEnemy?.Enemy;
+        set
+        {
+            if (value is null || SelectedTroopEnemy is not { } model || model.Enemy == value) return;
+            model.Enemy = value;
+            OnPropertyChanged();
+            _ = LoadSprite(model, value);
+        }
+    }
 
     public TroopEnemyModel? CopiedTroopEnemy
     {

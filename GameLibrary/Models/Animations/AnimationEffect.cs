@@ -1,5 +1,4 @@
 ﻿using MercuryLibrary.WinUI3Components;
-using GameLibrary.Models.Media;
 using MercuryLibrary.Enumerations;
 
 namespace GameLibrary.Models.Animations;
@@ -93,12 +92,6 @@ public class AnimationEffect : PropertyChangedUpdater
     } = 1.0;
 
     public BlendMode? BlendMode
-    {
-        get;
-        set => SetField(ref field, value);
-    }
-
-    public AudioFile? Sfx
     {
         get;
         set => SetField(ref field, value);

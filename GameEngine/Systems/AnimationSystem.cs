@@ -152,8 +152,6 @@ public class AnimationSystem(IGameDataService gameDataService, IGraphicsService 
         playing.Showing.Clear();
         foreach (var effect in playing.Animation.Effects.Where(x => x.Frame == playing.Frame).OrderBy(x => x.Cell))
         {
-            // a sound plays on the frame it's on, even on a cell with no picture
-            if (effect.Sfx is { Name: { Length: > 0 } sound } sfx) audioService.PlaySfx(sound, sfx.Volume, sfx.Pitch);
             if (string.IsNullOrEmpty(effect.Name)) continue;
 
             var path = Path.Combine(graphicsService.GetAnimationImagesPath(), effect.Name);
@@ -182,7 +180,7 @@ public class AnimationSystem(IGameDataService gameDataService, IGraphicsService 
         }
     }
 
-    // the animation's own sounds on this frame, the ones that aren't on a cell
+    // the animation's sounds on this frame
     private void PlaySounds(PlayingAnimation playing)
     {
         foreach (var sound in playing.Animation.Sounds.Where(x => x.Frame == playing.Frame))

@@ -10,6 +10,7 @@
              xmlns:states="using:GameLibrary.Models.States"
              xmlns:animations="using:GameLibrary.Models.Animations"
              xmlns:troops="using:GameLibrary.Models.Troops"
+             xmlns:choices="using:GameMaker.UX.Models.Choices"
              xmlns:gamemaps="using:GameLibrary.Models.GameMaps"
              xmlns:actions="using:GameLibrary.Models.Actions"
              xmlns:enums="using:GameLibrary.Enumerations"
@@ -526,7 +527,22 @@
 
       <!-- Initiate Battle -->
       <StackPanel x:Name="InitiateBattlePanel" x:Load="{x:Bind ViewModel.IsInitiateBattle}" Spacing="10">
+        <CheckBox Content="Random Troop"
+                  IsChecked="{x:Bind ViewModel.InitiateBattleRandom, Mode=TwoWay}"
+                  ToolTipService.ToolTip="Fights one of the ticked troops, picked at random each time, each as likely as the others. Troops without a battle map are skipped." />
+        <ScrollViewer MaxHeight="300"
+                      Visibility="{x:Bind ViewModel.InitiateBattleRandom, Mode=OneWay}">
+          <ItemsControl ItemsSource="{x:Bind ViewModel.InitiateBattleTroopChoices}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="choices:TroopChoice">
+                <CheckBox Content="{x:Bind Name}"
+                          IsChecked="{x:Bind IsChecked, Mode=TwoWay}" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </ScrollViewer>
         <ComboBox Header="Troop" PlaceholderText="None" HorizontalAlignment="Stretch"
+                  Visibility="{x:Bind ViewModel.InitiateBattleSingle, Mode=OneWay}"
                   ItemsSource="{x:Bind ViewModel.Troops, Mode=OneWay}"
                   SelectedValue="{x:Bind ViewModel.InitiateBattleTroopId, Mode=TwoWay, FallbackValue={x:Null}}"
                   SelectedValuePath="Guid">

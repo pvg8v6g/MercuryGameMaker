@@ -3,6 +3,7 @@
                xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+               xmlns:engineComboBox="using:GameMaker.UX.Components.EngineComboBox"
                xmlns:mercury="using:MercuryLibrary.CanvasComponents"
                mc:Ignorable="d"
                Title="Frame Effects"
@@ -203,40 +204,12 @@
                      SpinButtonPlacementMode="Inline" />
         </Grid>
 
-        <ComboBox Header="Blend Mode"
-                  HorizontalAlignment="Stretch"
-                  ItemsSource="{x:Bind ViewModel.BlendModes}"
-                  SelectedItem="{x:Bind ViewModel.Effect.BlendMode, Mode=TwoWay}" />
-
-        <ComboBox Header="Sound Effect"
-                  HorizontalAlignment="Stretch"
-                  ItemsSource="{x:Bind ViewModel.SfxFiles}"
-                  SelectedItem="{x:Bind ViewModel.SelectedSfx, Mode=TwoWay}" />
-
-        <Grid ColumnSpacing="20">
-          <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-          </Grid.ColumnDefinitions>
-          <NumberBox Grid.Column="0"
-                     Header="SFX Volume"
-                     Minimum="0"
-                     SmallChange="0.1"
-                     IsEnabled="{x:Bind ViewModel.IsSfxSelected, Mode=OneWay}"
-                     Value="{x:Bind ViewModel.SfxVolume, Mode=TwoWay}"
-                     SpinButtonPlacementMode="Inline" />
-          <NumberBox Grid.Column="1"
-                     Header="SFX Pitch"
-                     Minimum="0"
-                     SmallChange="0.1"
-                     IsEnabled="{x:Bind ViewModel.IsSfxSelected, Mode=OneWay}"
-                     Value="{x:Bind ViewModel.SfxPitch, Mode=TwoWay}"
-                     SpinButtonPlacementMode="Inline" />
-        </Grid>
-
-        <Button Content="Preview Sound"
-                HorizontalAlignment="Stretch"
-                Command="{x:Bind ViewModel.PreviewSfxCommand}" />
+        <engineComboBox:EngineComboBox Header="Blend Mode"
+                                       IsClearable="True"
+                                       PlaceholderText="None"
+                                       HorizontalAlignment="Stretch"
+                                       ItemsSource="{x:Bind ViewModel.BlendModes}"
+                                       SelectedItem="{x:Bind ViewModel.Effect.BlendMode, Mode=TwoWay}" />
       </StackPanel>
     </ScrollViewer>
   </Grid>

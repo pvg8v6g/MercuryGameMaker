@@ -508,7 +508,10 @@ public partial class MainPageViewModel(
         Map.RefreshMediaFiles();
         FootstepFiles = [AudioFiles.None, .. mediaService.GetMediaFiles(Cache.Footsteps)];
 
-        var selected = SelectedMap?.Guid ?? gameDataService.GameMaps.OrderBy(x => x.Id).FirstOrDefault(x => !x.FolderOnly)?.Guid;
+        // the editor opens to the map it was last on, the first one if that map is gone
+        var selected = SelectedMap?.Guid
+            ?? gameDataService.GameMaps.FirstOrDefault(x => !x.FolderOnly && x.Guid == locationService.Configuration?.LastMap)?.Guid
+            ?? gameDataService.GameMaps.OrderBy(x => x.Id).FirstOrDefault(x => !x.FolderOnly)?.Guid;
         RebuildTree(selected);
         RefreshMapState();
 
@@ -522,6 +525,7 @@ public partial class MainPageViewModel(
 
     private async Task OnSelectedMapChanged()
     {
+        RememberMap();
         Select(null);
         RefreshMapState();
         RebuildGrid();
@@ -533,6 +537,16 @@ public partial class MainPageViewModel(
 
         await PropTool.LoadMapProps();
         await EntityTool.LoadSprites();
+    }
+
+    // kept in config.json as soon as a map is picked. Folders don't count
+    private void RememberMap()
+    {
+        if (!IsMapSelected || SelectedMap is not { } map || locationService.Configuration is not { } configuration) return;
+        if (configuration.LastMap == map.Guid) return;
+
+        configuration.LastMap = map.Guid;
+        locationService.SaveConfiguration();
     }
 
     #endregion

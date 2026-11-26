@@ -517,6 +517,25 @@ public class ActionEditorViewModel(PageAction action, IGameDataService gameDataS
         }
     }
 
+    // a random battle shows the troop list to tick instead of the one troop
+    public bool InitiateBattleRandom
+    {
+        get => AsInitiateBattle?.RandomTroop ?? false;
+        set
+        {
+            if (AsInitiateBattle is null || AsInitiateBattle.RandomTroop == value) return;
+            AsInitiateBattle.RandomTroop = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(InitiateBattleSingle));
+        }
+    }
+
+    public bool InitiateBattleSingle => !InitiateBattleRandom;
+
+    public TroopChoice[] InitiateBattleTroopChoices => field ??= AsInitiateBattle is { } battle
+        ? [.. Troops.Select(x => new TroopChoice(x, battle.RandomTroopIds))]
+        : [];
+
     public Guid? SaveAnimationId
     {
         get => AsSave?.AnimationId;

@@ -1,12 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
-using GameLibrary.Commands;
-using GameLibrary.Enumerations;
 using GameLibrary.Models.Animations;
-using GameLibrary.Models.Media;
 using GameLibrary.Services.Graphics;
-using GameLibrary.Services.Media;
 using MercuryLibrary.Enumerations;
 using MercuryLibrary.ImageComponents;
 using MercuryLibrary.WinUI3Components;
@@ -18,26 +14,17 @@ public class AnimationEffectsPopupViewModel : PropertyChangedUpdater
     #region Fields
 
     private readonly IGraphicsService _graphicsService;
-    private readonly IMediaService _mediaService;
-    private readonly IAudioService _audioService;
     private PictureBox? _preview;
 
     #endregion
 
     public AnimationEffectsPopupViewModel(
         AnimationEffect effect,
-        IGraphicsService graphicsService,
-        IMediaService mediaService,
-        IAudioService audioService)
+        IGraphicsService graphicsService)
     {
         _graphicsService = graphicsService;
-        _mediaService = mediaService;
-        _audioService = audioService;
         Effect = effect;
         effect.PropertyChanged += OnEffectChanged;
-
-        SfxFiles = ["(None)", .. _mediaService.GetMediaFiles(Cache.Sfx)];
-        SelectedSfx = effect.Sfx?.Name ?? "(None)";
 
         _ = BuildPreview();
     }
@@ -59,61 +46,6 @@ public class AnimationEffectsPopupViewModel : PropertyChangedUpdater
 
     public BlendMode[] BlendModes { get; } = Enum.GetValues<BlendMode>();
 
-    public string[] SfxFiles { get; }
-
-    public string SelectedSfx
-    {
-        get;
-        set
-        {
-            var normalized = string.IsNullOrEmpty(value) ? "(None)" : value;
-            if (normalized == field) return;
-            field = normalized;
-
-            if (normalized == "(None)")
-            {
-                Effect.Sfx = null;
-            }
-            else
-            {
-                Effect.Sfx ??= new AudioFile { Path = "SFX" };
-                Effect.Sfx.Name = normalized;
-            }
-
-            OnPropertyChanged();
-            OnPropertyChanged(nameof(IsSfxSelected));
-            OnPropertyChanged(nameof(SfxVolume));
-            OnPropertyChanged(nameof(SfxPitch));
-            PreviewSfxCommand.RaiseCanExecuteChanged();
-        }
-    } = "(None)";
-
-    public bool IsSfxSelected => Effect.Sfx is not null;
-
-    public double SfxVolume
-    {
-        get => Effect.Sfx?.Volume ?? AudioDefaults.Volume;
-        set
-        {
-            if (Effect.Sfx is null) return;
-            Effect.Sfx.Volume = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public double SfxPitch
-    {
-        get => Effect.Sfx?.Pitch ?? AudioDefaults.Pitch;
-        set
-        {
-            if (Effect.Sfx is null) return;
-            Effect.Sfx.Pitch = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public RelayCommand PreviewSfxCommand => field ??= new RelayCommand(PreviewSfx, () => IsSfxSelected);
-
     public double PreviewSize => 256.0;
 
     public ObservableCollection<PictureBox> Sprites { get; } = [];
@@ -121,12 +53,6 @@ public class AnimationEffectsPopupViewModel : PropertyChangedUpdater
     #endregion
 
     #region Private methods
-
-    private void PreviewSfx()
-    {
-        if (Effect.Sfx?.Name is not { } name || string.IsNullOrEmpty(name)) return;
-        _audioService.PlaySfx(name, Effect.Sfx.Volume, Effect.Sfx.Pitch);
-    }
 
     private void OnEffectChanged(object? sender, PropertyChangedEventArgs e)
     {

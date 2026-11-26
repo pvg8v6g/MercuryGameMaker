@@ -7,7 +7,7 @@
                Title="Frame Spanning"
                Background="{StaticResource PrimaryBrush}"
                PrimaryButtonText="Apply"
-               SecondaryButtonText="Delete All Cells"
+               SecondaryButtonText="Delete These Cells"
                CloseButtonText="Cancel"
                DefaultButton="Primary">
   <ScrollViewer VerticalScrollBarVisibility="Auto">

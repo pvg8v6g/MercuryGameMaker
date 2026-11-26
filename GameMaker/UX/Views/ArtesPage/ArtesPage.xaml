@@ -96,8 +96,6 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
           </Grid.RowDefinitions>
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" />
@@ -181,42 +179,6 @@
                     VerticalAlignment="Bottom">
             Rotate Arte With Character Direction
           </CheckBox>
-
-          <engineTextBox:EngineTextBox Grid.Column="0"
-                                       Grid.Row="5"
-                                       Header="AI Targets Wanted"
-                                       InputType="Integer"
-                                       Text="{x:Bind ViewModel.SelectedEntity.TargetsWanted, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}"
-                                       Tooltip="How many fighters should this arte catch before the AI uses it? It never asks for more than are still standing." />
-
-          <Grid Grid.Column="1"
-                Grid.Row="5"
-                ColumnSpacing="10">
-            <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
-              <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <ComboBox Grid.Column="0"
-                      Header="AI Timing"
-                      ItemsSource="{extensions:EnumValues EnumType=enums:ArteTiming}"
-                      SelectedItem="{x:Bind ViewModel.SelectedEntity.AiTiming, Mode=TwoWay}"
-                      ToolTipService.ToolTip="When may the AI use this arte? Opening: while the other side has most of its Life. Late: once it's under half. LowLifeTarget: when it would hit someone who's nearly down."
-                      HorizontalAlignment="Stretch" />
-            <CheckBox Grid.Column="1"
-                      IsChecked="{x:Bind ViewModel.SelectedEntity.Risky, Mode=TwoWay, FallbackValue='False', UpdateSourceTrigger=PropertyChanged}"
-                      behaviors:PointerCursorBehavior.CursorType="Hand"
-                      ToolTipService.ToolTip="The AI only uses a risky arte when it loses its temper: hurt badly, an ally falling, or just in a mood."
-                      VerticalAlignment="Bottom">
-              Risky
-            </CheckBox>
-          </Grid>
-
-          <engineTextBox:EngineTextBox Grid.Column="0"
-                                       Grid.Row="6"
-                                       Header="Threat"
-                                       InputType="Integer"
-                                       Text="{x:Bind ViewModel.SelectedEntity.Threat, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                       Tooltip="Changes the user's Threat when it's used, on top of what its damage or healing builds. Positive for a tank, negative for a Threat drop." />
         </Grid>
       </enginePanel:EnginePanel>
 
@@ -495,48 +457,105 @@
                                        PreviewOffsetY="{x:Bind ViewModel.HitboxPreviewOffsetY, Mode=OneWay}"
                                        ShowAnchor="True"
                                        ShowGrid="True" />
+          <Button Command="{x:Bind ViewModel.ClearHitboxesCommand}"
+                  HorizontalAlignment="Right"
+                  behaviors:PointerCursorBehavior.CursorType="Hand"
+                  ToolTipService.ToolTip="Clear all hitboxes, in every direction">
+            <SymbolIcon Symbol="Delete" />
+          </Button>
         </StackPanel>
       </enginePanel:EnginePanel>
     </Grid>
 
-    <enginePanel:EnginePanel Grid.Column="2"
-                             Grid.Row="0"
-                             Title="Arte Damage"
-                             Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
-      <Grid ColumnSpacing="20">
-        <Grid.RowDefinitions>
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-          <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="*" />
-          <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+    <StackPanel Grid.Column="2"
+                Grid.Row="0"
+                Spacing="10">
+      <enginePanel:EnginePanel Title="Arte Damage"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <Grid ColumnSpacing="20">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
 
-        <engineTextBox:EngineTextBox Grid.Column="0"
-                                     Grid.Row="0"
-                                     Header="Life Damage"
-                                     InputType="Double"
-                                     Text="{x:Bind ViewModel.SelectedEntity.HpDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="Times the user's Power: 1 is 1x Power, 0.7 is 70%. Negative values heal." />
+          <engineTextBox:EngineTextBox Grid.Column="0"
+                                       Grid.Row="0"
+                                       Header="Life Damage"
+                                       InputType="Double"
+                                       Text="{x:Bind ViewModel.SelectedEntity.HpDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                       Tooltip="Times the user's Power: 1 is 1x Power, 0.7 is 70%. Negative values heal." />
 
-        <engineTextBox:EngineTextBox Grid.Column="0"
-                                     Grid.Row="1"
-                                     Header="Mana Damage"
-                                     InputType="Integer"
-                                     Text="{x:Bind ViewModel.SelectedEntity.ManaDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="How much mana damage does this arte deal? Negative values restore mana." />
+          <engineTextBox:EngineTextBox Grid.Column="0"
+                                       Grid.Row="1"
+                                       Header="Mana Damage"
+                                       InputType="Integer"
+                                       Text="{x:Bind ViewModel.SelectedEntity.ManaDamage, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                       Tooltip="How much mana damage does this arte deal? Negative values restore mana." />
 
-        <engineTextBox:EngineTextBox Grid.Column="0"
-                                     Grid.Row="2"
-                                     Header="Damage Variance %"
-                                     InputType="Integer"
-                                     Text="{x:Bind ViewModel.SelectedEntity.Variance, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
-                                     Tooltip="This is a percent variance of the damage dealt. For instance if the damage dealt happens to be 100, and you give it a variance of 10 it could cause anywhere from 90 to 110." />
-      </Grid>
-    </enginePanel:EnginePanel>
+          <engineTextBox:EngineTextBox Grid.Column="0"
+                                       Grid.Row="2"
+                                       Header="Damage Variance %"
+                                       InputType="Integer"
+                                       Text="{x:Bind ViewModel.SelectedEntity.Variance, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                       Tooltip="This is a percent variance of the damage dealt. For instance if the damage dealt happens to be 100, and you give it a variance of 10 it could cause anywhere from 90 to 110." />
+        </Grid>
+      </enginePanel:EnginePanel>
+
+      <!-- how the AI decides to use the arte -->
+      <enginePanel:EnginePanel Title="AI"
+                               Visibility="{x:Bind ViewModel.SelectedEntity, Converter={StaticResource NullToCollapsedConverter}, Mode=OneWay}">
+        <Grid ColumnSpacing="20"
+              RowSpacing="10">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+
+          <engineTextBox:EngineTextBox Grid.Column="0"
+                                       Grid.Row="0"
+                                       Header="Targets Wanted"
+                                       BoxMinWidth="100"
+                                       InputType="Integer"
+                                       Text="{x:Bind ViewModel.SelectedEntity.TargetsWanted, Mode=TwoWay, FallbackValue='1', UpdateSourceTrigger=PropertyChanged}"
+                                       Tooltip="How many fighters should this arte catch before the AI uses it? It never asks for more than are still standing." />
+
+          <engineTextBox:EngineTextBox Grid.Column="1"
+                                       Grid.Row="0"
+                                       Header="Threat"
+                                       BoxMinWidth="100"
+                                       InputType="Integer"
+                                       Text="{x:Bind ViewModel.SelectedEntity.Threat, Mode=TwoWay, FallbackValue='0', UpdateSourceTrigger=PropertyChanged}"
+                                       Tooltip="Changes the user's Threat when it's used, on top of what its damage or healing builds. Positive for a tank, negative for a Threat drop." />
+
+          <ComboBox Grid.Column="0"
+                    Grid.Row="1"
+                    Header="Timing"
+                    ItemsSource="{extensions:EnumValues EnumType=enums:ArteTiming}"
+                    SelectedItem="{x:Bind ViewModel.SelectedEntity.AiTiming, Mode=TwoWay}"
+                    ToolTipService.ToolTip="When may the AI use this arte? Opening: while the other side has most of its Life. Late: once it's under half. LowLifeTarget: when it would hit someone who's nearly down."
+                    HorizontalAlignment="Stretch" />
+
+          <CheckBox Grid.Column="1"
+                    Grid.Row="1"
+                    IsChecked="{x:Bind ViewModel.SelectedEntity.Risky, Mode=TwoWay, FallbackValue='False', UpdateSourceTrigger=PropertyChanged}"
+                    behaviors:PointerCursorBehavior.CursorType="Hand"
+                    ToolTipService.ToolTip="The AI only uses a risky arte when it loses its temper: hurt badly, an ally falling, or just in a mood."
+                    VerticalAlignment="Bottom">
+            Risky
+          </CheckBox>
+        </Grid>
+      </enginePanel:EnginePanel>
+    </StackPanel>
 
     <enginePanel:EnginePanel Grid.Column="2"
                              Grid.Row="1"
